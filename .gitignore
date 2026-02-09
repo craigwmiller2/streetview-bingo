@@ -1,0 +1,33 @@
+# --- Dependencies ---
+node_modules/
+lib/
+# Note: If you manually downloaded Leaflet/html2canvas into lib/, 
+# and aren't using npm to manage them, you might want to remove 
+# 'lib/' from this list so they are tracked in Git.
+
+# --- OS / IDE Files ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# --- Build / Packaging ---
+*.zip
+*.xpi
+dist/
+build/
+
+# --- Logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# --- Local Secrets ---
+.env

@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Street View Bingo - Summary</title>
+        <link rel="stylesheet" href="../lib/leaflet.css" />
+        <link rel="stylesheet" href="../css/map.css" />
+    </head>
+    <body>
+        <div class="controls">
+            <button id="download-share-btn">Download Shareable Summary (JPG)</button>
+        </div>
+
+        <div id="share-container">
+            <h1>Street View Bingo Journey</h1>
+
+            <div id="final-map"></div>
+
+            <div class="stats-bar">
+                <span id="stat-distance">Distance: 0 km</span>
+                <span id="stat-time">Time Taken: 00:00:00</span>
+            </div>
+
+            <div class="share-grid" id="share-grid"></div>
+        </div>
+
+        <div id="lightbox">
+            <img id="lightbox-img" src="" />
+            <div id="lightbox-caption"></div>
+        </div>
+
+        <script src="../lib/leaflet.js"></script>
+        <script src="../lib/html2canvas.min.js"></script>
+        <script src="../js/map.js"></script>
+    </body>
+</html>

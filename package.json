@@ -1,0 +1,12 @@
+{
+  "name": "firefox-bingo-extension",
+  "version": "1.0.0",
+  "description": "Extension for Firefox browser to play Street View Bingo",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "sidebar.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

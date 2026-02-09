@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Bingo Career Stats</title>
+        <link rel="stylesheet" href="../css/stats.css" />
+    </head>
+    <body>
+        <h1>Your Hunting Career</h1>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h2>Total Attempts</h2>
+                <p id="total-attempts">0</p>
+            </div>
+            <div class="stat-card">
+                <h2>Total Bingos</h2>
+                <p id="total-bingos">0</p>
+            </div>
+            <div class="stat-card">
+                <h2>Fastest Win</h2>
+                <p id="fastest-win">--</p>
+            </div>
+            <div class="stat-card highlight-gold">
+                <h2>Most Found</h2>
+                <p id="most-found" style="font-size: 1.2rem">--</p>
+            </div>
+            <div class="stat-card highlight-silver">
+                <h2>Least Found</h2>
+                <p id="least-found" style="font-size: 1.2rem">--</p>
+            </div>
+        </div>
+
+        <div class="rank-list">
+            <h2>Item Frequency</h2>
+            <ul id="item-rank"></ul>
+        </div>
+
+        <hr style="margin-top: 50px; border: 0; border-top: 1px solid #ddd" />
+        <div style="text-align: center; padding: 20px">
+            <button
+                id="reset-stats-btn"
+                style="
+                    background-color: #e74c3c;
+                    color: white;
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-weight: bold;
+                "
+            >
+                Reset All Career Stats
+            </button>
+        </div>
+
+        <script src="../js/stats.js"></script>
+    </body>
+</html>

@@ -1,0 +1,236 @@
+:root {
+    /* Colors */
+    --bg-main: #f0f0f0;
+    --bg-card: #ffffff;
+    --text-main: #2c3e50;
+    --text-light: #ffffff;
+
+    /* Primary Action Colors */
+    --color-success: #2ecc71; /* Green for Found/Win */
+    --color-danger: #e74c3c; /* Red for Timer/Timeout */
+    --color-warning: #e67e22; /* Orange for Reset */
+    --color-info: #34495e; /* Dark Grey for Stats */
+    --color-loading: #ffeaa7; /* Yellow for Capturing */
+
+    /* UI Elements */
+    --border-color: #cccccc;
+    --radius-standard: 8px;
+    --radius-round: 20px;
+    --grid-gap: 4px;
+
+    /* Transitions */
+    --transition-speed: 0.2s;
+}
+
+/* --- General Layout --- */
+body {
+    padding: 10px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-main);
+    margin: 0;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* --- Menu & Buttons --- */
+#mode-menu {
+    text-align: center;
+    padding: 20px 0;
+}
+
+button {
+    width: 90%;
+    margin: 8px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 12px;
+    border-radius: var(--radius-standard);
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition:
+        filter var(--transition-speed),
+        transform 0.1s;
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+button:hover {
+    filter: brightness(1.1);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+#btn-10min {
+    background-color: var(--color-info);
+    color: var(--text-light);
+}
+#btn-infinite {
+    background-color: var(--color-info);
+    color: var(--text-light);
+}
+#view-stats-btn {
+    background-color: var(--color-info);
+    color: var(--text-light);
+}
+#reset-btn {
+    background-color: var(--color-warning);
+    color: var(--text-light);
+}
+
+/* --- Timer --- */
+#timer-container {
+    position: relative;
+    width: 100px;
+    margin: 10px auto 20px;
+}
+
+#timer-svg {
+    transform: rotate(-90deg);
+}
+
+.timer-bg {
+    fill: none;
+    stroke: var(--border-color);
+    stroke-width: 8;
+    opacity: 0.3;
+}
+
+.timer-progress {
+    fill: none;
+    stroke: var(--color-danger);
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+}
+
+#timer-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    font-family: "Courier New", monospace;
+    font-size: 1.1rem;
+}
+
+/* --- Bingo Grid --- */
+#bingo-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--grid-gap);
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.cell {
+    aspect-ratio: 1 / 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.65rem;
+    cursor: pointer;
+    overflow: hidden;
+    padding: 2px;
+    background-size: cover;
+    background-position: center;
+    transition:
+        transform 0.1s,
+        background-color var(--transition-speed);
+}
+
+.cell span {
+    pointer-events: none; /* Allows click through text to cell */
+}
+
+.cell:hover {
+    background-color: #f9f9f9;
+    transform: scale(1.02);
+    z-index: 2;
+}
+
+.cell.found {
+    color: var(--text-light);
+    font-weight: bold;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--color-success);
+}
+
+.cell.capturing {
+    background-color: var(--color-loading);
+    animation: pulse 1.5s infinite;
+    cursor: wait;
+}
+
+/* --- Overlays --- */
+#win-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--color-success); /* Defaults to green; JS can override */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.4s ease-out;
+    border-radius: var(--grid-gap);
+}
+
+.win-content {
+    text-align: center;
+    color: var(--text-light);
+    padding: 15px;
+}
+
+.win-content h1 {
+    margin: 0;
+    font-size: 1.3rem;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.win-content button {
+    margin-top: 15px;
+    background: var(--bg-card);
+    color: var(--color-success);
+    border-radius: var(--radius-round);
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
