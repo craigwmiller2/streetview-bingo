@@ -29,7 +29,7 @@ const ITEMS = [
 let gameData = [];
 let timerInterval = null;
 let timeLeft = 0;
-let initialTime = 60; // Default 10 mins
+let initialTime = 600; // Default 10 mins
 let gameStartTime = null;
 const FULL_DASH_ARRAY = 283; // 2 * PI * radius (45)
 
