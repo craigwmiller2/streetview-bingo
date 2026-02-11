@@ -7,9 +7,10 @@ L.Icon.Default.mergeOptions({
 });
 
 async function initMap() {
-    const data = await browser.storage.local.get(["current_game", "start_time"]);
+    const data = await browser.storage.local.get(["current_game", "start_time", "end_time"]);
     const finds = data.current_game || [];
     const startTimestamp = data.start_time;
+    const endTimestamp = data.end_time;
 
     if (finds.length === 0) {
         document.getElementById("share-container").innerHTML = "<h1>No data found. Go find some Bingo items!</h1>";
@@ -60,7 +61,7 @@ async function initMap() {
 
     // 3. Draw Path & Stats
     if (pathPoints.length > 1) {
-        L.polyline(pathPoints, { color: "#1877f2", weight: 3, dashArray: "5, 10" }).addTo(map);
+        // L.polyline(pathPoints, { color: "#1877f2", weight: 3, dashArray: "5, 10" }).addTo(map);
         map.fitBounds(
             L.featureGroup(pathPoints.map((p) => L.marker(p)))
                 .getBounds()
@@ -70,17 +71,18 @@ async function initMap() {
 
     // Time Calculation
     const start = new Date(startTimestamp);
-    const end = new Date(finds[finds.length - 1].timestamp);
 
-    // Calculate the difference in milliseconds
+    // Use endTimestamp if it exists, otherwise fallback to the last find's timestamp
+    const end = endTimestamp ? new Date(endTimestamp) : new Date(finds[finds.length - 1].timestamp);
+
     const diffMs = end - start;
 
-    // Format into H:M:S
+    // Format into H:M:S (Same as before, but now 'end' is correct)
     const hours = Math.floor(diffMs / 3600000);
     const mins = Math.floor((diffMs % 3600000) / 60000);
     const secs = Math.floor((diffMs % 60000) / 1000);
 
-    const timeStr = `${hours}h ${mins}m ${secs}s`;
+    const timeStr = hours > 0 ? `${hours}h ${mins}m ${secs}s` : `${mins}m ${secs}s`;
 
     document.getElementById("stat-distance").textContent = `Distance: ${(totalDistance / 1000).toFixed(2)} km`;
     document.getElementById("stat-time").textContent = `Time Taken: ${timeStr}`;

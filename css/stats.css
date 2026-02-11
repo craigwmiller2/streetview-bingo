@@ -134,6 +134,7 @@ h1 {
     background: var(--bar-color);
     border-radius: 4px;
     transition: width 1s ease-out; /* Animates when page loads */
+    min-width: 2px;
 }
 
 .chart-count {
@@ -148,4 +149,36 @@ h1 {
 .chart-row:hover .chart-bar {
     filter: brightness(1.2);
     cursor: default;
+}
+
+#history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+#history-table th {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 2px solid var(--bg-stats-page);
+    color: var(--secondary-stat);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+#history-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+}
+
+/* Status coloring */
+.status-completed {
+    color: var(--color-success);
+    font-weight: bold;
+}
+
+.status-timeout {
+    color: var(--color-danger);
+    font-weight: bold;
 }

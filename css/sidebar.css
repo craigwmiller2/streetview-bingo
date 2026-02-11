@@ -111,10 +111,12 @@ button:active {
 
 .timer-progress {
     fill: none;
-    stroke: var(--color-danger);
     stroke-width: 8;
     stroke-linecap: round;
-    transition: stroke-dashoffset 1s linear;
+    /* Ensure the color change is as smooth as the movement */
+    transition:
+        stroke-dashoffset 1s linear,
+        stroke 1s linear;
 }
 
 #timer-text {
@@ -178,6 +180,40 @@ button:active {
     cursor: wait;
 }
 
+/* Container for the undo button on the cell */
+.cell.found {
+    position: relative;
+}
+
+.undo-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 20px !important; /* Override global button width */
+    height: 20px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 12px;
+    background: rgba(231, 76, 60, 0.8); /* Transparent red */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity var(--transition-speed);
+}
+
+.cell.found:hover .undo-btn {
+    opacity: 1;
+}
+
+.undo-btn:hover {
+    background: var(--color-danger) !important;
+    transform: scale(1.1);
+}
+
 /* --- Overlays --- */
 #win-overlay {
     position: absolute;
@@ -232,5 +268,16 @@ button:active {
     }
     50% {
         opacity: 0.6;
+    }
+}
+
+@keyframes pulseTimer {
+    from {
+        opacity: 1;
+        stroke-width: 8;
+    }
+    to {
+        opacity: 0.6;
+        stroke-width: 10;
     }
 }

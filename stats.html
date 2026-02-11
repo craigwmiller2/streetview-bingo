@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Bingo Career Stats</title>
-        <link rel="stylesheet" href="../css/stats.css" />
+        <link rel="stylesheet" href="css/stats.css" />
     </head>
     <body>
         <h1>Your Hunting Career</h1>
@@ -31,7 +31,22 @@
 
         <div class="rank-list">
             <h2>Item Frequency</h2>
-            <ul id="item-rank"></ul>
+            <div id="item-rank"></div>
+        </div>
+
+        <div class="rank-list">
+            <h2>Recent Activity</h2>
+            <table id="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Items</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body"></tbody>
+            </table>
         </div>
 
         <hr style="margin-top: 50px; border: 0; border-top: 1px solid #ddd" />
@@ -52,6 +67,6 @@
             </button>
         </div>
 
-        <script src="../js/stats.js"></script>
+        <script src="js/stats.js"></script>
     </body>
 </html>

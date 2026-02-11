@@ -29,7 +29,7 @@ const ITEMS = [
 let gameData = [];
 let timerInterval = null;
 let timeLeft = 0;
-let initialTime = 600; // Default 10 mins
+let initialTime = 60; // Default 10 mins
 let gameStartTime = null;
 const FULL_DASH_ARRAY = 283; // 2 * PI * radius (45)
 
@@ -102,7 +102,20 @@ async function handleCapture(itemName, cellElement) {
         cellElement.classList.remove("capturing");
         cellElement.classList.add("found");
         cellElement.style.backgroundImage = `url(${screenshot})`;
+
+        // 1. Set the text first
         cellElement.innerHTML = `<span>${itemName}</span>`;
+
+        // 2. NOW add the undo button so it stays on top
+        const undoBtn = document.createElement("button");
+        undoBtn.className = "undo-btn";
+        undoBtn.innerHTML = "✕";
+        undoBtn.title = "Undo capture";
+        undoBtn.onclick = (e) => {
+            e.stopPropagation();
+            handleUndo(itemName, cellElement);
+        };
+        cellElement.appendChild(undoBtn);
 
         checkWinCondition();
     } catch (error) {
@@ -110,6 +123,20 @@ async function handleCapture(itemName, cellElement) {
         cellElement.innerHTML = originalContent;
         if (error.message === "WrongTab") alert("Switch to Google Maps!");
     }
+}
+
+function handleUndo(itemName, cellElement) {
+    const index = gameData.map((f) => f.item).lastIndexOf(itemName);
+    if (index > -1) {
+        gameData.splice(index, 1);
+    }
+
+    cellElement.classList.remove("found");
+    cellElement.style.backgroundImage = "none";
+    cellElement.innerHTML = `<span>${itemName}</span>`; // Restore the original text
+
+    // Re-assign the click listener
+    cellElement.onclick = () => handleCapture(itemName, cellElement);
 }
 
 /**
@@ -121,21 +148,44 @@ function startTimer() {
 
     progressCircle.style.strokeDasharray = `${FULL_DASH_ARRAY} ${FULL_DASH_ARRAY}`;
 
-    timerInterval = setInterval(() => {
-        timeLeft--;
+    // Helper to update the UI so we can call it immediately AND in the interval
+    const updateUI = () => {
+        const percentage = Math.max(0, timeLeft / initialTime);
 
-        // Update Text (M:SS)
+        // Update Color
+        const hue = percentage * 210;
+        progressCircle.style.stroke = `hsl(${hue}, 80%, 50%)`;
+
+        // Update Text
         const mins = Math.floor(timeLeft / 60);
         const secs = timeLeft % 60;
         textDisplay.textContent = `${mins}:${secs.toString().padStart(2, "0")}`;
 
-        // Update SVG Circle Offset
-        const offset = FULL_DASH_ARRAY - (timeLeft / initialTime) * FULL_DASH_ARRAY;
+        // Update Circle
+        const offset = FULL_DASH_ARRAY - percentage * FULL_DASH_ARRAY;
         progressCircle.style.strokeDashoffset = offset;
+
+        // Pulse logic
+        if (timeLeft < 30 && timeLeft > 0) {
+            progressCircle.style.animation = "pulseTimer 0.5s infinite alternate";
+        } else {
+            progressCircle.style.animation = "none";
+        }
+    };
+
+    // Run once immediately so it doesn't "jump" after 1 second
+    updateUI();
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
 
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
+            timeLeft = 0;
+            updateUI(); // One final update to ensure color is pure red
             triggerEndGame("⏰ TIME'S UP!", "rgba(192, 57, 43, 0.9)");
+        } else {
+            updateUI();
         }
     }, 1000);
 }
@@ -155,9 +205,25 @@ function checkWinCondition() {
  */
 function triggerEndGame(title, bgColor) {
     const grid = document.getElementById("bingo-grid");
+    // Prevent multiple overlays if both timer and bingo trigger at once
     if (document.getElementById("win-overlay")) return;
 
-    // Disable further clicks
+    let now = Date.now();
+    let finalDuration;
+
+    // Check if the game ended because of a timeout
+    if (timeLeft <= 0) {
+        // Force exactly the initial time (e.g., 60s or 600s)
+        finalDuration = initialTime * 1000;
+    } else {
+        // They won early, calculate actual time
+        finalDuration = now - gameStartTime;
+    }
+
+    // Capture the specific endTime we will use for storage
+    const absoluteEndTime = gameStartTime + finalDuration;
+
+    // UI Cleanup
     document.querySelectorAll(".cell").forEach((c) => (c.onclick = null));
 
     const overlay = document.createElement("div");
@@ -174,15 +240,16 @@ function triggerEndGame(title, bgColor) {
     grid.style.position = "relative";
     grid.appendChild(overlay);
 
-    // Update global stats in storage
-    updateGlobalStats();
+    // Save stats and setup map launch
+    updateGlobalStats(finalDuration);
 
     document.getElementById("final-map-launch-btn").addEventListener("click", async () => {
         await browser.storage.local.set({
             current_game: gameData,
             start_time: gameStartTime,
+            end_time: absoluteEndTime,
         });
-        browser.tabs.create({ url: browser.runtime.getURL("pages/map.html") });
+        browser.tabs.create({ url: browser.runtime.getURL("map.html") });
     });
 }
 
@@ -234,38 +301,52 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-async function updateGlobalStats() {
+async function updateGlobalStats(finalDuration) {
     const stats = await browser.storage.local.get("global_stats");
+
+    // 1. Ensure history exists in the initial state
     let global = stats.global_stats || {
         totalAttempts: 0,
         totalBingos: 0,
-        itemCounts: {}, // Tracks how many times each item was found
-        fastestFullBoard: null, // in milliseconds
-        totalDistance: 0,
+        itemCounts: {},
+        fastestFullBoard: null,
+        history: [], // Added this
     };
 
     global.totalAttempts += 1;
-    if (gameData.length === 25) global.totalBingos += 1;
+    const isBingo = gameData.length === 25;
 
-    // Track item popularity
+    if (isBingo) {
+        global.totalBingos += 1;
+        if (!global.fastestFullBoard || finalDuration < global.fastestFullBoard) {
+            global.fastestFullBoard = finalDuration;
+        }
+    }
+
+    // 2. Create the summary for the history table
+    const gameSummary = {
+        date: new Date().toLocaleDateString(),
+        // Logic: if timer ran out and board isn't full, it's a Timeout
+        status: timeLeft <= 0 && !isBingo ? "Timed Out" : "Completed",
+        itemsFound: gameData.length,
+        duration: finalDuration,
+    };
+
+    // 3. Keep only the 5 most recent games
+    if (!global.history) global.history = []; // Safety check
+    global.history.unshift(gameSummary);
+    if (global.history.length > 5) {
+        global.history.pop();
+    }
+
+    // Existing item frequency tracking
     gameData.forEach((find) => {
         global.itemCounts[find.item] = (global.itemCounts[find.item] || 0) + 1;
     });
-
-    // Track fastest board
-    const start = gameStartTime;
-    const end = new Date(gameData[gameData.length - 1].timestamp).getTime();
-    const duration = end - start;
-
-    if (gameData.length === 25) {
-        if (!global.fastestFullBoard || duration < global.fastestFullBoard) {
-            global.fastestFullBoard = duration;
-        }
-    }
 
     await browser.storage.local.set({ global_stats: global });
 }
 
 document.getElementById("view-stats-btn").addEventListener("click", () => {
-    browser.tabs.create({ url: browser.runtime.getURL("pages/stats.html") });
+    browser.tabs.create({ url: browser.runtime.getURL("stats.html") });
 });
