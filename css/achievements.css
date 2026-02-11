@@ -1,0 +1,84 @@
+:root {
+    /* Rarity Palette */
+    --rarity-common: #2ecc71;
+    --rarity-rare: #3498db;
+    --rarity-epic: #9b59b6;
+    --rarity-legendary: #d4af37;
+
+    /* Card Styles */
+    --ach-bg: #ffffff;
+    --ach-shadow: rgba(0, 0, 0, 0.1);
+    --ach-locked-opacity: 0.4;
+    --ach-transition: 0.3s ease;
+}
+
+.ach-grid {
+    display: grid;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.ach-card {
+    background: var(--ach-bg);
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 8px var(--ach-shadow);
+
+    /* Default Locked State */
+    opacity: var(--ach-locked-opacity);
+    filter: grayscale(100%);
+    transition: var(--ach-transition);
+    border-left: 5px solid transparent;
+}
+
+.ach-card.unlocked {
+    opacity: 1;
+    filter: none;
+}
+
+/* Rarity Border Colors for Unlocked Cards */
+.ach-card.unlocked.common {
+    border-color: var(--rarity-common);
+}
+.ach-card.unlocked.rare {
+    border-color: var(--rarity-rare);
+}
+.ach-card.unlocked.epic {
+    border-color: var(--rarity-epic);
+}
+.ach-card.unlocked.legendary {
+    border-color: var(--rarity-legendary);
+}
+
+.ach-icon {
+    font-size: 2rem;
+    margin-right: 20px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.rarity-tag {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: white;
+    margin-left: auto;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+/* Rarity Tag Background Colors */
+.rarity-tag.common {
+    background-color: var(--rarity-common);
+}
+.rarity-tag.rare {
+    background-color: var(--rarity-rare);
+}
+.rarity-tag.epic {
+    background-color: var(--rarity-epic);
+}
+.rarity-tag.legendary {
+    background-color: var(--rarity-legendary);
+}

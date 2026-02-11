@@ -29,10 +29,12 @@ const ITEMS = [
 const soundTick = new Audio(browser.runtime.getURL("audio/tick.mp3"));
 const soundBingo = new Audio(browser.runtime.getURL("audio/bingo.mp3"));
 const soundDefeat = new Audio(browser.runtime.getURL("audio/defeat.mp3"));
+const soundAchievement = new Audio(browser.runtime.getURL("audio/achievement.ogg"));
 
 soundTick.load();
 soundBingo.load();
 soundDefeat.load();
+soundAchievement.load();
 
 let gameData = [];
 let timerInterval = null;
@@ -256,6 +258,7 @@ function triggerEndGame(title, bgColor) {
 
     // Save stats and setup map launch
     updateGlobalStats(finalDuration);
+    checkAchievements(finalDuration);
 
     document.getElementById("final-map-launch-btn").addEventListener("click", async () => {
         await browser.storage.local.set({
@@ -291,6 +294,20 @@ document.addEventListener("DOMContentLoaded", () => {
         btnInfinite.addEventListener("click", () => {
             console.log("Starting Infinite mode...");
             startGame("infinite");
+        });
+    }
+
+    const viewAchievementsBtn = document.getElementById("view-achievements-btn");
+    if (viewAchievementsBtn) {
+        viewAchievementsBtn.addEventListener("click", () => {
+            browser.tabs.create({ url: browser.runtime.getURL("achievements.html") });
+        });
+    }
+
+    const viewStatsBtn = document.getElementById("view-stats-btn");
+    if (viewStatsBtn) {
+        viewStatsBtn.addEventListener("click", () => {
+            browser.tabs.create({ url: browser.runtime.getURL("stats.html") });
         });
     }
 
@@ -361,6 +378,71 @@ async function updateGlobalStats(finalDuration) {
     await browser.storage.local.set({ global_stats: global });
 }
 
-document.getElementById("view-stats-btn").addEventListener("click", () => {
-    browser.tabs.create({ url: browser.runtime.getURL("stats.html") });
-});
+async function checkAchievements(finalDuration) {
+    const data = await browser.storage.local.get(["global_stats", "achievements"]);
+    const stats = data.global_stats || { itemCounts: {} };
+    let earned = data.achievements || [];
+    let newUnlocks = [];
+
+    const isBingo = gameData.length === 25;
+
+    // Map your logic directly to the centralized IDs
+    const logicMap = {
+        first_bingo: isBingo,
+        speed_demon: isBingo && finalDuration < 300000,
+        gardener: (stats.itemCounts["Lawnmower"] || 0) >= 5,
+        master_hunter: ITEMS.every((item) => (stats.itemCounts[item] || 0) >= 5),
+    };
+
+    ACH_DATA.forEach((ach) => {
+        if (logicMap[ach.id] && !earned.includes(ach.id)) {
+            earned.push(ach.id);
+            newUnlocks.push(ach); // Push the WHOLE object, not just the name
+        }
+    });
+
+    if (newUnlocks.length > 0) {
+        await browser.storage.local.set({ achievements: earned });
+        showAchievementToast(newUnlocks);
+        soundAchievement.play();
+    }
+}
+
+function showAchievementToast(unlockedObjects) {
+    let container = document.getElementById("achievement-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "achievement-container";
+        document.body.appendChild(container);
+    }
+
+    unlockedObjects.forEach((ach, index) => {
+        setTimeout(() => {
+            const toast = document.createElement("div");
+            // Dynamically add 'green' or 'gold' based on ACH_DATA
+            toast.className = `achievement-toast ${ach.rarity}`;
+
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="ach-icon">${ach.icon}</span>
+                    <div>
+                        <strong style="font-size: 0.8rem; text-transform: uppercase; opacity: 0.8;">
+                            Achievement Unlocked!
+                        </strong>
+                        <p style="margin: 2px 0 0 0; font-size: 1.1rem; font-weight: bold;">
+                            ${ach.name}
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add("show"), 10);
+
+            setTimeout(() => {
+                toast.classList.remove("show");
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }, index * 400);
+    });
+}

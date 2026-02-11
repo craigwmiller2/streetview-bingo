@@ -4,6 +4,7 @@
     --bg-card: #ffffff;
     --text-main: #2c3e50;
     --text-light: #ffffff;
+    --text-dark: #000000;
 
     /* Primary Action Colors */
     --color-success: #2ecc71; /* Green for Found/Win */
@@ -11,6 +12,7 @@
     --color-warning: #e67e22; /* Orange for Reset */
     --color-info: #34495e; /* Dark Grey for Stats */
     --color-loading: #ffeaa7; /* Yellow for Capturing */
+    --color-achievement: #ffd700; /* Gold for Achievements */
 
     /* UI Elements */
     --border-color: #cccccc;
@@ -85,6 +87,10 @@ button:active {
 #view-stats-btn {
     background-color: var(--color-info);
     color: var(--text-light);
+}
+#view-achievements-btn {
+    background-color: var(--color-achievement);
+    color: var(--text-dark);
 }
 #reset-btn {
     background-color: var(--color-warning);
@@ -247,6 +253,114 @@ button:active {
     background: var(--bg-card);
     color: var(--color-success);
     border-radius: var(--radius-round);
+}
+
+/* The invisible box that holds all toasts */
+#achievement-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column-reverse; /* Newest toast at the bottom */
+    gap: 10px;
+    pointer-events: none; /* Let clicks pass through empty space */
+    z-index: 1000;
+}
+
+.achievement-toast {
+    background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+    color: white;
+    border: 1px solid #b8860b;
+    padding: 12px 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    pointer-events: auto; /* Re-enable clicks for the toast itself */
+    max-width: 400px;
+
+    /* Animation: Slide in from the side/bottom */
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.achievement-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.ach-icon {
+    --inset-color: orange;
+    --shadow-color: gold;
+    font-size: 1.5rem;
+    border-radius: 100vw;
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    border: 1px solid white;
+    display: grid;
+    place-items: center;
+    box-shadow:
+        0 2px 4px var(--shadow-color),
+        inset 0 2px 4px var(--shadow-color);
+}
+
+.achievement-toast.common {
+    background: #2ecc71;
+    border-color: #27ae60;
+
+    .ach-icon {
+        --shadow-color: #27ae60;
+    }
+}
+
+.achievement-toast.rare {
+    background: #3498db;
+    border-color: #2980b9;
+
+    .ach-icon {
+        --shadow-color: #2980b9;
+    }
+}
+
+.achievement-toast.epic {
+    background: #9b59b6;
+    border-color: #8e44ad;
+
+    .ach-icon {
+        --shadow-color: #8e44ad;
+    }
+}
+
+.achievement-toast.legendary {
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-toast.legendary::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to bottom right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(45deg);
+    animation: glint 1.5s forwards;
+}
+
+@keyframes glint {
+    0% {
+        transform: rotate(45deg) translateX(-200%);
+    }
+    100% {
+        transform: rotate(45deg) translateX(200%);
+    }
 }
 
 /* --- Animations --- */
