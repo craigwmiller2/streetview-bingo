@@ -14,5 +14,11 @@
     },
     "sidebar_action": {
         "default_panel": "sidebar.html"
-    }
+    },
+    "web_accessible_resources": [
+        {
+            "resources": ["audio/*.mp3"],
+            "matches": ["<all_urls>"]
+        }
+    ]
 }

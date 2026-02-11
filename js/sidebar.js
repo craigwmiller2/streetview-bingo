@@ -26,6 +26,14 @@ const ITEMS = [
     "A Ladder",
 ];
 
+const soundTick = new Audio(browser.runtime.getURL("audio/tick.mp3"));
+const soundBingo = new Audio(browser.runtime.getURL("audio/bingo.mp3"));
+const soundDefeat = new Audio(browser.runtime.getURL("audio/defeat.mp3"));
+
+soundTick.load();
+soundBingo.load();
+soundDefeat.load();
+
 let gameData = [];
 let timerInterval = null;
 let timeLeft = 0;
@@ -165,9 +173,13 @@ function startTimer() {
         const offset = FULL_DASH_ARRAY - percentage * FULL_DASH_ARRAY;
         progressCircle.style.strokeDashoffset = offset;
 
-        // Pulse logic
-        if (timeLeft < 30 && timeLeft > 0) {
-            progressCircle.style.animation = "pulseTimer 0.5s infinite alternate";
+        // Audio & Pulse Logic
+        if (timeLeft <= 10 && timeLeft > 0) {
+            progressCircle.style.animation = "pulse 0.5s infinite alternate";
+
+            // Play tick sound
+            soundTick.currentTime = 0;
+            soundTick.play().catch((e) => console.log("Audio blocked: click sidebar first"));
         } else {
             progressCircle.style.animation = "none";
         }
@@ -183,6 +195,7 @@ function startTimer() {
             clearInterval(timerInterval);
             timeLeft = 0;
             updateUI(); // One final update to ensure color is pure red
+            soundDefeat.play();
             triggerEndGame("⏰ TIME'S UP!", "rgba(192, 57, 43, 0.9)");
         } else {
             updateUI();
@@ -196,6 +209,7 @@ function checkWinCondition() {
 
     if (foundCells === totalCells) {
         clearInterval(timerInterval);
+        soundBingo.play();
         triggerEndGame("🏆 BOARD CLEARED!", "rgba(46, 204, 113, 0.9)");
     }
 }
