@@ -1,7 +1,12 @@
 {
     "addons": {
         "streetview-bingo@orknet.co.uk": {
-            "updates": []
+            "updates": [
+                {
+                    "version": "1.0.0",
+                    "update_link": "https://github.com/craigwmiller2/streetview-bingo/releases/download/v1.0.0/streetview-bingo-1.0.0.xpi"
+                }
+            ]
         }
     }
 }

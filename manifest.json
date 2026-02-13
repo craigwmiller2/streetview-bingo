@@ -1,11 +1,14 @@
 {
     "manifest_version": 3,
     "name": "Street View Bingo",
-    "version": "0.0.9",
+    "version": "1.0.0",
     "browser_specific_settings": {
         "gecko": {
             "id": "streetview-bingo@orknet.co.uk",
-            "update_url": "https://craigwmiller2.github.io/streetview-bingo/updates.json"
+            "update_url": "https://craigwmiller2.github.io/streetview-bingo/updates.json",
+            "data_collection_permissions": {
+                "required": ["none"]
+            }
         }
     },
     "permissions": ["tabs", "storage", "activeTab"],
@@ -18,7 +21,7 @@
     },
     "web_accessible_resources": [
         {
-            "resources": ["audio/*.mp3"],
+            "resources": ["audio/*.mp3", "audio/*.ogg"],
             "matches": ["<all_urls>"]
         }
     ]
