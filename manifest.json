@@ -4,7 +4,8 @@
     "version": "0.0.9",
     "browser_specific_settings": {
         "gecko": {
-            "id": "sv-bingo@orknet.co.uk"
+            "id": "streetview-bingo@orknet.co.uk",
+            "update_url": "https://craigwmiller2.github.io/streetview-bingo/updates.json"
         }
     },
     "permissions": ["tabs", "storage", "activeTab"],
