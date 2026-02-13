@@ -27,10 +27,12 @@ const ITEMS = [
 ];
 
 async function loadStats() {
-    const data = await browser.storage.local.get("global_stats");
-    const stats = data.global_stats;
+    // 1. Fetch all data from storage
+    const storage = await browser.storage.local.get(["global_stats", "world_history"]);
+    const stats = storage.global_stats;
+    const worldHistory = storage.world_history || [];
 
-    // If no stats exist, show a friendly message and hide the grid
+    // If no stats exist, show a friendly message
     if (!stats || stats.totalAttempts === 0) {
         document.querySelector(".stats-grid").style.opacity = "0.3";
         const msg = document.createElement("p");
@@ -51,19 +53,14 @@ async function loadStats() {
         document.getElementById("fastest-win").textContent = `${mins}m ${secs.toString().padStart(2, "0")}s`;
     }
 
-    // --- 2. Item Frequency Bar Chart (Including Zeroes) ---
+    // --- 2. Item Frequency Bar Chart ---
     const itemCounts = stats.itemCounts || {};
-
-    // Map every item in the master list to its count (default to 0)
     const allItemEntries = ITEMS.map((name) => [name, itemCounts[name] || 0]);
-
-    // Sort by count descending
     allItemEntries.sort((a, b) => b[1] - a[1]);
 
     const list = document.getElementById("item-rank");
     list.innerHTML = "";
 
-    // Find highest count for bar scaling (ensure at least 1 to avoid division by zero)
     const maxCount = Math.max(...allItemEntries.map((e) => e[1]), 1);
 
     allItemEntries.forEach(([name, count]) => {
@@ -72,7 +69,7 @@ async function loadStats() {
 
         const row = document.createElement("div");
         row.className = "chart-row";
-        if (isZero) row.style.opacity = "0.6"; // Dim items never found
+        if (isZero) row.style.opacity = "0.4";
 
         row.innerHTML = `
             <div class="chart-label">${name}</div>
@@ -84,26 +81,54 @@ async function loadStats() {
         list.appendChild(row);
     });
 
-    // Update Most/Least Found Cards based on allItemEntries
     if (allItemEntries.length > 0) {
         document.getElementById("most-found").textContent = allItemEntries[0][0];
         document.getElementById("least-found").textContent = allItemEntries[allItemEntries.length - 1][0];
     }
 
-    // --- 3. Recent Activity Table ---
+    // --- 3. Global Reach (Country Stats) ---
+    const countryStatsContainer = document.getElementById("country-stats-container");
+    if (worldHistory.length > 0) {
+        countryStatsContainer.innerHTML = "";
+        const countryMap = {};
+
+        worldHistory.forEach((game) => {
+            const country = game.country || "Unknown";
+            if (!countryMap[country]) countryMap[country] = { bingos: 0, total: 0 };
+            countryMap[country].total++;
+            if (game.isBingo) countryMap[country].bingos++;
+        });
+
+        Object.entries(countryMap)
+            .sort((a, b) => b[1].total - a[1].total)
+            .forEach(([name, data]) => {
+                const winPct = (data.bingos / data.total) * 100;
+                const row = document.createElement("div");
+                row.className = "country-row";
+                row.innerHTML = `
+                    <div class="country-info">
+                        <span>${name}</span>
+                        <small>${data.total} games (${data.bingos} Wins)</small>
+                    </div>
+                    <div class="ratio-bar-container">
+                        <div class="ratio-bar-win" style="width: ${winPct}%"></div>
+                        <div class="ratio-bar-loss" style="width: ${100 - winPct}%"></div>
+                    </div>
+                `;
+                countryStatsContainer.appendChild(row);
+            });
+    }
+
+    // --- 4. Recent Activity Table ---
     const historyBody = document.getElementById("history-body");
     if (stats.history && stats.history.length > 0) {
         historyBody.innerHTML = "";
-
         stats.history.forEach((game) => {
             const row = document.createElement("tr");
-
-            // Format Duration (M:SS)
             const totalSeconds = Math.floor(game.duration / 1000);
             const mins = Math.floor(totalSeconds / 60);
             const secs = totalSeconds % 60;
             const timeStr = `${mins}m ${secs.toString().padStart(2, "0")}s`;
-
             const statusClass = game.status === "Completed" ? "status-completed" : "status-timeout";
 
             row.innerHTML = `
@@ -114,20 +139,15 @@ async function loadStats() {
             `;
             historyBody.appendChild(row);
         });
-    } else {
-        historyBody.innerHTML =
-            '<tr><td colspan="4" style="text-align:center; padding: 20px; color: #888;">No recent games recorded.</td></tr>';
     }
 }
 
-// Initial Load
-loadStats();
-
-// --- Reset Career Stats ---
+// Reset Handler
 document.getElementById("reset-stats-btn").addEventListener("click", async () => {
-    const confirmed = confirm("Are you sure you want to delete all career statistics? This cannot be undone.");
-    if (confirmed) {
-        await browser.storage.local.remove("global_stats");
+    if (confirm("Delete all career statistics and world history? This cannot be undone.")) {
+        await browser.storage.local.remove(["global_stats", "world_history", "achievements"]);
         window.location.reload();
     }
 });
+
+loadStats();

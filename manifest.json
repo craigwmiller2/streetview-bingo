@@ -1,10 +1,10 @@
 {
     "manifest_version": 3,
     "name": "Street View Bingo",
-    "version": "1.0.3",
+    "version": "0.0.9",
     "browser_specific_settings": {
         "gecko": {
-            "id": "sv-bingo@example.com"
+            "id": "sv-bingo@orknet.co.uk"
         }
     },
     "permissions": ["tabs", "storage", "activeTab"],

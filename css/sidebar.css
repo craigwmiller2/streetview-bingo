@@ -76,15 +76,7 @@ button:active {
     transform: scale(0.98);
 }
 
-#btn-10min {
-    background-color: var(--color-info);
-    color: var(--text-light);
-}
-#btn-infinite {
-    background-color: var(--color-info);
-    color: var(--text-light);
-}
-#view-stats-btn {
+.button {
     background-color: var(--color-info);
     color: var(--text-light);
 }

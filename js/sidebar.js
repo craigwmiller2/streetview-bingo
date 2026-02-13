@@ -219,7 +219,7 @@ function checkWinCondition() {
 /**
  * Universal Game End (Win or Time Out)
  */
-function triggerEndGame(title, bgColor) {
+async function triggerEndGame(title, bgColor) {
     const grid = document.getElementById("bingo-grid");
     // Prevent multiple overlays if both timer and bingo trigger at once
     if (document.getElementById("win-overlay")) return;
@@ -257,8 +257,9 @@ function triggerEndGame(title, bgColor) {
     grid.appendChild(overlay);
 
     // Save stats and setup map launch
-    updateGlobalStats(finalDuration);
-    checkAchievements(finalDuration);
+    await updateGlobalStats(finalDuration);
+    await processWorldData();
+    await checkAchievements(finalDuration);
 
     document.getElementById("final-map-launch-btn").addEventListener("click", async () => {
         await browser.storage.local.set({
@@ -311,6 +312,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    const viewWorldBtn = document.getElementById("view-world-btn");
+    if (viewWorldBtn) {
+        viewWorldBtn.addEventListener("click", () => {
+            browser.tabs.create({ url: browser.runtime.getURL("world.html") });
+        });
+    }
+
     // 2. Hook up the Reset Button
     const resetBtn = document.getElementById("reset-btn");
     if (resetBtn) {
@@ -355,10 +363,13 @@ async function updateGlobalStats(finalDuration) {
     }
 
     // 2. Create the summary for the history table
+    // Check if we are in Infinite mode (no timer) so we don't accidentally mark it as a Timeout
+    const isInfinite = document.getElementById("timer-container").style.display === "none";
+    const gameStatus = timeLeft <= 0 && !isBingo && !isInfinite ? "Timed Out" : "Completed";
+
     const gameSummary = {
         date: new Date().toLocaleDateString(),
-        // Logic: if timer ran out and board isn't full, it's a Timeout
-        status: timeLeft <= 0 && !isBingo ? "Timed Out" : "Completed",
+        status: gameStatus, // Use the new variable here
         itemsFound: gameData.length,
         duration: finalDuration,
     };
@@ -445,4 +456,58 @@ function showAchievementToast(unlockedObjects) {
             }, 4000);
         }, index * 400);
     });
+}
+
+async function processWorldData(finalDuration) {
+    if (gameData.length === 0) return;
+
+    // 1. Calculate Average Point
+    const totals = gameData.reduce(
+        (acc, f) => {
+            acc.lat += f.coords.lat;
+            acc.lng += f.coords.lng;
+            return acc;
+        },
+        { lat: 0, lng: 0 },
+    );
+
+    const avgLat = totals.lat / gameData.length;
+    const avgLng = totals.lng / gameData.length;
+
+    // 2. Reverse Geocode (Nominatim)
+    let locationName = "Unknown Location";
+    let countryName = "Unknown Country";
+
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${avgLat}&lon=${avgLng}&format=json&zoom=10`,
+            {
+                headers: { "User-Agent": "StreetViewBingo/1.0" },
+            },
+        );
+        const data = await response.json();
+        // Get City/Town/Village
+        locationName =
+            data.address.city || data.address.town || data.address.village || data.address.suburb || "Remote Area";
+        countryName = data.address.country || "Unknown Country";
+    } catch (e) {
+        console.error("Geocoding failed", e);
+    }
+
+    // 3. Save to world_history
+    const storage = await browser.storage.local.get("world_history");
+    const worldHistory = storage.world_history || [];
+
+    const newPoint = {
+        lat: avgLat,
+        lng: avgLng,
+        city: locationName,
+        country: countryName,
+        found: gameData.length,
+        isBingo: gameData.length === 25,
+        timestamp: Date.now(),
+    };
+
+    worldHistory.push(newPoint);
+    await browser.storage.local.set({ world_history: worldHistory });
 }
