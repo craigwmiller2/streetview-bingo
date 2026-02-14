@@ -15,6 +15,7 @@
 - **Interactive Marker Clustering:** Integrated `Leaflet.markercluster` to group nearby game locations, significantly improving map performance and visual clarity at high zoom levels.
 - **Spiderfy Interaction:** Implemented "Spiderfying" logic that automatically fans out overlapping markers when a cluster is clicked, allowing access to multiple games played at the same location.
 - **Offline Reliability:** Transitioned all map dependencies to a self-hosted model, ensuring the World Map and clustering logic function without external CDN dependencies.
+- **Quick Launch Button:** Added a "Open Google Maps" button to the main menu with smart-tab detection, allowing users to jump directly to the game environment or switch to an existing Maps tab.
 
 ### Changed
 

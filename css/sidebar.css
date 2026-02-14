@@ -128,6 +128,17 @@ button {
     background-color: var(--color-primary);
     color: var(--text-light);
 }
+.secondary-btn {
+    color: var(--text-light);
+    background-color: #4285f4 !important; /* Google Blue */
+    margin-top: 10px;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.secondary-btn:hover {
+    opacity: 1;
+}
 .btn-alt {
     background-color: #f8f9fa;
     color: var(--text-main);

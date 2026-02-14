@@ -434,17 +434,22 @@ async function openOrFocusTab(fileName) {
     }
 }
 
+// Helper function for opening external links
+async function openOrFocusExternal(targetUrl) {
+    // Check for any tab that contains "google.com/maps"
+    const tabs = await browser.tabs.query({ url: "*://*.google.com/maps*" });
+
+    if (tabs.length > 0) {
+        await browser.windows.update(tabs[0].windowId, { focused: true });
+        await browser.tabs.update(tabs[0].id, { active: true });
+    } else {
+        browser.tabs.create({ url: targetUrl });
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-10min").onclick = () => startGame("10min");
     document.getElementById("btn-infinite").onclick = () => startGame("infinite");
-
-    // document.getElementById("view-achievements-btn").onclick = () =>
-    //     browser.tabs.create({ url: browser.runtime.getURL("achievements.html") });
-    // document.getElementById("view-stats-btn").onclick = () =>
-    //     browser.tabs.create({ url: browser.runtime.getURL("stats.html") });
-    // document.getElementById("view-world-btn").onclick = () =>
-    //     browser.tabs.create({ url: browser.runtime.getURL("world.html") });
-
     document.getElementById("view-achievements-btn").onclick = () => openOrFocusTab("achievements.html");
     document.getElementById("view-stats-btn").onclick = () => openOrFocusTab("stats.html");
     document.getElementById("view-world-btn").onclick = () => openOrFocusTab("world.html");
@@ -462,4 +467,12 @@ document.addEventListener("DOMContentLoaded", () => {
             if (overlay) overlay.remove();
         }
     };
+
+    const launchMapsBtn = document.getElementById("launch-maps-btn");
+    if (launchMapsBtn) {
+        launchMapsBtn.onclick = () => {
+            // We use a simplified version of our helper for external URLs
+            openOrFocusExternal("https://www.google.com/maps");
+        };
+    }
 });
