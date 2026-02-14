@@ -27,4 +27,11 @@ const ACH_DATA = [
         icon: "👑",
         rarity: "rare",
     },
+    {
+        id: "world_traveler",
+        name: "World Traveler",
+        desc: "Play a game in 5 different countries",
+        icon: "✈️",
+        rarity: "epic",
+    },
 ];

@@ -39,7 +39,7 @@ soundAchievement.load();
 let gameData = [];
 let timerInterval = null;
 let timeLeft = 0;
-let initialTime = 600; // Default 10 mins
+let initialTime = 60; // Default 10 mins
 let gameStartTime = null;
 const FULL_DASH_ARRAY = 283; // 2 * PI * radius (45)
 
@@ -49,6 +49,7 @@ const FULL_DASH_ARRAY = 283; // 2 * PI * radius (45)
 window.startGame = function (mode) {
     gameStartTime = Date.now();
     document.getElementById("mode-menu").style.display = "none";
+    document.getElementById("main-header").style.display = "none"; // ADD THIS: Hide header
     document.getElementById("controls").style.display = "block";
     gameData = [];
     generateGrid();
@@ -330,6 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // UI Reset
                 document.getElementById("mode-menu").style.display = "block";
+                document.getElementById("main-header").style.display = "block"; // ADD THIS: Show header
                 document.getElementById("controls").style.display = "none";
                 document.getElementById("timer-container").style.display = "none";
                 document.getElementById("bingo-grid").innerHTML = "";

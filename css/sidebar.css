@@ -3,22 +3,26 @@
     --bg-main: #f0f0f0;
     --bg-card: #ffffff;
     --text-main: #2c3e50;
+    --text-muted: #7f8c8d;
     --text-light: #ffffff;
     --text-dark: #000000;
 
     /* Primary Action Colors */
-    --color-success: #2ecc71; /* Green for Found/Win */
-    --color-danger: #e74c3c; /* Red for Timer/Timeout */
-    --color-warning: #e67e22; /* Orange for Reset */
-    --color-info: #34495e; /* Dark Grey for Stats */
-    --color-loading: #ffeaa7; /* Yellow for Capturing */
-    --color-achievement: #ffd700; /* Gold for Achievements */
+    --color-primary: #3498db;
+    --color-success: #2ecc71;
+    --color-danger: #e74c3c;
+    --color-warning: #e67e22;
+    --color-info: #34495e;
+    --color-loading: #ffeaa7;
+    --color-achievement: #ffd700;
 
     /* UI Elements */
     --border-color: #cccccc;
     --radius-standard: 8px;
+    --radius-large: 12px;
     --radius-round: 20px;
     --grid-gap: 4px;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
 
     /* Transitions */
     --transition-speed: 0.2s;
@@ -26,8 +30,8 @@
 
 /* --- General Layout --- */
 body {
-    padding: 10px;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    padding: 12px;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg-main);
     color: var(--text-main);
     margin: 0;
@@ -37,49 +41,99 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    padding-top: 5px;
 }
 
-/* --- Menu & Buttons --- */
-#mode-menu {
+/* --- Menu Header --- */
+.menu-header {
     text-align: center;
     padding: 20px 0;
+    transition: opacity 0.3s ease;
 }
 
+.menu-header .logo {
+    font-size: 42px;
+    line-height: 1;
+}
+
+.menu-header h1 {
+    font-size: 1.4rem;
+    margin: 8px 0 2px;
+    color: var(--text-main);
+}
+
+.tagline {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* --- Menu Groups --- */
+.menu-group {
+    background: var(--bg-card);
+    border-radius: var(--radius-large);
+    padding: 12px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.group-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    margin: 0 0 10px 4px;
+}
+
+/* --- Buttons --- */
 button {
-    width: 90%;
-    margin: 8px auto;
+    width: 100%;
+    margin: 6px 0;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    padding: 12px;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
     border-radius: var(--radius-standard);
     border: none;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     transition:
         filter var(--transition-speed),
         transform 0.1s;
-
-    svg {
-        width: 20px;
-        height: 20px;
-    }
 }
 
-button:hover {
-    filter: brightness(1.1);
+/* Icon Container */
+.icon-wrap {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
-button:active {
-    transform: scale(0.98);
+.icon-wrap svg {
+    width: 22px;
+    height: 22px;
 }
 
+/* Button Variants */
 .button {
     background-color: var(--color-info);
     color: var(--text-light);
 }
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--text-light);
+}
+.btn-alt {
+    background-color: #f8f9fa;
+    color: var(--text-main);
+    border: 1px solid #eee;
+}
+
 #view-achievements-btn {
     background-color: var(--color-achievement);
     color: var(--text-dark);
@@ -87,6 +141,27 @@ button:active {
 #reset-btn {
     background-color: var(--color-warning);
     color: var(--text-light);
+}
+
+/* Secondary Actions Grid (Stats & Map) */
+.secondary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 2px;
+}
+
+.secondary-grid .button {
+    margin: 0;
+    justify-content: center;
+    font-size: 0.85rem;
+}
+
+button:hover {
+    filter: brightness(1.05);
+}
+button:active {
+    transform: scale(0.98);
 }
 
 /* --- Timer --- */
@@ -111,7 +186,6 @@ button:active {
     fill: none;
     stroke-width: 8;
     stroke-linecap: round;
-    /* Ensure the color change is as smooth as the movement */
     transition:
         stroke-dashoffset 1s linear,
         stroke 1s linear;
@@ -156,7 +230,7 @@ button:active {
 }
 
 .cell span {
-    pointer-events: none; /* Allows click through text to cell */
+    pointer-events: none;
 }
 
 .cell:hover {
@@ -166,6 +240,7 @@ button:active {
 }
 
 .cell.found {
+    position: relative;
     color: var(--text-light);
     font-weight: bold;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
@@ -178,21 +253,17 @@ button:active {
     cursor: wait;
 }
 
-/* Container for the undo button on the cell */
-.cell.found {
-    position: relative;
-}
-
+/* Undo Button on Cell */
 .undo-btn {
     position: absolute;
     top: 2px;
     right: 2px;
-    width: 20px !important; /* Override global button width */
+    width: 20px !important;
     height: 20px !important;
     padding: 0 !important;
     margin: 0 !important;
     font-size: 12px;
-    background: rgba(231, 76, 60, 0.8); /* Transparent red */
+    background: rgba(231, 76, 60, 0.8);
     color: white;
     border-radius: 50%;
     display: flex;
@@ -219,7 +290,7 @@ button:active {
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--color-success); /* Defaults to green; JS can override */
+    background: var(--color-success);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -247,16 +318,16 @@ button:active {
     border-radius: var(--radius-round);
 }
 
-/* The invisible box that holds all toasts */
+/* --- Achievement Toasts --- */
 #achievement-container {
     position: fixed;
     bottom: 20px;
     left: 20px;
     right: 20px;
     display: flex;
-    flex-direction: column-reverse; /* Newest toast at the bottom */
+    flex-direction: column-reverse;
     gap: 10px;
-    pointer-events: none; /* Let clicks pass through empty space */
+    pointer-events: none;
     z-index: 1000;
 }
 
@@ -267,10 +338,8 @@ button:active {
     padding: 12px 15px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    pointer-events: auto; /* Re-enable clicks for the toast itself */
+    pointer-events: auto;
     max-width: 400px;
-
-    /* Animation: Slide in from the side/bottom */
     transform: translateY(100px);
     opacity: 0;
     transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -282,8 +351,6 @@ button:active {
 }
 
 .ach-icon {
-    --inset-color: orange;
-    --shadow-color: gold;
     font-size: 1.5rem;
     border-radius: 100vw;
     width: 40px;
@@ -292,36 +359,20 @@ button:active {
     border: 1px solid white;
     display: grid;
     place-items: center;
-    box-shadow:
-        0 2px 4px var(--shadow-color),
-        inset 0 2px 4px var(--shadow-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .achievement-toast.common {
     background: #2ecc71;
     border-color: #27ae60;
-
-    .ach-icon {
-        --shadow-color: #27ae60;
-    }
 }
-
 .achievement-toast.rare {
     background: #3498db;
     border-color: #2980b9;
-
-    .ach-icon {
-        --shadow-color: #2980b9;
-    }
 }
-
 .achievement-toast.epic {
     background: #9b59b6;
     border-color: #8e44ad;
-
-    .ach-icon {
-        --shadow-color: #8e44ad;
-    }
 }
 
 .achievement-toast.legendary {
@@ -346,15 +397,6 @@ button:active {
     animation: glint 1.5s forwards;
 }
 
-@keyframes glint {
-    0% {
-        transform: rotate(45deg) translateX(-200%);
-    }
-    100% {
-        transform: rotate(45deg) translateX(200%);
-    }
-}
-
 /* --- Animations --- */
 @keyframes fadeIn {
     from {
@@ -374,6 +416,15 @@ button:active {
     }
     50% {
         opacity: 0.6;
+    }
+}
+
+@keyframes glint {
+    0% {
+        transform: rotate(45deg) translateX(-200%);
+    }
+    100% {
+        transform: rotate(45deg) translateX(200%);
     }
 }
 
