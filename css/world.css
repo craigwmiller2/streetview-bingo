@@ -1,0 +1,85 @@
+:root {
+    --primary-color: #4285f4; /* Google Blue */
+    --success-color: #2ecc71; /* Bingo Green */
+    --danger-color: #e74c3c; /* Timeout Red */
+    --bg-color: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-main: #2c3e50;
+    --text-muted: #7f8c8d;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --border-radius: 12px;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+/* Map Container Styling */
+#world-map {
+    height: 75vh;
+    width: 100%;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* --- Leaflet Marker & Cluster Overrides --- */
+
+/* The individual Bingo Dots */
+.custom-bingo-dot div {
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.custom-bingo-dot:hover div {
+    transform: scale(1.4);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+/* Cluster Bubbles - Styled to match Bingo Green */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+    background-color: rgba(46, 204, 113, 0.4) !important;
+}
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+    background-color: var(--success-color) !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+/* Popup Customization */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    padding: 5px;
+}
+
+.leaflet-popup-tip {
+    background: white;
+}

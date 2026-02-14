@@ -12,6 +12,16 @@
 - **Unified Smart Navigation:** All external pages (Stats, Achievements, World Map, and Findings Map) now use an "Open-or-Focus" logic to prevent duplicate tabs and ensure data is always refreshed upon viewing.
 - **Shareable Locations:** World Map markers now feature "Open in Street View" and "Copy Share Link" options, allowing you to challenge friends to the same locations.
 - **English Localisation:** Forced the geocoding engine to return place names in English regardless of the game's original territory.
+- **Interactive Marker Clustering:** Integrated `Leaflet.markercluster` to group nearby game locations, significantly improving map performance and visual clarity at high zoom levels.
+- **Spiderfy Interaction:** Implemented "Spiderfying" logic that automatically fans out overlapping markers when a cluster is clicked, allowing access to multiple games played at the same location.
+- **Offline Reliability:** Transitioned all map dependencies to a self-hosted model, ensuring the World Map and clustering logic function without external CDN dependencies.
+
+### Changed
+
+- **Marker Redesign:** Replaced standard circle markers with high-contrast, CSS-driven "Bingo Dots" featuring depth shadows for better visibility against various map terrains.
+- **Modular Styles:** Decoupled World Map styling into a dedicated `world.css` file.
+- **UI Harmonization:** Implemented CSS variables to sync colors, shadows, and typography with the main extension interface.
+- **Themed Clustering:** Custom-styled the `MarkerCluster` bubbles to utilize the Bingo brand palette (Success Green) instead of default Leaflet colors.
 
 ### Fixed
 
@@ -22,6 +32,7 @@
 - Prevented "tab bloat" by implementing a focus-and-reload pattern for all internal extension pages.
 - Improved readability of Map popups with a cleaner, centered layout and clearer typography.
 - **Fixed:** Resolved Content Security Policy (CSP) errors on the World Map that prevented "Copy Link" buttons from functioning.
+- **Duplicate Marker Overlay:** Resolved an issue where multiple games in the same neighborhood were visually hidden behind a single marker.
 
 ---
 
