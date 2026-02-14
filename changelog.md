@@ -9,6 +9,7 @@
 - **Dynamic Header:** Implementation of an auto-hiding header that collapses during gameplay to maximize vertical space for the Bingo grid.
 - **Personal Best System:** The extension now tracks your fastest Bingo completion time and triggers a specialized notification when a record is broken.
 - **Record Broken Notification:** Added a dedicated toast notification for Personal Bests, featuring a unique "Record Broken!" header and legendary "glint" animation to distinguish it from regular achievements.
+- **Unified Smart Navigation:** All external pages (Stats, Achievements, World Map, and Findings Map) now use an "Open-or-Focus" logic to prevent duplicate tabs and ensure data is always refreshed upon viewing.
 
 ### Fixed
 
@@ -16,6 +17,7 @@
 - Refined achievement logic to ensure "World Traveler" correctly identifies unique countries via the game's location history.
 - **Fixed:** Resolved a timing discrepancy where recorded game duration could differ from the visible countdown clock by up to one second.
 - **Notification Logic:** Refactored the achievement system to handle both permanent unlocks and recurring personal records through a centralized toast component.
+- Prevented "tab bloat" by implementing a focus-and-reload pattern for all internal extension pages.
 
 ---
 

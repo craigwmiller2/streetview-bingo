@@ -244,7 +244,7 @@ async function triggerEndGame(title, bgColor) {
             start_time: gameStartTime,
             end_time: absoluteEndTime,
         });
-        browser.tabs.create({ url: browser.runtime.getURL("map.html") });
+        await openOrFocusTab("map.html");
     });
 }
 
@@ -412,15 +412,40 @@ async function processWorldData() {
     await browser.storage.local.set({ world_history: worldHistory });
 }
 
+// Helper to switch to an existing tab or open a new one
+async function openOrFocusTab(fileName) {
+    const url = browser.runtime.getURL(fileName);
+
+    // 1. Check if the tab is already open anywhere
+    const tabs = await browser.tabs.query({ url: url });
+
+    if (tabs.length > 0) {
+        // 2. If it exists, focus the window and the tab
+        await browser.windows.update(tabs[0].windowId, { focused: true });
+        await browser.tabs.update(tabs[0].id, { active: true });
+
+        // 3. Optional: Refresh the tab to show new game data
+        await browser.tabs.reload(tabs[0].id);
+    } else {
+        // 4. If it doesn't exist, open it fresh
+        browser.tabs.create({ url: url });
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-10min").onclick = () => startGame("10min");
     document.getElementById("btn-infinite").onclick = () => startGame("infinite");
-    document.getElementById("view-achievements-btn").onclick = () =>
-        browser.tabs.create({ url: browser.runtime.getURL("achievements.html") });
-    document.getElementById("view-stats-btn").onclick = () =>
-        browser.tabs.create({ url: browser.runtime.getURL("stats.html") });
-    document.getElementById("view-world-btn").onclick = () =>
-        browser.tabs.create({ url: browser.runtime.getURL("world.html") });
+
+    // document.getElementById("view-achievements-btn").onclick = () =>
+    //     browser.tabs.create({ url: browser.runtime.getURL("achievements.html") });
+    // document.getElementById("view-stats-btn").onclick = () =>
+    //     browser.tabs.create({ url: browser.runtime.getURL("stats.html") });
+    // document.getElementById("view-world-btn").onclick = () =>
+    //     browser.tabs.create({ url: browser.runtime.getURL("world.html") });
+
+    document.getElementById("view-achievements-btn").onclick = () => openOrFocusTab("achievements.html");
+    document.getElementById("view-stats-btn").onclick = () => openOrFocusTab("stats.html");
+    document.getElementById("view-world-btn").onclick = () => openOrFocusTab("world.html");
 
     document.getElementById("reset-btn").onclick = async () => {
         if (confirm("Reset game?")) {
