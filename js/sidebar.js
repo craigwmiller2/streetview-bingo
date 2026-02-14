@@ -39,17 +39,17 @@ soundAchievement.load();
 let gameData = [];
 let timerInterval = null;
 let timeLeft = 0;
-let initialTime = 60; // Default 10 mins
+let initialTime = 600; // 10 mins
 let gameStartTime = null;
-const FULL_DASH_ARRAY = 283; // 2 * PI * radius (45)
+const FULL_DASH_ARRAY = 283;
 
 /**
- * Game State Controller: Triggered by Menu Buttons
+ * Game State Controller
  */
 window.startGame = function (mode) {
     gameStartTime = Date.now();
     document.getElementById("mode-menu").style.display = "none";
-    document.getElementById("main-header").style.display = "none"; // ADD THIS: Hide header
+    document.getElementById("main-header").style.display = "none";
     document.getElementById("controls").style.display = "block";
     gameData = [];
     generateGrid();
@@ -63,13 +63,9 @@ window.startGame = function (mode) {
     }
 };
 
-/**
- * Initializes the 5x5 Bingo Grid
- */
 function generateGrid() {
     const grid = document.getElementById("bingo-grid");
     grid.innerHTML = "";
-
     ITEMS.forEach((item) => {
         const cell = document.createElement("div");
         cell.className = "cell";
@@ -79,9 +75,6 @@ function generateGrid() {
     });
 }
 
-/**
- * Handles the capture process
- */
 async function handleCapture(itemName, cellElement) {
     if (cellElement.classList.contains("found") || cellElement.classList.contains("capturing")) return;
 
@@ -91,7 +84,6 @@ async function handleCapture(itemName, cellElement) {
 
     try {
         const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-
         if (!tab || (!tab.url.includes("google") && !tab.url.includes("maps"))) {
             throw new Error("WrongTab");
         }
@@ -109,19 +101,14 @@ async function handleCapture(itemName, cellElement) {
         };
 
         gameData.push(find);
-
         cellElement.classList.remove("capturing");
         cellElement.classList.add("found");
         cellElement.style.backgroundImage = `url(${screenshot})`;
-
-        // 1. Set the text first
         cellElement.innerHTML = `<span>${itemName}</span>`;
 
-        // 2. NOW add the undo button so it stays on top
         const undoBtn = document.createElement("button");
         undoBtn.className = "undo-btn";
         undoBtn.innerHTML = "✕";
-        undoBtn.title = "Undo capture";
         undoBtn.onclick = (e) => {
             e.stopPropagation();
             handleUndo(itemName, cellElement);
@@ -138,66 +125,45 @@ async function handleCapture(itemName, cellElement) {
 
 function handleUndo(itemName, cellElement) {
     const index = gameData.map((f) => f.item).lastIndexOf(itemName);
-    if (index > -1) {
-        gameData.splice(index, 1);
-    }
+    if (index > -1) gameData.splice(index, 1);
 
     cellElement.classList.remove("found");
     cellElement.style.backgroundImage = "none";
-    cellElement.innerHTML = `<span>${itemName}</span>`; // Restore the original text
-
-    // Re-assign the click listener
+    cellElement.innerHTML = `<span>${itemName}</span>`;
     cellElement.onclick = () => handleCapture(itemName, cellElement);
 }
 
-/**
- * Circular Countdown Logic
- */
 function startTimer() {
     const progressCircle = document.querySelector(".timer-progress");
     const textDisplay = document.getElementById("timer-text");
-
     progressCircle.style.strokeDasharray = `${FULL_DASH_ARRAY} ${FULL_DASH_ARRAY}`;
 
-    // Helper to update the UI so we can call it immediately AND in the interval
     const updateUI = () => {
         const percentage = Math.max(0, timeLeft / initialTime);
-
-        // Update Color
         const hue = percentage * 210;
         progressCircle.style.stroke = `hsl(${hue}, 80%, 50%)`;
-
-        // Update Text
         const mins = Math.floor(timeLeft / 60);
         const secs = timeLeft % 60;
         textDisplay.textContent = `${mins}:${secs.toString().padStart(2, "0")}`;
-
-        // Update Circle
         const offset = FULL_DASH_ARRAY - percentage * FULL_DASH_ARRAY;
         progressCircle.style.strokeDashoffset = offset;
 
-        // Audio & Pulse Logic
         if (timeLeft <= 10 && timeLeft > 0) {
             progressCircle.style.animation = "pulse 0.5s infinite alternate";
-
-            // Play tick sound
             soundTick.currentTime = 0;
-            soundTick.play().catch((e) => console.log("Audio blocked: click sidebar first"));
+            soundTick.play().catch(() => {});
         } else {
             progressCircle.style.animation = "none";
         }
     };
 
-    // Run once immediately so it doesn't "jump" after 1 second
     updateUI();
-
     timerInterval = setInterval(() => {
         timeLeft--;
-
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             timeLeft = 0;
-            updateUI(); // One final update to ensure color is pure red
+            updateUI();
             soundDefeat.play();
             triggerEndGame("⏰ TIME'S UP!", "rgba(192, 57, 43, 0.9)");
         } else {
@@ -207,10 +173,7 @@ function startTimer() {
 }
 
 function checkWinCondition() {
-    const totalCells = 25;
-    const foundCells = document.querySelectorAll(".cell.found").length;
-
-    if (foundCells === totalCells) {
+    if (document.querySelectorAll(".cell.found").length === 25) {
         clearInterval(timerInterval);
         soundBingo.play();
         triggerEndGame("🏆 BOARD CLEARED!", "rgba(46, 204, 113, 0.9)");
@@ -218,37 +181,26 @@ function checkWinCondition() {
 }
 
 /**
- * Universal Game End (Win or Time Out)
+ * Universal Game End
  */
 async function triggerEndGame(title, bgColor) {
     const grid = document.getElementById("bingo-grid");
-    // Prevent multiple overlays if both timer and bingo trigger at once
     if (document.getElementById("win-overlay")) return;
 
-    // 1. Immediately stop the timer to freeze 'timeLeft'
     clearInterval(timerInterval);
 
     let finalDuration;
     const isInfinite = document.getElementById("timer-container").style.display === "none";
 
-    // 2. Calculate duration based on mode
     if (isInfinite) {
-        // High-precision timing for Infinite mode
         finalDuration = Date.now() - gameStartTime;
     } else if (timeLeft <= 0) {
-        // Force exactly the initial time if they ran out of time
         finalDuration = initialTime * 1000;
     } else {
-        // SYNC FIX: Calculate based on visible clock seconds
-        // (Initial Seconds - Remaining Seconds) * 1000
-        const secondsElapsed = initialTime - timeLeft;
-        finalDuration = secondsElapsed * 1000;
+        finalDuration = (initialTime - timeLeft) * 1000;
     }
 
-    // Capture the specific endTime we will use for storage
     const absoluteEndTime = gameStartTime + finalDuration;
-
-    // UI Cleanup
     document.querySelectorAll(".cell").forEach((c) => (c.onclick = null));
 
     const overlay = document.createElement("div");
@@ -265,10 +217,26 @@ async function triggerEndGame(title, bgColor) {
     grid.style.position = "relative";
     grid.appendChild(overlay);
 
-    // Save stats and setup map launch
-    await updateGlobalStats(finalDuration);
+    // 1. Update stats and catch Personal Best flag
+    const { isNewRecord, updatedStats } = await updateGlobalStats(finalDuration);
+
+    if (isNewRecord) {
+        showAchievementToast([
+            {
+                id: "personal_best",
+                name: "New Personal Best!",
+                icon: "⏱️",
+                rarity: "legendary",
+            },
+        ]);
+        soundAchievement.play();
+    }
+
+    // 2. Process geocoding
     await processWorldData();
-    await checkAchievements(finalDuration);
+
+    // 3. Check achievements using the FRESHLY updated stats
+    await checkAchievements(finalDuration, updatedStats);
 
     document.getElementById("final-map-launch-btn").addEventListener("click", async () => {
         await browser.storage.local.set({
@@ -285,140 +253,71 @@ function parseCoords(url) {
     return match ? { lat: parseFloat(match[1]), lng: parseFloat(match[2]) } : null;
 }
 
-/**
- * Reset / Return to Menu
- */
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. Hook up the Menu Buttons
-    const btn10min = document.getElementById("btn-10min");
-    const btnInfinite = document.getElementById("btn-infinite");
-
-    if (btn10min) {
-        btn10min.addEventListener("click", () => {
-            console.log("Starting 10-minute mode...");
-            startGame("10min");
-        });
-    }
-
-    if (btnInfinite) {
-        btnInfinite.addEventListener("click", () => {
-            console.log("Starting Infinite mode...");
-            startGame("infinite");
-        });
-    }
-
-    const viewAchievementsBtn = document.getElementById("view-achievements-btn");
-    if (viewAchievementsBtn) {
-        viewAchievementsBtn.addEventListener("click", () => {
-            browser.tabs.create({ url: browser.runtime.getURL("achievements.html") });
-        });
-    }
-
-    const viewStatsBtn = document.getElementById("view-stats-btn");
-    if (viewStatsBtn) {
-        viewStatsBtn.addEventListener("click", () => {
-            browser.tabs.create({ url: browser.runtime.getURL("stats.html") });
-        });
-    }
-
-    const viewWorldBtn = document.getElementById("view-world-btn");
-    if (viewWorldBtn) {
-        viewWorldBtn.addEventListener("click", () => {
-            browser.tabs.create({ url: browser.runtime.getURL("world.html") });
-        });
-    }
-
-    // 2. Hook up the Reset Button
-    const resetBtn = document.getElementById("reset-btn");
-    if (resetBtn) {
-        resetBtn.addEventListener("click", async () => {
-            if (confirm("Reset game?")) {
-                clearInterval(timerInterval);
-                gameData = [];
-                await browser.storage.local.remove("current_game");
-
-                // UI Reset
-                document.getElementById("mode-menu").style.display = "block";
-                document.getElementById("main-header").style.display = "block"; // ADD THIS: Show header
-                document.getElementById("controls").style.display = "none";
-                document.getElementById("timer-container").style.display = "none";
-                document.getElementById("bingo-grid").innerHTML = "";
-                const overlay = document.getElementById("win-overlay");
-                if (overlay) overlay.remove();
-            }
-        });
-    }
-});
-
 async function updateGlobalStats(finalDuration) {
-    const stats = await browser.storage.local.get("global_stats");
-
-    // 1. Ensure history exists in the initial state
-    let global = stats.global_stats || {
+    const data = await browser.storage.local.get("global_stats");
+    let global = data.global_stats || {
         totalAttempts: 0,
         totalBingos: 0,
         itemCounts: {},
         fastestFullBoard: null,
-        history: [], // Added this
+        history: [],
     };
 
     global.totalAttempts += 1;
     const isBingo = gameData.length === 25;
+    let isNewRecord = false;
 
     if (isBingo) {
         global.totalBingos += 1;
         if (!global.fastestFullBoard || finalDuration < global.fastestFullBoard) {
             global.fastestFullBoard = finalDuration;
+            isNewRecord = true;
         }
     }
 
-    // 2. Create the summary for the history table
-    // Check if we are in Infinite mode (no timer) so we don't accidentally mark it as a Timeout
     const isInfinite = document.getElementById("timer-container").style.display === "none";
     const gameStatus = timeLeft <= 0 && !isBingo && !isInfinite ? "Timed Out" : "Completed";
 
     const gameSummary = {
         date: new Date().toLocaleDateString(),
-        status: gameStatus, // Use the new variable here
+        status: gameStatus,
         itemsFound: gameData.length,
         duration: finalDuration,
     };
 
-    // 3. Keep only the 5 most recent games
-    if (!global.history) global.history = []; // Safety check
+    if (!global.history) global.history = [];
     global.history.unshift(gameSummary);
-    if (global.history.length > 5) {
-        global.history.pop();
-    }
+    if (global.history.length > 5) global.history.pop();
 
-    // Existing item frequency tracking
     gameData.forEach((find) => {
         global.itemCounts[find.item] = (global.itemCounts[find.item] || 0) + 1;
     });
 
     await browser.storage.local.set({ global_stats: global });
+    return { isNewRecord, updatedStats: global };
 }
 
-async function checkAchievements(finalDuration) {
-    const data = await browser.storage.local.get(["global_stats", "achievements"]);
-    const stats = data.global_stats || { itemCounts: {} };
+async function checkAchievements(finalDuration, stats) {
+    const data = await browser.storage.local.get(["achievements", "world_history"]);
+    const history = data.world_history || [];
     let earned = data.achievements || [];
     let newUnlocks = [];
 
     const isBingo = gameData.length === 25;
+    const uniqueCountries = new Set(history.map((game) => game.country)).size;
 
-    // Map your logic directly to the centralized IDs
     const logicMap = {
         first_bingo: isBingo,
         speed_demon: isBingo && finalDuration < 300000,
         gardener: (stats.itemCounts["Lawnmower"] || 0) >= 5,
         master_hunter: ITEMS.every((item) => (stats.itemCounts[item] || 0) >= 5),
+        world_traveler: uniqueCountries >= 5,
     };
 
     ACH_DATA.forEach((ach) => {
         if (logicMap[ach.id] && !earned.includes(ach.id)) {
             earned.push(ach.id);
-            newUnlocks.push(ach); // Push the WHOLE object, not just the name
+            newUnlocks.push(ach);
         }
     });
 
@@ -440,15 +339,17 @@ function showAchievementToast(unlockedObjects) {
     unlockedObjects.forEach((ach, index) => {
         setTimeout(() => {
             const toast = document.createElement("div");
-            // Dynamically add 'green' or 'gold' based on ACH_DATA
             toast.className = `achievement-toast ${ach.rarity}`;
+
+            // Check if it's a Personal Best to change the header text
+            const headerText = ach.id === "personal_best" ? "Record Broken!" : "Achievement Unlocked!";
 
             toast.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span class="ach-icon">${ach.icon}</span>
                     <div>
                         <strong style="font-size: 0.8rem; text-transform: uppercase; opacity: 0.8;">
-                            Achievement Unlocked!
+                            ${headerText}
                         </strong>
                         <p style="margin: 2px 0 0 0; font-size: 1.1rem; font-weight: bold;">
                             ${ach.name}
@@ -468,10 +369,8 @@ function showAchievementToast(unlockedObjects) {
     });
 }
 
-async function processWorldData(finalDuration) {
+async function processWorldData() {
     if (gameData.length === 0) return;
-
-    // 1. Calculate Average Point
     const totals = gameData.reduce(
         (acc, f) => {
             acc.lat += f.coords.lat;
@@ -484,31 +383,24 @@ async function processWorldData(finalDuration) {
     const avgLat = totals.lat / gameData.length;
     const avgLng = totals.lng / gameData.length;
 
-    // 2. Reverse Geocode (Nominatim)
     let locationName = "Unknown Location";
     let countryName = "Unknown Country";
 
     try {
         const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${avgLat}&lon=${avgLng}&format=json&zoom=10`,
-            {
-                headers: { "User-Agent": "StreetViewBingo/1.0" },
-            },
+            { headers: { "User-Agent": "StreetViewBingo/1.0" } },
         );
         const data = await response.json();
-        // Get City/Town/Village
-        locationName =
-            data.address.city || data.address.town || data.address.village || data.address.suburb || "Remote Area";
+        locationName = data.address.city || data.address.town || data.address.village || "Remote Area";
         countryName = data.address.country || "Unknown Country";
     } catch (e) {
         console.error("Geocoding failed", e);
     }
 
-    // 3. Save to world_history
     const storage = await browser.storage.local.get("world_history");
     const worldHistory = storage.world_history || [];
-
-    const newPoint = {
+    worldHistory.push({
         lat: avgLat,
         lng: avgLng,
         city: locationName,
@@ -516,8 +408,31 @@ async function processWorldData(finalDuration) {
         found: gameData.length,
         isBingo: gameData.length === 25,
         timestamp: Date.now(),
-    };
-
-    worldHistory.push(newPoint);
+    });
     await browser.storage.local.set({ world_history: worldHistory });
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("btn-10min").onclick = () => startGame("10min");
+    document.getElementById("btn-infinite").onclick = () => startGame("infinite");
+    document.getElementById("view-achievements-btn").onclick = () =>
+        browser.tabs.create({ url: browser.runtime.getURL("achievements.html") });
+    document.getElementById("view-stats-btn").onclick = () =>
+        browser.tabs.create({ url: browser.runtime.getURL("stats.html") });
+    document.getElementById("view-world-btn").onclick = () =>
+        browser.tabs.create({ url: browser.runtime.getURL("world.html") });
+
+    document.getElementById("reset-btn").onclick = async () => {
+        if (confirm("Reset game?")) {
+            clearInterval(timerInterval);
+            gameData = [];
+            document.getElementById("mode-menu").style.display = "block";
+            document.getElementById("main-header").style.display = "block";
+            document.getElementById("controls").style.display = "none";
+            document.getElementById("timer-container").style.display = "none";
+            document.getElementById("bingo-grid").innerHTML = "";
+            const overlay = document.getElementById("win-overlay");
+            if (overlay) overlay.remove();
+        }
+    };
+});
