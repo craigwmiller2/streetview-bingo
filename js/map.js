@@ -95,7 +95,7 @@ async function initMap() {
         const canvas = await html2canvas(document.getElementById("share-container"), {
             useCORS: true,
             allowTaint: false,
-            scale: 1.5,
+            scale: 1.1,
         });
 
         const link = document.createElement("a");
@@ -105,6 +105,40 @@ async function initMap() {
 
         btn.textContent = "Download Shareable Summary (JPG)";
     };
+
+    // 5. Copy to Clipboard Functionality
+    document.getElementById("copy-share-btn").onclick = async () => {
+        const btn = document.getElementById("copy-share-btn");
+        const originalText = btn.textContent;
+        btn.textContent = "Generating Image...";
+
+        // disable button temporarily to prevent multiple clicks
+        btn.disabled = true;
+
+        try {
+            // Generate the canvas from the share-container
+            const canvas = await html2canvas(document.getElementById("share-container"), {
+                useCORS: true,
+                allowTaint: false,
+                scale: 1.0,
+            });
+
+            // Convert canvas to PNG DataURL (ClipboardItem prefers PNG)
+            const dataUrl = canvas.toDataURL("image/png");
+
+            // Use your existing copy function
+            await copyImageToClipboard(dataUrl, btn, originalText);
+        } catch (err) {
+            console.error("Error copying summary:", err);
+            btn.textContent = "Error copying image";
+        } finally {
+            // Logic for reverting text is handled inside copyImageToClipboard,
+            // but we reset here in case the try block fails before calling it.
+            if (btn.textContent === "Generating Image...") {
+                btn.textContent = "📋 Copy Summary Image to Clipboard";
+            }
+        }
+    };
 }
 
 // Lightbox Close
@@ -113,3 +147,36 @@ document.getElementById("lightbox").onclick = () => {
 };
 
 document.addEventListener("DOMContentLoaded", initMap);
+
+/**
+ * CSP-safe Copy to Clipboard
+ * Converts a Base64/DataURL screenshot to a PNG Blob and copies it.
+ */
+async function copyImageToClipboard(dataUrl, btn, originalText) {
+    try {
+        // 1. Fetch the dataURL and convert to a Blob
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+
+        // 2. Create a ClipboardItem (Chrome/Firefox/Edge standard)
+        const item = new ClipboardItem({ "image/png": blob });
+
+        // 3. Write to clipboard
+        await navigator.clipboard.write([item]);
+
+        // UI Feedback
+        btn.innerHTML = "Copied! ✓";
+        btn.style.backgroundColor = "#2ecc71";
+
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.backgroundColor = ""; // Reverts to CSS default
+
+            // Re-enable the button after the operation is complete
+            btn.disabled = false;
+        }, 2000);
+    } catch (err) {
+        console.error("Failed to copy image:", err);
+        alert("Clipboard copy failed. Your browser might require a secure context (HTTPS/Extension).");
+    }
+}

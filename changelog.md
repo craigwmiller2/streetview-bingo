@@ -16,6 +16,8 @@
 - **Spiderfy Interaction:** Implemented "Spiderfying" logic that automatically fans out overlapping markers when a cluster is clicked, allowing access to multiple games played at the same location.
 - **Offline Reliability:** Transitioned all map dependencies to a self-hosted model, ensuring the World Map and clustering logic function without external CDN dependencies.
 - **Quick Launch Button:** Added a "Open Google Maps" button to the main menu with smart-tab detection, allowing users to jump directly to the game environment or switch to an existing Maps tab.
+- **Full Summary Clipboard Support:** Added a "Copy Summary" button to the Findings Map, allowing users to copy the entire journey (map + stats + grid) as a single image for instant sharing.
+- **Full Summary Clipboard Support:** Added a "Copy Summary" button to the Findings Map, allowing users to copy the entire journey (map + stats + grid) as a single image for instant sharing.
 
 ### Changed
 
