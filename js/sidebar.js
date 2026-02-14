@@ -388,8 +388,10 @@ async function processWorldData() {
 
     try {
         const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${avgLat}&lon=${avgLng}&format=json&zoom=10`,
-            { headers: { "User-Agent": "StreetViewBingo/1.0" } },
+            `https://nominatim.openstreetmap.org/reverse?lat=${avgLat}&lon=${avgLng}&format=json&zoom=10&accept-language=en`, // Added &accept-language=en
+            {
+                headers: { "User-Agent": "StreetViewBingo/1.0" },
+            },
         );
         const data = await response.json();
         locationName = data.address.city || data.address.town || data.address.village || "Remote Area";

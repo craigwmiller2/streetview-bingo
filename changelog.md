@@ -10,6 +10,8 @@
 - **Personal Best System:** The extension now tracks your fastest Bingo completion time and triggers a specialized notification when a record is broken.
 - **Record Broken Notification:** Added a dedicated toast notification for Personal Bests, featuring a unique "Record Broken!" header and legendary "glint" animation to distinguish it from regular achievements.
 - **Unified Smart Navigation:** All external pages (Stats, Achievements, World Map, and Findings Map) now use an "Open-or-Focus" logic to prevent duplicate tabs and ensure data is always refreshed upon viewing.
+- **Shareable Locations:** World Map markers now feature "Open in Street View" and "Copy Share Link" options, allowing you to challenge friends to the same locations.
+- **English Localisation:** Forced the geocoding engine to return place names in English regardless of the game's original territory.
 
 ### Fixed
 
@@ -18,6 +20,8 @@
 - **Fixed:** Resolved a timing discrepancy where recorded game duration could differ from the visible countdown clock by up to one second.
 - **Notification Logic:** Refactored the achievement system to handle both permanent unlocks and recurring personal records through a centralized toast component.
 - Prevented "tab bloat" by implementing a focus-and-reload pattern for all internal extension pages.
+- Improved readability of Map popups with a cleaner, centered layout and clearer typography.
+- **Fixed:** Resolved Content Security Policy (CSP) errors on the World Map that prevented "Copy Link" buttons from functioning.
 
 ---
 
