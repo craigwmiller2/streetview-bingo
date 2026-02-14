@@ -225,16 +225,24 @@ async function triggerEndGame(title, bgColor) {
     // Prevent multiple overlays if both timer and bingo trigger at once
     if (document.getElementById("win-overlay")) return;
 
-    let now = Date.now();
-    let finalDuration;
+    // 1. Immediately stop the timer to freeze 'timeLeft'
+    clearInterval(timerInterval);
 
-    // Check if the game ended because of a timeout
-    if (timeLeft <= 0) {
-        // Force exactly the initial time (e.g., 60s or 600s)
+    let finalDuration;
+    const isInfinite = document.getElementById("timer-container").style.display === "none";
+
+    // 2. Calculate duration based on mode
+    if (isInfinite) {
+        // High-precision timing for Infinite mode
+        finalDuration = Date.now() - gameStartTime;
+    } else if (timeLeft <= 0) {
+        // Force exactly the initial time if they ran out of time
         finalDuration = initialTime * 1000;
     } else {
-        // They won early, calculate actual time
-        finalDuration = now - gameStartTime;
+        // SYNC FIX: Calculate based on visible clock seconds
+        // (Initial Seconds - Remaining Seconds) * 1000
+        const secondsElapsed = initialTime - timeLeft;
+        finalDuration = secondsElapsed * 1000;
     }
 
     // Capture the specific endTime we will use for storage

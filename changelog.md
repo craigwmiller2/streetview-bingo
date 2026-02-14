@@ -12,6 +12,7 @@
 
 - Improved UI responsiveness by centering game controls and optimizing button touch targets.
 - Refined achievement logic to ensure "World Traveler" correctly identifies unique countries via the game's location history.
+- **Fixed:** Resolved a timing discrepancy where recorded game duration could differ from the visible countdown clock by up to one second.
 
 ---
 
