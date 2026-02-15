@@ -5,20 +5,21 @@
 ### Added
 
 - **Round Start Countdown:** Introduced a "3, 2, 1, GO!" animated overlay with background blurring to allow players to orient themselves before the timer begins.
-- **Centralised Settings Hub:** Created a dedicated Settings page to house technical configurations and data management tools, decluttering the Stats dashboard.
-- **Data Portability (Import/Export):** Players can now export their career journey as a .json backup file and import it to restore progress across different browsers or devices.
-- **Action Confirmation System:** Added a post-reload notification banner that confirms successful data resets or backups, providing clear feedback for destructive actions.
+- **Centralised Settings Hub:** A new dedicated page for technical configurations and data management, decluttering the Stats dashboard.
+- **Data Portability (Import/Export):** Support for exporting career data as a `.json` backup and importing it to restore progress across devices.
+- **Career Completion Dashboard:** A high-impact "Hero" section at the top of the Achievements page featuring a global progress bar.
+- **Categorised Progress Tracking:** Achievement-specific progress bars and completion ratios (e.g., 2/5) for each category.
+- **Unlock Timestamps:** Achievements now record the exact date earned, with "Legacy Support" labels for trophies earned prior to v1.2.0.
+- **Action Confirmation System:** Post-reload notification banners to confirm successful data resets or imports.
 
 ### Changed
 
-- **Achievement Architecture Refactor:** Migrated from a linear "Rarity" system to a descriptive "Category" system (Milestone, Sprint, Exploration, Collection, and Tactical).
-- **Dynamic Achievement UI:** Redesigned the Achievements screen to automatically group trophies by category, providing a clearer overview of different playstyles.
-- **Enhanced Notification Toasts:** Updated the sidebar notification system with category-specific colour gradients and high-contrast styling for improved visibility.
-- **Improved Legendary Polish:** Refined the "Record Broken" toast with an infinite glint animation and distinct gold styling to better celebrate new Personal Bests.
-- **Dashboard Expansion:** Redesigned the Career Stats page to accommodate new tracking metrics, including total time explored and daily playing streaks.
-- **Improved UI Hierarchy:** Reorganised stat cards into a responsive grid that prioritises cumulative progress before deep-dive item highlights.
-- **Backup Optimisation:** The export engine now intelligently strips out high-resolution session screenshots (current_game), resulting in backup files that are 95% smaller while retaining 100% of career progress.
-- **Safety Workflow:** Relocated the "Reset All Data" function to a dedicated "Danger Zone" in Settings, requiring double-confirmation to prevent accidental loss of achievements.
+- **Achievement System Overhaul:** Migrated from "Rarity" to a descriptive "Category" system (Milestone, Sprint, Exploration, Collection, and Tactical) with a redesigned, responsive grid layout.
+- **Enhanced Notification Toasts:** Updated sidebar toasts with category-specific gradients and an infinite glint animation for "Personal Best" records.
+- **Dashboard Expansion:** Redesigned the Career Stats page with a responsive grid and new tracking metrics (Total Time Explored and Daily Streaks).
+- **Backup Optimisation:** The export engine now strips temporary session screenshots, reducing backup file sizes by 95% while retaining 100% of career progress.
+- **Safety Workflow:** Relocated "Reset All Data" to a "Danger Zone" in Settings, requiring double-confirmation to prevent accidental data loss.
+- **Logic Refactor:** Optimised the storage schema to separate IDs from metadata, ensuring faster load times and more reliable backups.
 
 ## [1.1.0] - 2026-02-14
 
