@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Bingo Settings</title>
+        <link rel="stylesheet" href="css/world.css" />
+        <style>
+            .settings-container {
+                max-width: 600px;
+                margin: 40px auto;
+                padding: 20px;
+
+                h1 {
+                    margin-bottom: 1rem;
+                }
+            }
+            .setting-group {
+                background: white;
+                padding: 20px;
+                border-radius: 12px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            }
+            .danger-zone {
+                border: 2px solid #ffcccc;
+            }
+            button {
+                padding: 10px 16px;
+                border-radius: 6px;
+                border: none;
+                cursor: pointer;
+                font-weight: bold;
+                margin-right: 10px;
+            }
+            .btn-export {
+                background: #3498db;
+                color: white;
+            }
+            .btn-import {
+                background: #2ecc71;
+                color: white;
+            }
+            .btn-reset {
+                background: #e74c3c;
+                color: white;
+            }
+            @keyframes slideDown {
+                from {
+                    transform: translate(-50%, -50px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translate(-50%, 0);
+                    opacity: 1;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="settings-container">
+            <h1>Settings & Data</h1>
+
+            <div class="setting-group">
+                <h3>Backup & Restore</h3>
+                <p>Export your career stats, achievements, and world history to a file.</p>
+                <button id="export-btn" class="btn-export">📥 Export Data (.json)</button>
+                <button id="import-trigger" class="btn-import">📤 Import Data</button>
+                <input type="file" id="import-file" style="display: none" accept=".json" />
+            </div>
+
+            <div class="setting-group danger-zone">
+                <h3>Danger Zone</h3>
+                <p>This will permanently delete all your progress, including achievements and map history.</p>
+                <button id="reset-stats-btn" class="btn-reset">Reset All Career Stats</button>
+            </div>
+        </div>
+        <script src="js/settings.js"></script>
+    </body>
+</html>

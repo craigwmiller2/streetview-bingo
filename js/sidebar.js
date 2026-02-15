@@ -546,6 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("view-achievements-btn").onclick = () => openOrFocusTab("achievements.html");
     document.getElementById("view-stats-btn").onclick = () => openOrFocusTab("stats.html");
     document.getElementById("view-world-btn").onclick = () => openOrFocusTab("world.html");
+    document.getElementById("btn-settings").onclick = () => openOrFocusTab("settings.html");
 
     document.getElementById("reset-btn").onclick = async () => {
         if (confirm("Reset game?")) {

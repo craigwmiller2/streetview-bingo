@@ -162,12 +162,4 @@ async function loadStats() {
     }
 }
 
-// Reset Handler
-document.getElementById("reset-stats-btn").addEventListener("click", async () => {
-    if (confirm("Delete all career statistics and world history? This cannot be undone.")) {
-        await browser.storage.local.remove(["global_stats", "world_history", "achievements"]);
-        window.location.reload();
-    }
-});
-
 loadStats();
