@@ -1,84 +1,134 @@
 :root {
-    /* Rarity Palette */
-    --rarity-common: #2ecc71;
-    --rarity-rare: #3498db;
-    --rarity-epic: #9b59b6;
-    --rarity-legendary: #d4af37;
+    /* Category Palette - UK Colours */
+    --type-milestone: #9b59b6; /* Royal Purple */
+    --type-sprint: #f1c40f; /* Gold */
+    --type-collection: #2ecc71; /* Emerald Green */
+    --type-exploration: #3498db; /* Sky Blue */
+    --type-tactical: #e67e22; /* Pumpkin Orange */
 
     /* Card Styles */
     --ach-bg: #ffffff;
     --ach-shadow: rgba(0, 0, 0, 0.1);
     --ach-locked-opacity: 0.4;
-    --ach-transition: 0.3s ease;
+    --ach-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Category Sections */
+.ach-category-group {
+    margin-bottom: 40px;
+}
+
+.category-title {
+    font-size: 1.4rem;
+    color: #2c3e50;
+    text-transform: capitalize;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Grid Layout */
 .ach-grid {
     display: grid;
+    /* Responsive grid: fits as many cards as possible at 300px wide */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 15px;
-    margin-top: 20px;
 }
 
 .ach-card {
     background: var(--ach-bg);
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     box-shadow: 0 2px 8px var(--ach-shadow);
+    position: relative;
+    overflow: hidden;
 
     /* Default Locked State */
     opacity: var(--ach-locked-opacity);
     filter: grayscale(100%);
     transition: var(--ach-transition);
-    border-left: 5px solid transparent;
+    border-left: 6px solid #bdc3c7; /* Grey border for locked items */
 }
 
 .ach-card.unlocked {
     opacity: 1;
     filter: none;
+    transform: translateY(0);
 }
 
-/* Rarity Border Colors for Unlocked Cards */
-.ach-card.unlocked.common {
-    border-color: var(--rarity-common);
+.ach-card.unlocked:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
-.ach-card.unlocked.rare {
-    border-color: var(--rarity-rare);
+
+/* Category Border Colours for Unlocked Cards */
+.ach-card.unlocked.milestone {
+    border-left-color: var(--type-milestone);
 }
-.ach-card.unlocked.epic {
-    border-color: var(--rarity-epic);
+.ach-card.unlocked.sprint {
+    border-left-color: var(--type-sprint);
 }
-.ach-card.unlocked.legendary {
-    border-color: var(--rarity-legendary);
+.ach-card.unlocked.collection {
+    border-left-color: var(--type-collection);
+}
+.ach-card.unlocked.exploration {
+    border-left-color: var(--type-exploration);
+}
+.ach-card.unlocked.tactical {
+    border-left-color: var(--type-tactical);
 }
 
 .ach-icon {
-    font-size: 2rem;
+    font-size: 2.2rem;
     margin-right: 20px;
-    min-width: 40px;
+    min-width: 50px;
     text-align: center;
 }
 
-.rarity-tag {
-    font-size: 0.8rem;
-    padding: 2px 8px;
-    border-radius: 4px;
+.type-tag {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 20px;
     color: white;
-    margin-left: auto;
     text-transform: uppercase;
-    font-weight: bold;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    margin-bottom: 4px;
 }
 
-/* Rarity Tag Background Colors */
-.rarity-tag.common {
-    background-color: var(--rarity-common);
+/* Type Tag Background Colours */
+.type-tag.milestone {
+    background-color: var(--type-milestone);
 }
-.rarity-tag.rare {
-    background-color: var(--rarity-rare);
+.type-tag.sprint {
+    background-color: var(--type-sprint);
+    color: #2c3e50;
 }
-.rarity-tag.epic {
-    background-color: var(--rarity-epic);
+.type-tag.collection {
+    background-color: var(--type-collection);
 }
-.rarity-tag.legendary {
-    background-color: var(--rarity-legendary);
+.type-tag.exploration {
+    background-color: var(--type-exploration);
+}
+.type-tag.tactical {
+    background-color: var(--type-tactical);
+}
+
+h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #2c3e50;
+}
+
+p {
+    margin: 4px 0 0 0;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    line-height: 1.3;
 }

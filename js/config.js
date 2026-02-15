@@ -4,34 +4,34 @@ const ACH_DATA = [
         name: "First Steps",
         desc: "Get your first Bingo!",
         icon: "🗺️",
-        rarity: "epic",
+        type: "milestone", // Blue/Purple
     },
     {
         id: "speed_demon",
         name: "Speed Demon",
         desc: "Bingo in under 5 minutes",
         icon: "⚡",
-        rarity: "legendary",
+        type: "sprint", // Gold/Yellow
     },
     {
         id: "gardener",
         name: "The Gardener",
         desc: "Find 5 Lawnmowers",
         icon: "🌱",
-        rarity: "common",
+        type: "collection", // Green
     },
     {
         id: "master_hunter",
         name: "Completionist",
         desc: "Find every item at least 5 times",
         icon: "👑",
-        rarity: "rare",
+        type: "milestone",
     },
     {
         id: "world_traveler",
         name: "World Traveler",
         desc: "Play a game in 5 different countries",
         icon: "✈️",
-        rarity: "epic",
+        type: "exploration", // Teal/Cyan
     },
 ];

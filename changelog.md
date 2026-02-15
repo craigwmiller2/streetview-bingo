@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0] - 2026-02-15
+
+### Changed
+
+- **Achievement Architecture Refactor:** Migrated from a linear "Rarity" system to a descriptive "Category" system (Milestone, Sprint, Exploration, Collection, and Tactical).
+- **Dynamic Achievement UI:** Redesigned the Achievements screen to automatically group trophies by category, providing a clearer overview of different playstyles.
+- **Enhanced Notification Toasts:** Updated the sidebar notification system with category-specific colour gradients and high-contrast styling for improved visibility.
+- **Improved Legendary Polish:** Refined the "Record Broken" toast with an infinite glint animation and distinct gold styling to better celebrate new Personal Bests.
+
 ## [1.1.0] - 2026-02-14
 
 ### Added

@@ -339,19 +339,24 @@ function showAchievementToast(unlockedObjects) {
     unlockedObjects.forEach((ach, index) => {
         setTimeout(() => {
             const toast = document.createElement("div");
-            toast.className = `achievement-toast ${ach.rarity}`;
 
-            // Check if it's a Personal Best to change the header text
+            // Logic: Personal Best defaults to 'legendary' styling,
+            // otherwise use the new achievement 'type'
+            const toastClass = ach.id === "personal_best" ? "legendary" : ach.type;
+            toast.className = `achievement-toast ${toastClass}`;
+
             const headerText = ach.id === "personal_best" ? "Record Broken!" : "Achievement Unlocked!";
 
             toast.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <span class="ach-icon">${ach.icon}</span>
+                    <div class="ach-icon-wrap">
+                        <span class="ach-icon">${ach.icon}</span>
+                    </div>
                     <div>
-                        <strong style="font-size: 0.8rem; text-transform: uppercase; opacity: 0.8;">
+                        <strong style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9;">
                             ${headerText}
                         </strong>
-                        <p style="margin: 2px 0 0 0; font-size: 1.1rem; font-weight: bold;">
+                        <p style="margin: 1px 0 0 0; font-size: 1.05rem; font-weight: bold; line-height: 1.2;">
                             ${ach.name}
                         </p>
                     </div>

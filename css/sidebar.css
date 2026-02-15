@@ -343,50 +343,66 @@ button:active {
 }
 
 .achievement-toast {
-    background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+    background: #34495e; /* Default Dark */
     color: white;
-    border: 1px solid #b8860b;
     padding: 12px 15px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-standard);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     pointer-events: auto;
-    max-width: 400px;
-    transform: translateY(100px);
+    max-width: 350px;
+    transform: translateX(-120%); /* Slide in from left */
     opacity: 0;
     transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-left: 5px solid white;
 }
 
 .achievement-toast.show {
-    transform: translateY(0);
+    transform: translateX(0);
     opacity: 1;
 }
 
-.ach-icon {
-    font-size: 1.5rem;
-    border-radius: 100vw;
-    width: 40px;
-    height: 40px;
-    background-color: white;
-    border: 1px solid white;
+.ach-icon-wrap {
+    width: 42px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
     display: grid;
     place-items: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
 }
 
-.achievement-toast.common {
-    background: #2ecc71;
-    border-color: #27ae60;
-}
-.achievement-toast.rare {
-    background: #3498db;
-    border-color: #2980b9;
-}
-.achievement-toast.epic {
-    background: #9b59b6;
-    border-color: #8e44ad;
+.ach-icon {
+    font-size: 1.4rem;
 }
 
+/* Category Specific Toast Colours */
+.achievement-toast.milestone {
+    background: linear-gradient(135deg, #8e44ad, #9b59b6);
+    border-color: #7d3c98;
+}
+.achievement-toast.sprint {
+    background: linear-gradient(135deg, #f1c40f, #f39c12);
+    border-color: #d4ac0d;
+    color: #2c3e50; /* Dark text for yellow background */
+}
+.achievement-toast.collection {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    border-color: #1e8449;
+}
+.achievement-toast.exploration {
+    background: linear-gradient(135deg, #2980b9, #3498db);
+    border-color: #21618c;
+}
+.achievement-toast.tactical {
+    background: linear-gradient(135deg, #d35400, #e67e22);
+    border-color: #a04000;
+}
+
+/* Legendary / Personal Best Styling */
 .achievement-toast.legendary {
+    background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+    color: #2c3e50;
+    border-color: #b8860b;
     position: relative;
     overflow: hidden;
 }
@@ -401,11 +417,11 @@ button:active {
     background: linear-gradient(
         to bottom right,
         rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0.6) 50%,
         rgba(255, 255, 255, 0) 100%
     );
     transform: rotate(45deg);
-    animation: glint 1.5s forwards;
+    animation: glint 2s infinite; /* Legendary items now pulse/glint continuously */
 }
 
 /* --- Animations --- */
