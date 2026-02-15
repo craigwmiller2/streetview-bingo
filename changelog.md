@@ -5,6 +5,9 @@
 ### Added
 
 - **Round Start Countdown:** Introduced a "3, 2, 1, GO!" animated overlay with background blurring to allow players to orient themselves before the timer begins.
+- **Centralised Settings Hub:** Created a dedicated Settings page to house technical configurations and data management tools, decluttering the Stats dashboard.
+- **Data Portability (Import/Export):** Players can now export their career journey as a .json backup file and import it to restore progress across different browsers or devices.
+- **Action Confirmation System:** Added a post-reload notification banner that confirms successful data resets or backups, providing clear feedback for destructive actions.
 
 ### Changed
 
@@ -14,6 +17,8 @@
 - **Improved Legendary Polish:** Refined the "Record Broken" toast with an infinite glint animation and distinct gold styling to better celebrate new Personal Bests.
 - **Dashboard Expansion:** Redesigned the Career Stats page to accommodate new tracking metrics, including total time explored and daily playing streaks.
 - **Improved UI Hierarchy:** Reorganised stat cards into a responsive grid that prioritises cumulative progress before deep-dive item highlights.
+- **Backup Optimisation:** The export engine now intelligently strips out high-resolution session screenshots (current_game), resulting in backup files that are 95% smaller while retaining 100% of career progress.
+- **Safety Workflow:** Relocated the "Reset All Data" function to a dedicated "Danger Zone" in Settings, requiring double-confirmation to prevent accidental loss of achievements.
 
 ## [1.1.0] - 2026-02-14
 

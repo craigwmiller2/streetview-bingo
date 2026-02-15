@@ -1,10 +1,14 @@
 :root {
     /* Category Palette - UK Colours */
-    --type-milestone: #9b59b6; /* Royal Purple */
-    --type-sprint: #f1c40f; /* Gold */
-    --type-collection: #2ecc71; /* Emerald Green */
-    --type-exploration: #3498db; /* Sky Blue */
-    --type-tactical: #e67e22; /* Pumpkin Orange */
+    --type-milestone: #9b59b6;
+    --type-sprint: #f1c40f;
+    --type-collection: #2ecc71;
+    --type-exploration: #3498db;
+    --type-tactical: #e67e22;
+
+    /* Status Colours */
+    --color-success: #2ecc71;
+    --color-locked: #bdc3c7;
 
     /* Card Styles */
     --ach-bg: #ffffff;
@@ -13,27 +17,113 @@
     --ach-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Category Sections */
+/* --- Global Progress Hero --- */
+.global-progress-section {
+    background: #2c3e50;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 40px;
+    color: white;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.global-stats-text {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 15px;
+}
+
+.global-stats-text h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    letter-spacing: -0.5px;
+}
+
+#global-percentage {
+    font-size: 2.2rem;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--type-sprint); /* Using the Gold colour for the percentage */
+}
+
+.global-progress-container {
+    width: 100%;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.global-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--type-collection), #55efc4);
+    transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+}
+
+/* --- Category Header & Progress Sections --- */
 .ach-category-group {
     margin-bottom: 40px;
+}
+
+.category-header {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .category-title {
     font-size: 1.4rem;
     color: #2c3e50;
     text-transform: capitalize;
-    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-/* Grid Layout */
+.category-progress-container {
+    width: 100%;
+    height: 24px;
+    background: #ecf0f1;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.category-progress-bar {
+    height: 100%;
+    background-color: var(--color-success);
+    background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-progress-text {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #2c3e50;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* --- Grid & Cards --- */
 .ach-grid {
     display: grid;
-    /* Responsive grid: fits as many cards as possible at 300px wide */
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 15px;
 }
@@ -47,18 +137,16 @@
     box-shadow: 0 2px 8px var(--ach-shadow);
     position: relative;
     overflow: hidden;
-
-    /* Default Locked State */
+    transition: var(--ach-transition);
+    border-left: 6px solid var(--color-locked);
     opacity: var(--ach-locked-opacity);
     filter: grayscale(100%);
-    transition: var(--ach-transition);
-    border-left: 6px solid #bdc3c7; /* Grey border for locked items */
 }
 
 .ach-card.unlocked {
     opacity: 1;
     filter: none;
-    transform: translateY(0);
+    border-left-width: 6px;
 }
 
 .ach-card.unlocked:hover {
@@ -66,7 +154,7 @@
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Category Border Colours for Unlocked Cards */
+/* Category Specific Borders */
 .ach-card.unlocked.milestone {
     border-left-color: var(--type-milestone);
 }
@@ -83,6 +171,7 @@
     border-left-color: var(--type-tactical);
 }
 
+/* --- Typography & Elements --- */
 .ach-icon {
     font-size: 2.2rem;
     margin-right: 20px;
@@ -102,7 +191,6 @@
     margin-bottom: 4px;
 }
 
-/* Type Tag Background Colours */
 .type-tag.milestone {
     background-color: var(--type-milestone);
 }
@@ -131,4 +219,13 @@ p {
     font-size: 0.9rem;
     color: #7f8c8d;
     line-height: 1.3;
+}
+
+.ach-date {
+    font-size: 0.7rem;
+    color: var(--color-success);
+    margin-top: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    font-style: italic;
 }

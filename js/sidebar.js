@@ -386,8 +386,10 @@ async function updateGlobalStats(finalDuration) {
 }
 
 async function checkAchievements(finalDuration, stats) {
-    const data = await browser.storage.local.get(["achievements", "world_history"]);
+    // 1. Fetch achievements and the new dates object
+    const data = await browser.storage.local.get(["achievements", "world_history", "achievement_dates"]);
     const history = data.world_history || [];
+    const earnedDates = data.achievement_dates || {}; // NEW
     let earned = data.achievements || [];
     let newUnlocks = [];
 
@@ -402,15 +404,25 @@ async function checkAchievements(finalDuration, stats) {
         world_traveler: uniqueCountries >= 5,
     };
 
+    const today = new Date().toLocaleDateString("en-GB"); // Format: DD/MM/YYYY
+
     ACH_DATA.forEach((ach) => {
         if (logicMap[ach.id] && !earned.includes(ach.id)) {
             earned.push(ach.id);
             newUnlocks.push(ach);
+
+            // 2. Record the date for this specific achievement ID
+            earnedDates[ach.id] = today;
         }
     });
 
     if (newUnlocks.length > 0) {
-        await browser.storage.local.set({ achievements: earned });
+        // 3. Save both the list of IDs and the dates map
+        await browser.storage.local.set({
+            achievements: earned,
+            achievement_dates: earnedDates,
+        });
+
         showAchievementToast(newUnlocks);
         soundAchievement.play();
     }
