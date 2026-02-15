@@ -26,6 +26,18 @@ const ITEMS = [
     "A Ladder",
 ];
 
+/**
+ * Helper to convert milliseconds to a clean career duration string
+ */
+function formatTotalDuration(ms) {
+    if (!ms || ms === 0) return "0m";
+    const totalMinutes = Math.floor(ms / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+}
+
 async function loadStats() {
     // 1. Fetch all data from storage
     const storage = await browser.storage.local.get(["global_stats", "world_history"]);
@@ -46,6 +58,14 @@ async function loadStats() {
     // --- 1. Top Stat Cards ---
     document.getElementById("total-attempts").textContent = stats.totalAttempts;
     document.getElementById("total-bingos").textContent = stats.totalBingos;
+
+    // Display New Playtime
+    document.getElementById("total-playtime").textContent = formatTotalDuration(stats.totalPlaytime);
+
+    // Display Daily Streak
+    const streakEl = document.getElementById("current-streak");
+    const streakCount = stats.currentStreak || 0;
+    streakEl.textContent = streakCount > 1 ? `🔥 ${streakCount} Days` : `${streakCount} Day`;
 
     if (stats.fastestFullBoard) {
         const mins = Math.floor(stats.fastestFullBoard / 60000);

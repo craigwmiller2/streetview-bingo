@@ -12,6 +12,8 @@
 - **Dynamic Achievement UI:** Redesigned the Achievements screen to automatically group trophies by category, providing a clearer overview of different playstyles.
 - **Enhanced Notification Toasts:** Updated the sidebar notification system with category-specific colour gradients and high-contrast styling for improved visibility.
 - **Improved Legendary Polish:** Refined the "Record Broken" toast with an infinite glint animation and distinct gold styling to better celebrate new Personal Bests.
+- **Dashboard Expansion:** Redesigned the Career Stats page to accommodate new tracking metrics, including total time explored and daily playing streaks.
+- **Improved UI Hierarchy:** Reorganised stat cards into a responsive grid that prioritises cumulative progress before deep-dive item highlights.
 
 ## [1.1.0] - 2026-02-14
 

@@ -25,39 +25,50 @@ h1 {
     margin-bottom: 40px;
 }
 
+/* Ensure the grid wraps nicely as we add more cards */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
 }
 
 .stat-card {
-    background: var(--bg-stats-card);
-    padding: 25px;
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-card);
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     text-align: center;
-    transition: transform 0.2s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
 }
 
 .stat-card h2 {
-    margin: 0;
-    color: var(--secondary-stat);
     font-size: 0.8rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    color: #7f8c8d;
+    margin: 0 0 10px 0;
 }
 
 .stat-card p {
-    margin: 10px 0 0;
-    font-size: 2rem;
-    font-weight: bold;
+    font-size: 1.8rem; /* Big bold numbers for the main stats */
+    font-weight: 800;
+    margin: 0;
+    color: #2c3e50;
+}
+
+/* Specific styling for the Streak card */
+.streak-card p {
+    color: #e67e22; /* Tactical Orange */
+}
+
+/* Keep your highlights distinct */
+.highlight-gold {
+    border-top: 4px solid #f1c40f;
+}
+.highlight-silver {
+    border-top: 4px solid #bdc3c7;
+}
+.highlight-win {
+    border-top: 4px solid #3498db;
 }
 
 .rank-list {

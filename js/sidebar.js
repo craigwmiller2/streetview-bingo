@@ -315,9 +315,42 @@ async function updateGlobalStats(finalDuration) {
         itemCounts: {},
         fastestFullBoard: null,
         history: [],
+        totalPlaytime: 0, // NEW
+        currentStreak: 0, // NEW
+        lastPlayedTimestamp: null, // NEW
     };
 
+    // 1. Basic Stats & Playtime
     global.totalAttempts += 1;
+    global.totalPlaytime = (global.totalPlaytime || 0) + finalDuration;
+
+    // 2. Daily Streak Logic
+    const now = new Date();
+    // Normalize "now" to the start of today for date comparison
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    if (global.lastPlayedTimestamp) {
+        const lastDate = new Date(global.lastPlayedTimestamp);
+        const lastStart = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate()).getTime();
+
+        const diff = todayStart - lastStart;
+
+        if (diff === oneDayMs) {
+            // Played exactly yesterday
+            global.currentStreak += 1;
+        } else if (diff > oneDayMs) {
+            // Missed a day or more
+            global.currentStreak = 1;
+        }
+        // If diff === 0, they already played today, streak stays the same
+    } else {
+        // First game ever
+        global.currentStreak = 1;
+    }
+    global.lastPlayedTimestamp = todayStart;
+
+    // 3. Bingo & Records
     const isBingo = gameData.length === 25;
     let isNewRecord = false;
 
@@ -329,11 +362,12 @@ async function updateGlobalStats(finalDuration) {
         }
     }
 
+    // 4. History & Item Counts
     const isInfinite = document.getElementById("timer-container").style.display === "none";
     const gameStatus = timeLeft <= 0 && !isBingo && !isInfinite ? "Timed Out" : "Completed";
 
     const gameSummary = {
-        date: new Date().toLocaleDateString(),
+        date: now.toLocaleDateString("en-GB"), // Force UK format for consistency
         status: gameStatus,
         itemsFound: gameData.length,
         duration: finalDuration,

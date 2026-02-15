@@ -8,5 +8,5 @@
 - [ ] Make sure there's a confirmation button for the import that will overwrite existing data
 - [ ] Update the layout/look of the Acheivements page. Too wide currently.
 - [ ] Add "Data achieved" stat for achievements
-- [ ] Add a countdown when you click one of the starting buttons
+- [x] Add a countdown when you click one of the starting buttons
 - [x] Change achievement "rarity" to more specific categorisation, e.g. Time-based, Location-based, Item-based
