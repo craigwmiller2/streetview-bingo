@@ -301,32 +301,80 @@ button:active {
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--color-success);
+    /* Combine the blur with the dynamic background color */
+    background: var(--overlay-bg);
+    backdrop-filter: blur(5px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 100;
-    animation: fadeIn 0.4s ease-out;
-    border-radius: var(--grid-gap);
+    border-radius: var(--radius-large);
+    animation: overlayFadeIn 0.5s ease-out forwards;
 }
 
 .win-content {
     text-align: center;
-    color: var(--text-light);
-    padding: 15px;
+    color: white;
+    padding: 20px;
+    max-width: 90%;
 }
 
-.win-content h1 {
+.end-game-title {
+    font-size: 2.8rem;
     margin: 0;
-    font-size: 1.3rem;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    text-transform: uppercase;
+    font-weight: 900;
+    letter-spacing: -1px;
+    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    /* Pop animation similar to countdown */
+    animation: titlePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
-.win-content button {
-    margin-top: 15px;
-    background: var(--bg-card);
-    color: var(--color-success);
+.end-game-stats {
+    margin: 15px 0;
+    font-size: 1.1rem;
+    opacity: 0;
+    animation: fadeIn 0.5s ease-out 0.4s forwards; /* Slight delay */
+}
+
+#final-map-launch-btn {
+    background: white !important;
+    color: var(--text-main) !important;
     border-radius: var(--radius-round);
+    padding: 12px 24px;
+    font-size: 1rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    animation: fadeIn 0.5s ease-out 0.6s forwards; /* Appear last */
+    cursor: pointer;
+    justify-content: center;
+}
+
+/* Animations */
+@keyframes overlayFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes titlePop {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
 }
 
 /* --- Achievement Toasts --- */
@@ -422,6 +470,45 @@ button:active {
     );
     transform: rotate(45deg);
     animation: glint 2s infinite; /* Legendary items now pulse/glint continuously */
+}
+
+/* Start Countdown Overlay */
+.countdown-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4); /* Subtle dimming */
+    backdrop-filter: blur(8px); /* Frosts the background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    pointer-events: all; /* Blocks interaction during countdown */
+}
+
+#countdown-number {
+    font-size: 6rem;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    /* This makes the number "pop" every time it's updated */
+    animation: pulseNumber 0.5s ease-out;
+}
+
+@keyframes pulseNumber {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* --- Animations --- */

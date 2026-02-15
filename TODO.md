@@ -9,4 +9,4 @@
 - [ ] Update the layout/look of the Acheivements page. Too wide currently.
 - [ ] Add "Data achieved" stat for achievements
 - [ ] Add a countdown when you click one of the starting buttons
-- [ ] Change achievement "rarity" to more specific categorisation, e.g. Time-based, Location-based, Item-based
+- [x] Change achievement "rarity" to more specific categorisation, e.g. Time-based, Location-based, Item-based

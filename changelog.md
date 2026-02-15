@@ -2,6 +2,10 @@
 
 ## [1.2.0] - 2026-02-15
 
+### Added
+
+- **Round Start Countdown:** Introduced a "3, 2, 1, GO!" animated overlay with background blurring to allow players to orient themselves before the timer begins.
+
 ### Changed
 
 - **Achievement Architecture Refactor:** Migrated from a linear "Rarity" system to a descriptive "Category" system (Milestone, Sprint, Exploration, Collection, and Tactical).

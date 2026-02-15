@@ -30,11 +30,13 @@ const soundTick = new Audio(browser.runtime.getURL("audio/tick.mp3"));
 const soundBingo = new Audio(browser.runtime.getURL("audio/bingo.mp3"));
 const soundDefeat = new Audio(browser.runtime.getURL("audio/defeat.mp3"));
 const soundAchievement = new Audio(browser.runtime.getURL("audio/achievement.ogg"));
+const soundCountdown = new Audio(browser.runtime.getURL("audio/countdown.mp3"));
 
 soundTick.load();
 soundBingo.load();
 soundDefeat.load();
 soundAchievement.load();
+soundCountdown.load();
 
 let gameData = [];
 let timerInterval = null;
@@ -44,23 +46,54 @@ let gameStartTime = null;
 const FULL_DASH_ARRAY = 283;
 
 /**
- * Game State Controller
+ * Game State Controller with Countdown
  */
 window.startGame = function (mode) {
-    gameStartTime = Date.now();
+    // 1. Initial UI Setup (Happens immediately)
     document.getElementById("mode-menu").style.display = "none";
     document.getElementById("main-header").style.display = "none";
     document.getElementById("controls").style.display = "block";
     gameData = [];
     generateGrid();
 
-    if (mode === "10min") {
-        timeLeft = initialTime;
-        document.getElementById("timer-container").style.display = "block";
-        startTimer();
-    } else {
-        document.getElementById("timer-container").style.display = "none";
-    }
+    // 2. Prepare the Countdown Overlay
+    const overlay = document.getElementById("start-countdown");
+    const numberDisplay = document.getElementById("countdown-number");
+    overlay.style.display = "flex";
+
+    let count = 3;
+    numberDisplay.textContent = count;
+    numberDisplay.className = ""; // Reset any previous 'go-text' class
+    soundCountdown.play();
+
+    const countdownInterval = setInterval(() => {
+        count--;
+
+        // Reset animation by removing the display element and triggering a reflow
+        numberDisplay.style.animation = "none";
+        numberDisplay.offsetHeight; // This "magic" line triggers a reflow
+        numberDisplay.style.animation = null;
+
+        if (count > 0) {
+            numberDisplay.textContent = count;
+        } else if (count === 0) {
+            numberDisplay.textContent = "GO!";
+            numberDisplay.classList.add("go-text");
+        } else {
+            clearInterval(countdownInterval);
+            overlay.style.display = "none";
+
+            // Start the Game
+            gameStartTime = Date.now();
+            if (mode === "10min") {
+                timeLeft = initialTime;
+                document.getElementById("timer-container").style.display = "block";
+                startTimer();
+            } else {
+                document.getElementById("timer-container").style.display = "none";
+            }
+        }
+    }, 1000);
 };
 
 function generateGrid() {
@@ -181,6 +214,21 @@ function checkWinCondition() {
 }
 
 /**
+ * Formats seconds into a human-readable duration string
+ * @param {number} totalSeconds
+ * @returns {string} e.g. "2m 14s" or "45s"
+ */
+function formatTime(totalSeconds) {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = Math.floor(totalSeconds % 60);
+
+    if (mins > 0) {
+        return `${mins}m ${secs}s`;
+    }
+    return `${secs}s`;
+}
+
+/**
  * Universal Game End
  */
 async function triggerEndGame(title, bgColor) {
@@ -203,14 +251,20 @@ async function triggerEndGame(title, bgColor) {
     const absoluteEndTime = gameStartTime + finalDuration;
     document.querySelectorAll(".cell").forEach((c) => (c.onclick = null));
 
+    // Create the enhanced overlay
     const overlay = document.createElement("div");
     overlay.id = "win-overlay";
-    overlay.style.backgroundColor = bgColor;
+    // We'll use a CSS variable for the background color to keep the blur effect clean
+    overlay.style.setProperty("--overlay-bg", bgColor);
+
     overlay.innerHTML = `
         <div class="win-content">
-            <h1>${title}</h1>
-            <p>You found ${gameData.length} items.</p>
-            <button id="final-map-launch-btn">View Findings Map</button>
+            <h1 class="end-game-title">${title}</h1>
+            <div class="end-game-stats">
+                <p>Items Found: <strong>${gameData.length}</strong></p>
+                <p>Final Time: <strong>${formatTime(finalDuration / 1000)}</strong></p>
+            </div>
+            <button id="final-map-launch-btn" class="primary-btn">View Findings Map</button>
         </div>
     `;
 
