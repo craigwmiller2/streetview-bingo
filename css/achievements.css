@@ -139,14 +139,30 @@
     overflow: hidden;
     transition: var(--ach-transition);
     border-left: 6px solid var(--color-locked);
-    opacity: var(--ach-locked-opacity);
-    filter: grayscale(100%);
+    /* opacity: var(--ach-locked-opacity); */
+    /* filter: grayscale(100%); */
+    opacity: 1;
 }
 
 .ach-card.unlocked {
     opacity: 1;
     filter: none;
     border-left-width: 6px;
+}
+
+/* Only grayscale and fade the "info" parts of the card when locked */
+.ach-card:not(.unlocked) .ach-icon,
+.ach-card:not(.unlocked) .type-tag,
+.ach-card:not(.unlocked) h3,
+.ach-card:not(.unlocked) p {
+    filter: grayscale(100%);
+    opacity: var(--ach-locked-opacity); /* Moves the "faded" look to the text/icon only */
+}
+
+/* Ensure the progress bar remains at full opacity and color */
+.ach-card:not(.unlocked) .ach-progress-wrapper {
+    opacity: 1;
+    filter: none;
 }
 
 .ach-card.unlocked:hover {
@@ -228,4 +244,54 @@ p {
     font-weight: 700;
     letter-spacing: 0.2px;
     font-style: italic;
+}
+
+/* --- Updated Achievement Card Progress Bars --- */
+.ach-progress-wrapper {
+    width: 100%;
+    background: #ecf0f1;
+    height: 18px; /* Increased height to fit text */
+    border-radius: 10px;
+    margin-top: 10px;
+    position: relative; /* Essential for absolute positioning of text */
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.ach-progress-bar {
+    background: #3498db;
+    height: 100%;
+    transition: width 0.3s ease;
+    /* Removed individual background colours here to use the classes below */
+}
+
+.ach-progress-text {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centers text horizontally and vertically */
+    font-size: 0.65rem;
+    color: #2c3e50; /* Dark text for contrast against light bar backgrounds */
+    font-weight: 800;
+    pointer-events: none;
+    z-index: 2;
+    margin-top: 0; /* Reset previous margin */
+}
+
+/* Color code bars by achievement type - Matches your existing palette */
+.ach-card.collection .ach-progress-bar {
+    background-color: var(--type-collection);
+}
+.ach-card.milestone .ach-progress-bar {
+    background-color: var(--type-milestone);
+}
+.ach-card.sprint .ach-progress-bar {
+    background-color: var(--type-sprint);
+}
+.ach-card.exploration .ach-progress-bar {
+    background-color: var(--type-exploration);
 }

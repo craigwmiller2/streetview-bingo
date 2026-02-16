@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.3.0] - 2026-02-16
+
+### Added
+
+- Achievements Progress Bars: Visual progress indicators added to all locked achievement cards to track career goals.
+- End-Game Location Display: The results overlay now displays the specific city and country processed via reverse-geocoding.
+- Achievement - Double Tap: Unlocked by capturing two items within a 2-second window.
+- Achievement - Off to the Races: Unlocked by capturing the first item within 5 seconds of the game start.
+- Achievement - Logistics Expert: Career collection goal for Work Vans, Trailers, and Ladders.
+- Achievement - High-Vis Hero: Career collection goal for 20 "Person wearing Hi-Vis" finds.
+- Achievement - The Patriot: Location-based goal for finding a Flag in the United States.
+- Achievement - Scandinavian Scout: Multi-location goal requiring finds in Norway, Sweden, and Denmark.
+- Achievement - Island Hopper: Multi-location goal for the United Kingdom and Australia.
+- Achievement - London Calling: Regional goal for finding any item within the Greater London area.
+
+### Changed
+
+- Achievement Logic Reordering: The game now processes world geocoding data before checking achievement logic to ensure location-based goals trigger immediately upon game completion.
+- UI Grayscale Logic: Achievement cards now retain full color for progress bars while grayscaling text and icons for locked items, improving readability.
+- Fuzzy Location Matching: Updated location checks to use case-insensitive substring matching (e.g., "London") rather than exact string matches to account for varying API responses.
+- Version Update: Manifest version bumped to 1.3.0.
+- Made the .xpi file name generic so the index.html page link does not have to be updated each time.
+- Updated landing page.
+
+### Fixed
+
+- Achievement Progress Sync: Fixed a bug where the Achievements page failed to display partial progress for location-based goals due to missing world_history data in the storage request.
+- Reference Error: Resolved a JavaScript ReferenceError where lastGame was undefined during the end-game achievement check.
+
 ## [1.2.0] - 2026-02-15
 
 ### Added

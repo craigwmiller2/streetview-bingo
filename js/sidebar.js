@@ -251,6 +251,10 @@ async function triggerEndGame(title, bgColor) {
     const absoluteEndTime = gameStartTime + finalDuration;
     document.querySelectorAll(".cell").forEach((c) => (c.onclick = null));
 
+    const history = (await browser.storage.local.get("world_history")).world_history || [];
+    const lastGame = history[history.length - 1];
+    const locationDisplay = lastGame ? `${lastGame.city}, ${lastGame.country}` : "Unknown Location";
+
     // Create the enhanced overlay
     const overlay = document.createElement("div");
     overlay.id = "win-overlay";
@@ -261,6 +265,7 @@ async function triggerEndGame(title, bgColor) {
         <div class="win-content">
             <h1 class="end-game-title">${title}</h1>
             <div class="end-game-stats">
+                <p>Location: <strong>${locationDisplay}</strong></p>
                 <p>Items Found: <strong>${gameData.length}</strong></p>
                 <p>Final Time: <strong>${formatTime(finalDuration / 1000)}</strong></p>
             </div>
@@ -389,6 +394,7 @@ async function checkAchievements(finalDuration, stats) {
     // 1. Fetch achievements and the new dates object
     const data = await browser.storage.local.get(["achievements", "world_history", "achievement_dates"]);
     const history = data.world_history || [];
+    const lastGame = history[history.length - 1];
     const earnedDates = data.achievement_dates || {}; // NEW
     let earned = data.achievements || [];
     let newUnlocks = [];
@@ -396,12 +402,56 @@ async function checkAchievements(finalDuration, stats) {
     const isBingo = gameData.length === 25;
     const uniqueCountries = new Set(history.map((game) => game.country)).size;
 
+    // --- SPRINT LOGIC ---
+    // 1. Quick Start: First find within 5 seconds of starting
+    const firstFind = gameData[0];
+    const firstFindTime = firstFind ? new Date(firstFind.timestamp).getTime() - gameStartTime : null;
+
+    // 2. Double Tap: Any 2 finds within 2 seconds of each other
+    // We sort a copy of gameData by timestamp to ensure chronological order
+    const sortedFinds = [...gameData].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const doubleTapAchieved = sortedFinds.some((find, index) => {
+        if (index === 0) return false;
+        const current = new Date(find.timestamp).getTime();
+        const previous = new Date(sortedFinds[index - 1].timestamp).getTime();
+        return current - previous <= 2000; // 2000ms = 2s
+    });
+
+    // Helper to check if a place has been visited
+    const visited = (placeName) =>
+        history.some(
+            (game) =>
+                (game.city && game.city.toLowerCase().includes(placeName.toLowerCase())) ||
+                (game.country && game.country.toLowerCase().includes(placeName.toLowerCase())),
+        );
+
     const logicMap = {
         first_bingo: isBingo,
         speed_demon: isBingo && finalDuration < 300000,
         gardener: (stats.itemCounts["Lawnmower"] || 0) >= 5,
         master_hunter: ITEMS.every((item) => (stats.itemCounts[item] || 0) >= 5),
         world_traveler: uniqueCountries >= 5,
+        streak_3: stats.currentStreak >= 3,
+        marathoner: stats.totalPlaytime >= 3600000,
+        london_calling: visited("london"),
+        the_patriot:
+            gameData.some((f) => f.item === "A Flag") &&
+            (lastGame?.country.toLowerCase().includes("united states") ||
+                lastGame?.country.toLowerCase().includes("usa")),
+        quick_start: firstFindTime !== null && firstFindTime < 5000,
+        animal_lover: (stats.itemCounts["Dog or Cat"] || 0) >= 10,
+        double_tap: doubleTapAchieved,
+        the_commuter:
+            (stats.itemCounts["Bicycle"] || 0) >= 10 &&
+            (stats.itemCounts["Motorbike or Quadbike"] || 0) >= 10 &&
+            (stats.itemCounts["Caravan"] || 0) >= 10,
+        logistics_expert:
+            (stats.itemCounts["Work van (with signage)"] || 0) >= 10 &&
+            (stats.itemCounts["Trailer"] || 0) >= 10 &&
+            (stats.itemCounts["A Ladder"] || 0) >= 10,
+        high_vis_hero: (stats.itemCounts["Person wearing Hi-Vis"] || 0) >= 20,
+        island_hopper: visited("united kingdom") && visited("australia"),
+        scandinavian_scout: visited("norway") && visited("sweden") && visited("denmark"),
     };
 
     const today = new Date().toLocaleDateString("en-GB"); // Format: DD/MM/YYYY
