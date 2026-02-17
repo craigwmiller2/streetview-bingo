@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.1] - 2026-02-17
+
+### Fixed
+
+- Removed testing timer
+
 ## [1.4.0] - 2026-02-17
 
 ### Added
@@ -15,8 +21,6 @@
 
 - Toast Interactivity: Achievement toasts now feature a pointer cursor and hover states to indicate they are clickable.
 - English Placenames: Utilising a different map tileset so that placenames are now displayed in English on the World Map.
-
-### Fixed
 
 ## [1.3.0] - 2026-02-16
 

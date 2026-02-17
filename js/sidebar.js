@@ -41,7 +41,7 @@ soundCountdown.load();
 let gameData = [];
 let timerInterval = null;
 let timeLeft = 0;
-let initialTime = 60; // 10 mins
+let initialTime = 600; // 10 mins
 let gameStartTime = null;
 let isPaused = false;
 const FULL_DASH_ARRAY = 283;
