@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.4.0] - 2026-02-00
+
+### Added
+
+- Secret Achievements: Introduced hidden "Easter Egg" achievements that remain masked with mystery placeholders and "???" icons until unlocked.
+- Deep-Linked Achievement Toasts: Clicking an achievement notification now automatically opens the Achievement Gallery and scrolls directly to the unlocked card.
+- UI Highlighting: Added a "Pulse Glow" animation to achievement cards when accessed via a direct link to help players identify their new rewards.
+- Quick-Share Stats: Added a Quick-Share button on the Stats page that adds some of your top stats to your clipboard so you can paste them to your friends!
+- Track Your Daily Streak: Your daily streak count is now displayed pinned to the bottom of the sidebar. Additionally, there's a bunch more milestone achievements associated with your daily streak! So keep that streak alive!
+- Take a break: added a new pause button so you can pause the timer mid-game in case you need to take a break!
+
+### Changed
+
+- Toast Interactivity: Achievement toasts now feature a pointer cursor and hover states to indicate they are clickable.
+- English Placenames: Utilising a different map tileset so that placenames are now displayed in English on the World Map.
+
+### Fixed
+
 ## [1.3.0] - 2026-02-16
 
 ### Added

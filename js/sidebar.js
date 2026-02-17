@@ -41,8 +41,9 @@ soundCountdown.load();
 let gameData = [];
 let timerInterval = null;
 let timeLeft = 0;
-let initialTime = 600; // 10 mins
+let initialTime = 60; // 10 mins
 let gameStartTime = null;
+let isPaused = false;
 const FULL_DASH_ARRAY = 283;
 
 /**
@@ -108,8 +109,26 @@ function generateGrid() {
     });
 }
 
+function togglePause() {
+    if (document.getElementById("timer-container").style.display === "none") return; // Only for 10min mode
+
+    isPaused = !isPaused;
+    const overlay = document.getElementById("pause-overlay");
+    const grid = document.getElementById("bingo-grid");
+
+    if (isPaused) {
+        overlay.style.display = "flex";
+        grid.style.pointerEvents = "none"; // Disable all clicks on the grid
+        grid.style.filter = "blur(4px)";
+    } else {
+        overlay.style.display = "none";
+        grid.style.pointerEvents = "auto";
+        grid.style.filter = "none";
+    }
+}
+
 async function handleCapture(itemName, cellElement) {
-    if (cellElement.classList.contains("found") || cellElement.classList.contains("capturing")) return;
+    if (isPaused || cellElement.classList.contains("found") || cellElement.classList.contains("capturing")) return;
 
     cellElement.classList.add("capturing");
     const originalContent = cellElement.innerHTML;
@@ -169,6 +188,8 @@ function handleUndo(itemName, cellElement) {
 function startTimer() {
     const progressCircle = document.querySelector(".timer-progress");
     const textDisplay = document.getElementById("timer-text");
+    const pauseBtn = document.getElementById("pause-btn");
+
     progressCircle.style.strokeDasharray = `${FULL_DASH_ARRAY} ${FULL_DASH_ARRAY}`;
 
     const updateUI = () => {
@@ -181,7 +202,8 @@ function startTimer() {
         const offset = FULL_DASH_ARRAY - percentage * FULL_DASH_ARRAY;
         progressCircle.style.strokeDashoffset = offset;
 
-        if (timeLeft <= 10 && timeLeft > 0) {
+        if (timeLeft <= 10 && timeLeft > 0 && !isPaused) {
+            // Check pause here
             progressCircle.style.animation = "pulse 0.5s infinite alternate";
             soundTick.currentTime = 0;
             soundTick.play().catch(() => {});
@@ -191,7 +213,13 @@ function startTimer() {
     };
 
     updateUI();
+
+    // Clear any existing interval before starting a new one
+    if (timerInterval) clearInterval(timerInterval);
+
     timerInterval = setInterval(() => {
+        if (isPaused) return; // THE PAUSE LOGIC
+
         timeLeft--;
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
@@ -305,6 +333,9 @@ async function triggerEndGame(title, bgColor) {
         });
         await openOrFocusTab("map.html");
     });
+
+    // Update the sidebar streak display in case a new milestone was hit
+    updateSidebarStreak();
 }
 
 function parseCoords(url) {
@@ -391,33 +422,29 @@ async function updateGlobalStats(finalDuration) {
 }
 
 async function checkAchievements(finalDuration, stats) {
-    // 1. Fetch achievements and the new dates object
     const data = await browser.storage.local.get(["achievements", "world_history", "achievement_dates"]);
     const history = data.world_history || [];
     const lastGame = history[history.length - 1];
-    const earnedDates = data.achievement_dates || {}; // NEW
+    const earnedDates = data.achievement_dates || {};
     let earned = data.achievements || [];
     let newUnlocks = [];
 
+    const now = new Date();
+    const isLeetTime = now.getHours() === 13 && now.getMinutes() === 37;
     const isBingo = gameData.length === 25;
     const uniqueCountries = new Set(history.map((game) => game.country)).size;
 
-    // --- SPRINT LOGIC ---
-    // 1. Quick Start: First find within 5 seconds of starting
     const firstFind = gameData[0];
     const firstFindTime = firstFind ? new Date(firstFind.timestamp).getTime() - gameStartTime : null;
 
-    // 2. Double Tap: Any 2 finds within 2 seconds of each other
-    // We sort a copy of gameData by timestamp to ensure chronological order
     const sortedFinds = [...gameData].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     const doubleTapAchieved = sortedFinds.some((find, index) => {
         if (index === 0) return false;
         const current = new Date(find.timestamp).getTime();
         const previous = new Date(sortedFinds[index - 1].timestamp).getTime();
-        return current - previous <= 2000; // 2000ms = 2s
+        return current - previous <= 2000;
     });
 
-    // Helper to check if a place has been visited
     const visited = (placeName) =>
         history.some(
             (game) =>
@@ -425,13 +452,14 @@ async function checkAchievements(finalDuration, stats) {
                 (game.country && game.country.toLowerCase().includes(placeName.toLowerCase())),
         );
 
+    // --- LOGIC MAP ---
     const logicMap = {
         first_bingo: isBingo,
         speed_demon: isBingo && finalDuration < 300000,
         gardener: (stats.itemCounts["Lawnmower"] || 0) >= 5,
+        caravan_hunter: (stats.itemCounts["Caravan"] || 0) >= 5,
         master_hunter: ITEMS.every((item) => (stats.itemCounts[item] || 0) >= 5),
         world_traveler: uniqueCountries >= 5,
-        streak_3: stats.currentStreak >= 3,
         marathoner: stats.totalPlaytime >= 3600000,
         london_calling: visited("london"),
         the_patriot:
@@ -452,22 +480,27 @@ async function checkAchievements(finalDuration, stats) {
         high_vis_hero: (stats.itemCounts["Person wearing Hi-Vis"] || 0) >= 20,
         island_hopper: visited("united kingdom") && visited("australia"),
         scandinavian_scout: visited("norway") && visited("sweden") && visited("denmark"),
+        elite_explorer: isBingo && isLeetTime,
     };
 
-    const today = new Date().toLocaleDateString("en-GB"); // Format: DD/MM/YYYY
+    // --- DYNAMIC STREAK MILESTONES ---
+    // This loops through your required numbers and adds them to the logicMap automatically
+    const streakMilestones = [3, 5, 7, 10, 20, 30, 50, 75, 100];
+    streakMilestones.forEach((count) => {
+        logicMap[`streak_${count}`] = stats.currentStreak >= count;
+    });
+
+    const today = new Date().toLocaleDateString("en-GB");
 
     ACH_DATA.forEach((ach) => {
         if (logicMap[ach.id] && !earned.includes(ach.id)) {
             earned.push(ach.id);
             newUnlocks.push(ach);
-
-            // 2. Record the date for this specific achievement ID
             earnedDates[ach.id] = today;
         }
     });
 
     if (newUnlocks.length > 0) {
-        // 3. Save both the list of IDs and the dates map
         await browser.storage.local.set({
             achievements: earned,
             achievement_dates: earnedDates,
@@ -512,6 +545,10 @@ function showAchievementToast(unlockedObjects) {
                     </div>
                 </div>
             `;
+
+            toast.addEventListener("click", () => {
+                openOrFocusTab(`achievements.html#${ach.id}`);
+            });
 
             container.appendChild(toast);
             setTimeout(() => toast.classList.add("show"), 10);
@@ -570,22 +607,21 @@ async function processWorldData() {
 }
 
 // Helper to switch to an existing tab or open a new one
-async function openOrFocusTab(fileName) {
-    const url = browser.runtime.getURL(fileName);
+async function openOrFocusTab(fileWithHash) {
+    const [fileName, hash] = fileWithHash.split("#");
+    const baseUrl = browser.runtime.getURL(fileName);
+    const fullUrl = browser.runtime.getURL(fileWithHash);
 
-    // 1. Check if the tab is already open anywhere
-    const tabs = await browser.tabs.query({ url: url });
+    // Check for the tab using the base URL (ignoring the hash for the query)
+    const tabs = await browser.tabs.query({ url: baseUrl + "*" });
 
     if (tabs.length > 0) {
-        // 2. If it exists, focus the window and the tab
         await browser.windows.update(tabs[0].windowId, { focused: true });
-        await browser.tabs.update(tabs[0].id, { active: true });
-
-        // 3. Optional: Refresh the tab to show new game data
+        await browser.tabs.update(tabs[0].id, { active: true, url: fullUrl });
+        // Reload is often necessary to trigger the hash-change logic if already open
         await browser.tabs.reload(tabs[0].id);
     } else {
-        // 4. If it doesn't exist, open it fresh
-        browser.tabs.create({ url: url });
+        browser.tabs.create({ url: fullUrl });
     }
 }
 
@@ -602,7 +638,33 @@ async function openOrFocusExternal(targetUrl) {
     }
 }
 
+async function updateSidebarStreak() {
+    const data = await browser.storage.local.get("global_stats");
+    const stats = data.global_stats || { currentStreak: 0 };
+
+    const countEl = document.getElementById("sidebar-streak-count");
+    const hintEl = document.getElementById("sidebar-streak-hint");
+
+    const current = stats.currentStreak || 0;
+    countEl.innerText = `${current} Day${current === 1 ? "" : "s"}`;
+
+    // Find next milestone for the hint
+    const milestones = [3, 5, 7, 10, 20, 30, 50, 75, 100];
+    const next = milestones.find((m) => m > current);
+
+    if (next) {
+        hintEl.innerText = `Next Goal: ${next} days`;
+    } else {
+        hintEl.innerText = `MAX 🔥`;
+    }
+}
+updateSidebarStreak();
+
 document.addEventListener("DOMContentLoaded", () => {
+    // pause button logic
+    document.getElementById("pause-btn").onclick = togglePause;
+    document.getElementById("resume-btn").onclick = togglePause;
+
     document.getElementById("btn-10min").onclick = () => startGame("10min");
     document.getElementById("btn-infinite").onclick = () => startGame("infinite");
     document.getElementById("view-achievements-btn").onclick = () => openOrFocusTab("achievements.html");
@@ -613,6 +675,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("reset-btn").onclick = async () => {
         if (confirm("Reset game?")) {
             clearInterval(timerInterval);
+            isPaused = false;
+            document.getElementById("pause-overlay").style.display = "none";
+            document.getElementById("bingo-grid").style.filter = "none";
+            document.getElementById("bingo-grid").style.pointerEvents = "auto";
             gameData = [];
             document.getElementById("mode-menu").style.display = "block";
             document.getElementById("main-header").style.display = "block";

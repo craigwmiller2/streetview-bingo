@@ -59,8 +59,17 @@ async function loadAchievements() {
 
         achievements.forEach((ach) => {
             const isUnlocked = earned.includes(ach.id);
+
+            // Determine if we should mask the content
+            const shouldHide = ach.hidden && !isUnlocked;
+
             const card = document.createElement("div");
-            card.className = `ach-card ${ach.type} ${isUnlocked ? "unlocked" : ""}`;
+            card.className = `ach-card ${ach.type} ${isUnlocked ? "unlocked" : ""} ${shouldHide ? "is-hidden-secret" : ""}`;
+
+            // Values to display
+            const icon = shouldHide ? "❓" : ach.icon;
+            const name = shouldHide ? "Secret Achievement" : ach.name;
+            const desc = shouldHide ? "This achievement is hidden. Keep exploring to find it!" : ach.desc;
 
             let progressHtml = "";
             if (!isUnlocked && ach.goal) {
@@ -100,20 +109,43 @@ async function loadAchievements() {
             const dateDisplay = earnedDates[ach.id] || "Achieved before v1.2.0";
 
             card.innerHTML = `
-                <div class="ach-icon">${ach.icon}</div>
+                <div class="ach-icon">${icon}</div>
                 <div style="width: 100%;">
                     <span class="type-tag ${ach.type}">${ach.type}</span>
-                    <h3>${ach.name}</h3>
-                    <p>${ach.desc}</p>
+                    <h3>${name}</h3>
+                    <p>${desc}</p>
                     ${progressHtml} 
                     ${isUnlocked ? `<div class="ach-date">Unlocked: ${dateDisplay}</div>` : ""}
                 </div>
             `;
+
+            card.setAttribute("data-id", ach.id); // For deep linking
+
             grid.appendChild(card);
         });
 
         section.appendChild(grid);
         list.appendChild(section);
+
+        const targetId = window.location.hash.substring(1); // remove the '#'
+        if (targetId) {
+            // Find the card with a matching data attribute or ID
+            // Note: You'll need to ensure your cards have an ID set during creation
+            const targetCard = document.querySelector(`[data-id="${targetId}"]`);
+
+            if (targetCard) {
+                setTimeout(() => {
+                    targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+                    targetCard.classList.add("highlight-pulse");
+
+                    // Remove the highlight after the animation finishes
+                    setTimeout(() => {
+                        targetCard.classList.remove("highlight-pulse");
+                    }, 3000);
+                }, 500); // Small delay to ensure rendering is 100% complete
+            }
+        }
     }
 }
+
 loadAchievements();

@@ -13,7 +13,7 @@
     --color-danger: #e74c3c;
     --color-warning: #e67e22;
     --color-info: #34495e;
-    --color-loading: #ffeaa7;
+    --color-loading: #cacaca;
     --color-achievement: #ffd700;
 
     /* UI Elements */
@@ -226,10 +226,12 @@ button:active {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     display: flex;
+    border-radius: 2px;
     align-items: center;
     justify-content: center;
     text-align: center;
     font-size: 0.65rem;
+    font-weight: bold;
     cursor: pointer;
     overflow: hidden;
     padding: 2px;
@@ -402,11 +404,16 @@ button:active {
     opacity: 0;
     transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border-left: 5px solid white;
+    cursor: pointer;
 }
 
 .achievement-toast.show {
     transform: translateX(0);
     opacity: 1;
+
+    &:hover {
+        transform: translateX(0) scale(1.05);
+    }
 }
 
 .ach-icon-wrap {
@@ -550,5 +557,84 @@ button:active {
     to {
         opacity: 0.6;
         stroke-width: 10;
+    }
+}
+
+#streak-indicator-box {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #1a252f; /* Slightly darker than your primary-bg */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    gap: 15px;
+    z-index: 100;
+}
+
+.streak-flame {
+    font-size: 24px;
+    filter: drop-shadow(0 0 5px rgba(243, 156, 18, 0.4));
+    animation: flicker 3s ease-in-out infinite;
+}
+
+.streak-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.streak-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #7f8c8d;
+    letter-spacing: 1px;
+}
+
+#sidebar-streak-count {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.streak-target-hint {
+    font-size: 0.75rem;
+    color: #3498db;
+    background: rgba(52, 152, 219, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+@keyframes flicker {
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+.pause-control-btn {
+    background: #34495e;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10;
+    text-align: center;
+    display: block;
+    transition: all 0.3s ease;
+
+    &:hover {
+        background: #2c3e50;
     }
 }

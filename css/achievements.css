@@ -124,7 +124,7 @@
 /* --- Grid & Cards --- */
 .ach-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
     gap: 15px;
 }
 
@@ -168,6 +168,17 @@
 .ach-card.unlocked:hover {
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.ach-card.is-hidden-secret {
+    background: repeating-linear-gradient(45deg, #ffffff, #ffffff 10px, #f9f9f9 10px, #f9f9f9 20px);
+    border-left-style: dashed;
+    opacity: 0.7;
+}
+
+.ach-card.is-hidden-secret h3 {
+    color: #95a5a6;
+    font-style: italic;
 }
 
 /* Category Specific Borders */
@@ -294,4 +305,25 @@ p {
 }
 .ach-card.exploration .ach-progress-bar {
     background-color: var(--type-exploration);
+}
+
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 0 0 0px rgba(52, 152, 219, 0.7);
+        border-color: #3498db;
+    }
+    50% {
+        box-shadow: 0 0 20px 10px rgba(52, 152, 219, 0);
+        border-color: #3498db;
+    }
+    100% {
+        box-shadow: 0 0 0 0px rgba(52, 152, 219, 0);
+    }
+}
+
+.highlight-pulse {
+    animation: pulse-glow 1.5s ease-out 2; /* Pulse twice */
+    z-index: 10;
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
 }

@@ -162,4 +162,71 @@ async function loadStats() {
     }
 }
 
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. Fetch the stats from storage
+    const data = await browser.storage.local.get("global_stats");
+    const stats = data.global_stats || {};
+
+    const shareBtn = document.getElementById("share-stats-btn");
+
+    if (shareBtn) {
+        shareBtn.addEventListener("click", async () => {
+            // Use the helper function we discussed
+            const success = await copyStatsToClipboard(stats);
+
+            if (success) {
+                const originalText = shareBtn.innerHTML;
+                shareBtn.innerText = "Copied! ✨";
+                shareBtn.style.background = "#2ecc71"; // Success Green
+
+                setTimeout(() => {
+                    shareBtn.innerHTML = originalText;
+                    shareBtn.style.background = "#6aaa64"; // Reset to Wordle Green
+                }, 2000);
+            }
+        });
+    }
+});
+
+async function copyStatsToClipboard(stats) {
+    console.log(stats);
+
+    // Format logic (as discussed previously)
+    const hours = Math.floor((stats.totalTime || 0) / 3600);
+    const mins = Math.floor(((stats.totalTime || 0) % 3600) / 60);
+
+    // fastest bingo in ms
+    const fastest = stats.fastestFullBoard || 0;
+    const fMins = Math.floor(fastest / 60000);
+    const fSecs = Math.floor((fastest % 60000) / 1000);
+
+    // all items and counts
+    const itemCounts = stats.itemCounts || {};
+    const mostFoundItem = Object.entries(itemCounts).reduce(
+        (max, entry) => (entry[1] > max[1] ? entry : max),
+        ["N/A", 0],
+    )[0];
+    const leastFoundItem = Object.entries(itemCounts).reduce(
+        (min, entry) => (entry[1] < min[1] ? entry : min),
+        ["N/A", Infinity],
+    )[0];
+
+    const text = [
+        `🗺️ Street View Bingo`,
+        `🎯 Bingos: ${stats.totalBingos || 0}`,
+        `🔥 Streak: ${stats.currentStreak || 0} days`,
+        `⏱️ Best Time: ${fMins}m ${fSecs}s`,
+        `🌍 Total Time: ${hours}h ${mins}m`,
+        `📈 Most Found Item: ${mostFoundItem || "N/A"}`,
+        `📉 Least Found Item: ${leastFoundItem || "N/A"}`,
+        `🛰️ Play! - https://craigwmiller2.github.io/streetview-bingo/`,
+    ].join("\n");
+
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
 loadStats();

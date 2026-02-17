@@ -228,3 +228,35 @@ h1 {
         padding: 20px;
     }
 }
+
+.btn-share {
+    background-color: #6aaa64; /* Wordle Green */
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.1s;
+}
+.btn-share:active {
+    transform: scale(0.95);
+}
+
+#share-stats-btn {
+    transition: all 0.2s ease;
+    display: block;
+    margin: 20px auto; /* Centers the button */
+}
+
+#share-stats-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+}
+
+#share-stats-btn:active {
+    transform: translateY(0);
+}

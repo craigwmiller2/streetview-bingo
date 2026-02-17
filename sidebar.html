@@ -133,11 +133,23 @@
             </div>
 
             <div id="timer-container" style="display: none">
-                <svg id="timer-svg" width="100" height="100">
-                    <circle class="timer-bg" cx="50" cy="50" r="45"></circle>
-                    <circle class="timer-progress" cx="50" cy="50" r="45"></circle>
-                </svg>
-                <div id="timer-text">10:00</div>
+                <div class="timer-circle" style="position: relative">
+                    <svg id="timer-svg" width="100" height="100">
+                        <circle class="timer-bg" cx="50" cy="50" r="45"></circle>
+                        <circle class="timer-progress" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div id="timer-text">10:00</div>
+                </div>
+                <button id="pause-btn" class="pause-control-btn">Pause</button>
+            </div>
+
+            <div id="pause-overlay" class="countdown-overlay" style="display: none">
+                <div class="win-content">
+                    <h1 style="color: white; margin-bottom: 20px">GAME PAUSED</h1>
+                    <button id="resume-btn" class="button btn-primary" style="justify-content: center">
+                        Resume Game
+                    </button>
+                </div>
             </div>
 
             <div id="bingo-grid"></div>
@@ -156,6 +168,14 @@
                     </div>
                     <span>Quit Game</span>
                 </button>
+            </div>
+            <div id="streak-indicator-box">
+                <div class="streak-flame">🔥</div>
+                <div class="streak-info">
+                    <span class="streak-label">DAILY STREAK</span>
+                    <span id="sidebar-streak-count">0 Days</span>
+                </div>
+                <div class="streak-target-hint" id="sidebar-streak-hint">Next: 3 days</div>
             </div>
         </div>
 

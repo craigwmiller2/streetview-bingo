@@ -5,8 +5,10 @@ async function initWorldMap() {
     // Initialize map centered on the world
     const map = L.map("world-map").setView([20, 0], 2);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap contributors",
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        attribution: "©OpenStreetMap, ©CartoDB",
+        subdomains: "abcd",
+        maxZoom: 20,
     }).addTo(map);
 
     // 1. Initialize the Cluster Group

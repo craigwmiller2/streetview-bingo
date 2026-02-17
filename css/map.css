@@ -159,3 +159,34 @@ button {
 #copy-share-btn:hover {
     background-color: #4752c4;
 }
+
+.missing-items-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 12px;
+    border: 1px dashed #bdc3c7;
+}
+
+.missing-items-section h3 {
+    margin-top: 0;
+    color: #7f8c8d;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.missing-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.missing-tag {
+    background: #ecf0f1;
+    color: #95a5a6;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
