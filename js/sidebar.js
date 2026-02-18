@@ -330,19 +330,21 @@ function parseCoords(url) {
 
 async function updateGlobalStats(finalDuration) {
     const data = await browser.storage.local.get("global_stats");
-    let global = data.global_stats || {
-        totalAttempts: 0,
-        totalBingos: 0,
-        itemCounts: {},
-        fastestFullBoard: null,
-        history: [],
-        totalPlaytime: 0, // NEW
-        currentStreak: 0, // NEW
-        lastPlayedTimestamp: null, // NEW
-    };
+    // let global = data.global_stats || {
+    //     totalAttempts: 0,
+    //     totalBingos: 0,
+    //     itemCounts: {},
+    //     fastestFullBoard: null,
+    //     history: [],
+    //     totalPlaytime: 0, // NEW
+    //     currentStreak: 0, // NEW
+    //     lastPlayedTimestamp: null, // NEW
+    // };
 
-    // 1. Basic Stats & Playtime
-    global.totalAttempts += 1;
+    let global = data.global_stats || {};
+    if (!global.itemCounts) global.itemCounts = {}; // CRITICAL FIX
+
+    global.totalAttempts = (global.totalAttempts || 0) + 1;
     global.totalPlaytime = (global.totalPlaytime || 0) + finalDuration;
 
     // 2. Daily Streak Logic

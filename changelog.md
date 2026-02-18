@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.2] - 2026-02-18
+
+### Fixed
+
+- Fixed: Resolved a critical TypeError where itemCounts was undefined for new users.
+- Fixed: Added robust initialization for global_stats to prevent crashes on the Achievements and Stats pages.
+
 ## [1.5.1] - 2026-02-18
 
 ## Added

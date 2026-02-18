@@ -9,7 +9,11 @@ async function loadAchievements() {
 
     const earned = data.achievements || [];
     const earnedDates = data.achievement_dates || {};
-    const stats = data.global_stats || { itemCounts: {}, totalPlaytime: 0, dailyChallengeWins: 0, currentStreak: 0 };
+    // const stats = data.global_stats || { itemCounts: {}, totalPlaytime: 0, dailyChallengeWins: 0, currentStreak: 0 };
+    const stats = data.global_stats || {};
+    if (!stats.itemCounts) stats.itemCounts = {};
+    if (!stats.dailyChallengeWins) stats.dailyChallengeWins = 0;
+
     const history = data.world_history || [];
 
     const list = document.getElementById("achievements-list");
