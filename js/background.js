@@ -11,7 +11,7 @@ browser.runtime.onMessage.addListener(async (request, sender) => {
             // If captureVisibleTab is missing, captureTab is the Firefox MV3 equivalent
             const captureMethod = browser.tabs.captureTab || browser.tabs.captureVisibleTab;
 
-            return await captureMethod(activeTab.id, { format: "png", quality: 70 });
+            return await captureMethod(activeTab.id, { format: "jpeg", quality: 30 });
         } catch (err) {
             console.error("Capture failed in background:", err);
             return null;

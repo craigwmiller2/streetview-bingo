@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.3] - 2026-02-18
+
+### Changed
+
+- Changed the screenshot file format from PNG to JPEG as well as reduced the quality of images to 30% in order to reduce localStorage usage. Additionally, the smaller file size of these images improves the loading speed of the Findings page.
+
 ## [1.5.2] - 2026-02-18
 
 ### Fixed
