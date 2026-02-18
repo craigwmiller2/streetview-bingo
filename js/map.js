@@ -23,7 +23,7 @@ async function initMap() {
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "© OpenStreetMap contributors",
-        crossOrigin: true, // Crucial for html2canvas to read the map tiles
+        crossOrigin: true,
     }).addTo(map);
 
     const shareGrid = document.getElementById("share-grid");
@@ -31,6 +31,8 @@ async function initMap() {
     let totalDistance = 0;
 
     // 2. Process Findings
+    const foundItemNames = finds.map((f) => f.item);
+
     finds.forEach((find, index) => {
         if (find.coords) {
             const currentPos = L.latLng(find.coords.lat, find.coords.lng);
@@ -40,10 +42,8 @@ async function initMap() {
                 totalDistance += pathPoints[pathPoints.length - 2].distanceTo(currentPos);
             }
 
-            // Map Marker
             L.marker(currentPos).addTo(map).bindPopup(`<b>${find.item}</b><br><img src="${find.image}" width="100">`);
 
-            // Grid Item
             const itemDiv = document.createElement("div");
             itemDiv.className = "grid-item";
             itemDiv.innerHTML = `
@@ -59,9 +59,24 @@ async function initMap() {
         }
     });
 
+    // --- NEW: Identify and Render Missing Items ---
+    const missingItems = ITEMS.filter((item) => !foundItemNames.includes(item));
+
+    if (missingItems.length > 0) {
+        const missingSection = document.createElement("div");
+        missingSection.id = "missing-items-summary";
+        missingSection.innerHTML = `
+            <h3 class="missing-title">🔍 Items Not Found (${missingItems.length})</h3>
+            <div class="missing-tags-container">
+                ${missingItems.map((item) => `<span class="missing-tag">${item}</span>`).join("")}
+            </div>
+        `;
+        // Append to share-container so it is included in the JPG export
+        document.getElementById("share-container").appendChild(missingSection);
+    }
+
     // 3. Draw Path & Stats
     if (pathPoints.length > 1) {
-        // L.polyline(pathPoints, { color: "#1877f2", weight: 3, dashArray: "5, 10" }).addTo(map);
         map.fitBounds(
             L.featureGroup(pathPoints.map((p) => L.marker(p)))
                 .getBounds()
@@ -69,15 +84,10 @@ async function initMap() {
         );
     }
 
-    // Time Calculation
     const start = new Date(startTimestamp);
-
-    // Use endTimestamp if it exists, otherwise fallback to the last find's timestamp
     const end = endTimestamp ? new Date(endTimestamp) : new Date(finds[finds.length - 1].timestamp);
-
     const diffMs = end - start;
 
-    // Format into H:M:S (Same as before, but now 'end' is correct)
     const hours = Math.floor(diffMs / 3600000);
     const mins = Math.floor((diffMs % 3600000) / 60000);
     const secs = Math.floor((diffMs % 60000) / 1000);
@@ -111,29 +121,20 @@ async function initMap() {
         const btn = document.getElementById("copy-share-btn");
         const originalText = btn.textContent;
         btn.textContent = "Generating Image...";
-
-        // disable button temporarily to prevent multiple clicks
         btn.disabled = true;
 
         try {
-            // Generate the canvas from the share-container
             const canvas = await html2canvas(document.getElementById("share-container"), {
                 useCORS: true,
                 allowTaint: false,
                 scale: 1.0,
             });
-
-            // Convert canvas to PNG DataURL (ClipboardItem prefers PNG)
             const dataUrl = canvas.toDataURL("image/png");
-
-            // Use your existing copy function
             await copyImageToClipboard(dataUrl, btn, originalText);
         } catch (err) {
             console.error("Error copying summary:", err);
             btn.textContent = "Error copying image";
         } finally {
-            // Logic for reverting text is handled inside copyImageToClipboard,
-            // but we reset here in case the try block fails before calling it.
             if (btn.textContent === "Generating Image...") {
                 btn.textContent = "📋 Copy Summary Image to Clipboard";
             }
@@ -141,42 +142,29 @@ async function initMap() {
     };
 }
 
-// Lightbox Close
 document.getElementById("lightbox").onclick = () => {
     document.getElementById("lightbox").style.display = "none";
 };
 
 document.addEventListener("DOMContentLoaded", initMap);
 
-/**
- * CSP-safe Copy to Clipboard
- * Converts a Base64/DataURL screenshot to a PNG Blob and copies it.
- */
 async function copyImageToClipboard(dataUrl, btn, originalText) {
     try {
-        // 1. Fetch the dataURL and convert to a Blob
         const response = await fetch(dataUrl);
         const blob = await response.blob();
-
-        // 2. Create a ClipboardItem (Chrome/Firefox/Edge standard)
         const item = new ClipboardItem({ "image/png": blob });
-
-        // 3. Write to clipboard
         await navigator.clipboard.write([item]);
 
-        // UI Feedback
         btn.innerHTML = "Copied! ✓";
         btn.style.backgroundColor = "#2ecc71";
 
         setTimeout(() => {
             btn.innerHTML = originalText;
-            btn.style.backgroundColor = ""; // Reverts to CSS default
-
-            // Re-enable the button after the operation is complete
+            btn.style.backgroundColor = "";
             btn.disabled = false;
         }, 2000);
     } catch (err) {
         console.error("Failed to copy image:", err);
-        alert("Clipboard copy failed. Your browser might require a secure context (HTTPS/Extension).");
+        alert("Clipboard copy failed. Your browser might require a secure context.");
     }
 }

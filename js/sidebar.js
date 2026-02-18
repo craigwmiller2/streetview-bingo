@@ -1,31 +1,3 @@
-const ITEMS = [
-    "Lawnmower",
-    "Trampoline",
-    "Hose Reel",
-    "Dog or Cat",
-    "BBQ",
-    "Motorbike or Quadbike",
-    "A Flag",
-    "Someone looking directly at Street View Car",
-    "A Satellite Dish",
-    "Air Conditioning Unit",
-    "Graffiti",
-    "Wheely Bin",
-    "Wheelbarrow",
-    "Bicycle",
-    "Caravan",
-    "Person wearing Hi-Vis",
-    "Vehicle with roof rack",
-    "Outdoor chair/bench",
-    "Playground equipment",
-    "Plant/Flower Pot",
-    "Work van (with signage)",
-    "Trailer",
-    "Post/Letter Box",
-    "Speed Limit Sign",
-    "A Ladder",
-];
-
 const soundTick = new Audio(browser.runtime.getURL("audio/tick.mp3"));
 const soundBingo = new Audio(browser.runtime.getURL("audio/bingo.mp3"));
 const soundDefeat = new Audio(browser.runtime.getURL("audio/defeat.mp3"));
@@ -259,6 +231,9 @@ function formatTime(totalSeconds) {
 /**
  * Universal Game End
  */
+/**
+ * Universal Game End - Updated for v1.5.1 Daily Country Challenge
+ */
 async function triggerEndGame(title, bgColor) {
     const grid = document.getElementById("bingo-grid");
     if (document.getElementById("win-overlay")) return;
@@ -279,14 +254,26 @@ async function triggerEndGame(title, bgColor) {
     const absoluteEndTime = gameStartTime + finalDuration;
     document.querySelectorAll(".cell").forEach((c) => (c.onclick = null));
 
-    const history = (await browser.storage.local.get("world_history")).world_history || [];
+    // 1. Process geocoding FIRST so we have the country data for the challenge
+    await processWorldData();
+
+    // 2. Fetch history and identify current game location
+    const historyData = await browser.storage.local.get("world_history");
+    const history = historyData.world_history || [];
     const lastGame = history[history.length - 1];
     const locationDisplay = lastGame ? `${lastGame.city}, ${lastGame.country}` : "Unknown Location";
+
+    // 3. DAILY COUNTRY CHALLENGE LOGIC
+    // Get the global target from our new daily-challenge.js logic
+    const dailyTarget = getDailyCountry();
+    const playedCountry = lastGame ? lastGame.country : "";
+
+    // Update daily stats (Best score / Completion status)
+    await updateDailyChallengeProgress(playedCountry, dailyTarget.name, gameData.length);
 
     // Create the enhanced overlay
     const overlay = document.createElement("div");
     overlay.id = "win-overlay";
-    // We'll use a CSS variable for the background color to keep the blur effect clean
     overlay.style.setProperty("--overlay-bg", bgColor);
 
     overlay.innerHTML = `
@@ -304,7 +291,7 @@ async function triggerEndGame(title, bgColor) {
     grid.style.position = "relative";
     grid.appendChild(overlay);
 
-    // 1. Update stats and catch Personal Best flag
+    // 4. Update stats and catch Personal Best flag
     const { isNewRecord, updatedStats } = await updateGlobalStats(finalDuration);
 
     if (isNewRecord) {
@@ -319,10 +306,7 @@ async function triggerEndGame(title, bgColor) {
         soundAchievement.play();
     }
 
-    // 2. Process geocoding
-    await processWorldData();
-
-    // 3. Check achievements using the FRESHLY updated stats
+    // 5. Check achievements using the FRESHLY updated stats
     await checkAchievements(finalDuration, updatedStats);
 
     document.getElementById("final-map-launch-btn").addEventListener("click", async () => {
@@ -334,8 +318,9 @@ async function triggerEndGame(title, bgColor) {
         await openOrFocusTab("map.html");
     });
 
-    // Update the sidebar streak display in case a new milestone was hit
+    // 6. Update UI HUD elements
     updateSidebarStreak();
+    updateDailyChallengeHUD(); // Refresh the new Daily Challenge HUD state
 }
 
 function parseCoords(url) {
@@ -488,6 +473,15 @@ async function checkAchievements(finalDuration, stats) {
     const streakMilestones = [3, 5, 7, 10, 20, 30, 50, 75, 100];
     streakMilestones.forEach((count) => {
         logicMap[`streak_${count}`] = stats.currentStreak >= count;
+    });
+
+    // --- DYNAMIC DAILY HERO MILESTONES ---
+    // This checks how many unique daily challenges have been won
+    const dailyHeroMilestones = [5, 10, 25, 50];
+    const totalDailyWins = stats.dailyChallengeWins || 0;
+
+    dailyHeroMilestones.forEach((count) => {
+        logicMap[`daily_hero_${count}`] = totalDailyWins >= count;
     });
 
     const today = new Date().toLocaleDateString("en-GB");
@@ -696,5 +690,10 @@ document.addEventListener("DOMContentLoaded", () => {
             // We use a simplified version of our helper for external URLs
             openOrFocusExternal("https://www.google.com/maps");
         };
+    }
+
+    // NEW: Initialize the Daily Challenge HUD
+    if (typeof updateDailyChallengeHUD === "function") {
+        updateDailyChallengeHUD();
     }
 });

@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.5.0] - 2026-02-18
+
+### Added
+
+- Daily Country Challenge: Introduced a globally synchronised daily challenge. Every player is assigned the same country each day to hunt for a Bingo.
+- Challenge HUD: Added a new pinned "Daily Challenge" section to the sidebar dashboard, displaying the target country's flag, name, and your current best score.
+- Interactive Launch Button: Added a quick-launch button in the challenge HUD that opens Google Maps directly centered on the day's target country.
+- Daily Hero Achievement Tier: A new set of milestone achievements (5, 10, 25, and 50 wins) specifically for completing Daily Country Challenges.
+- Sidebar Dashboard Container: Created a unified, fixed-position container at the bottom of the sidebar to house both the Daily Challenge and the Streak Indicator for a cleaner "HUD" feel.
+
+### Changed
+
+- Achievement Progress Logic: Refactored the Achievement Gallery to support dynamic progress bars for "Daily Hero" and "Streak" milestones, showing exactly how many wins/days are remaining until the next unlock.
+- Refactored: Centralised the Bingo item pool into js/config.js to streamline future content updates.
+- Optimisation: Reduced the memory footprint of the extension by removing duplicate arrays in local scripts.
+
+### Fixed
+
+- Win-Counter Protection: Implemented logic to ensure a Daily Challenge win only increments the achievement counter once per day, even if the player completes multiple games in that country.
+- Fixed outputting the total time played in the stats sharing button.
+
 ## [1.4.1] - 2026-02-17
 
 ### Fixed

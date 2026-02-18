@@ -160,33 +160,36 @@ button {
     background-color: #4752c4;
 }
 
-.missing-items-section {
-    margin-top: 30px;
+#missing-items-summary {
+    margin: 30px 20px;
     padding: 20px;
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(255, 255, 255, 0.03);
     border-radius: 12px;
-    border: 1px dashed #bdc3c7;
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    text-align: left;
 }
 
-.missing-items-section h3 {
+.missing-title {
     margin-top: 0;
-    color: #7f8c8d;
-    font-size: 1rem;
+    color: var(--text-dark);
+    font-size: 0.85rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    margin-bottom: 15px;
 }
 
-.missing-grid {
+.missing-tags-container {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
 
 .missing-tag {
-    background: #ecf0f1;
-    color: #95a5a6;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text-dark);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
     font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }

@@ -9,7 +9,7 @@ async function loadAchievements() {
 
     const earned = data.achievements || [];
     const earnedDates = data.achievement_dates || {};
-    const stats = data.global_stats || { itemCounts: {}, totalPlaytime: 0 };
+    const stats = data.global_stats || { itemCounts: {}, totalPlaytime: 0, dailyChallengeWins: 0, currentStreak: 0 };
     const history = data.world_history || [];
 
     const list = document.getElementById("achievements-list");
@@ -93,9 +93,18 @@ async function loadAchievements() {
 
                 let displayCurrent = current;
                 let displayGoal = ach.goal;
-                if (ach.goalType === "stat" && ach.statKey === "totalPlaytime") {
+
+                if (ach.statKey === "totalPlaytime") {
                     displayCurrent = Math.floor(current / 60000) + "m";
                     displayGoal = Math.floor(ach.goal / 60000) + "m";
+                }
+                // Optional: Add a suffix for wins or days to make it clearer
+                else if (ach.statKey === "dailyChallengeWins") {
+                    displayCurrent = current + " Wins";
+                    displayGoal = ach.goal + " Wins";
+                } else if (ach.statKey === "currentStreak") {
+                    displayCurrent = current + " Days";
+                    displayGoal = ach.goal + " Days";
                 }
 
                 progressHtml = `

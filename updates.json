@@ -3,6 +3,10 @@
         "streetview-bingo@orknet.co.uk": {
             "updates": [
                 {
+                    "version": "1.5.0",
+                    "update_link": "https://github.com/craigwmiller2/streetview-bingo/releases/download/v1.5.0/streetview-bingo.xpi"
+                },
+                {
                     "version": "1.4.1",
                     "update_link": "https://github.com/craigwmiller2/streetview-bingo/releases/download/v1.4.1/streetview-bingo.xpi"
                 },

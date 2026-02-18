@@ -560,24 +560,115 @@ button:active {
     }
 }
 
-#streak-indicator-box {
+/* Container for both HUD elements */
+#sidebar-dashboard {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: #1a252f; /* Slightly darker than your primary-bg */
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: #1a252f;
+    border-top: 2px solid rgba(255, 255, 255, 0.1);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+}
+
+#sidebar-dashboard.all-done {
+    background: linear-gradient(to top, #1a252f, #1e3a2a);
+}
+
+/* Ensure the grid doesn't get cut off by the fixed dashboard */
+#game-container {
+    padding-bottom: 160px; /* Adjust this value based on height */
+}
+
+/* Daily Challenge Styling */
+#daily-challenge-box {
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.challenge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.hud-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #7f8c8d;
+    letter-spacing: 1px;
+}
+
+.status-badge {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #34495e;
+    color: #bdc3c7;
+    font-weight: bold;
+}
+
+.status-badge.completed {
+    background: #27ae60;
+    color: white;
+}
+
+.challenge-body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.huge-flag {
+    font-size: 1.8rem;
+}
+
+.challenge-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 150px;
+}
+
+#challenge-country-name {
+    font-size: 1rem;
+    color: white;
+}
+
+#challenge-progress {
+    font-size: 0.75rem;
+    color: #3498db;
+}
+
+#btn-launch-challenge {
+    background: rgba(52, 152, 219, 0.2);
+    border: 1px solid #3498db;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    justify-content: center;
+}
+
+#btn-launch-challenge:hover {
+    background: #3498db;
+}
+
+/* Streak Indicator (Modified to remove fixed positioning) */
+#streak-indicator-box {
     display: flex;
     align-items: center;
     padding: 12px 20px;
     gap: 15px;
-    z-index: 100;
 }
 
 .streak-flame {
     font-size: 24px;
     filter: drop-shadow(0 0 5px rgba(243, 156, 18, 0.4));
-    animation: flicker 3s ease-in-out infinite;
 }
 
 .streak-info {

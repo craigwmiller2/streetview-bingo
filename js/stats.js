@@ -1,31 +1,3 @@
-const ITEMS = [
-    "Lawnmower",
-    "Trampoline",
-    "Hose Reel",
-    "Dog or Cat",
-    "BBQ",
-    "Motorbike or Quadbike",
-    "A Flag",
-    "Someone looking directly at Street View Car",
-    "A Satellite Dish",
-    "Air Conditioning Unit",
-    "Graffiti",
-    "Wheely Bin",
-    "Wheelbarrow",
-    "Bicycle",
-    "Caravan",
-    "Person wearing Hi-Vis",
-    "Vehicle with roof rack",
-    "Outdoor chair/bench",
-    "Playground equipment",
-    "Plant/Flower Pot",
-    "Work van (with signage)",
-    "Trailer",
-    "Post/Letter Box",
-    "Speed Limit Sign",
-    "A Ladder",
-];
-
 /**
  * Helper to convert milliseconds to a clean career duration string
  */
@@ -192,8 +164,10 @@ async function copyStatsToClipboard(stats) {
     console.log(stats);
 
     // Format logic (as discussed previously)
-    const hours = Math.floor((stats.totalTime || 0) / 3600);
-    const mins = Math.floor(((stats.totalTime || 0) % 3600) / 60);
+    // const hours = Math.floor((stats.totalPlaytime || 0) / 3600);
+    // const mins = Math.floor(((stats.totalPlaytime || 0) % 3600) / 60);
+    const hours = Math.floor((stats.totalPlaytime || 0) / 3600000);
+    const mins = Math.floor(((stats.totalPlaytime || 0) % 3600000) / 60000);
 
     // fastest bingo in ms
     const fastest = stats.fastestFullBoard || 0;

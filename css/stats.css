@@ -230,7 +230,7 @@ h1 {
 }
 
 .btn-share {
-    background-color: #6aaa64; /* Wordle Green */
+    background-color: var(--color-success); /* Wordle Green */
     color: white;
     border: none;
     padding: 12px 24px;

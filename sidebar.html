@@ -169,17 +169,35 @@
                     <span>Quit Game</span>
                 </button>
             </div>
-            <div id="streak-indicator-box">
-                <div class="streak-flame">🔥</div>
-                <div class="streak-info">
-                    <span class="streak-label">DAILY STREAK</span>
-                    <span id="sidebar-streak-count">0 Days</span>
+            <div id="sidebar-dashboard">
+                <div id="daily-challenge-box">
+                    <div class="challenge-header">
+                        <span class="hud-label">🌍 DAILY CHALLENGE</span>
+                        <span id="challenge-status" class="status-badge">PENDING</span>
+                    </div>
+                    <div class="challenge-body">
+                        <span id="challenge-flag" class="huge-flag"></span>
+                        <div class="challenge-info">
+                            <strong id="challenge-country-name"></strong>
+                            <span id="challenge-progress">Best: 0/25</span>
+                        </div>
+                        <button id="btn-launch-challenge" title="Open in Maps">Open in Google Maps</button>
+                    </div>
                 </div>
-                <div class="streak-target-hint" id="sidebar-streak-hint">Next: 3 days</div>
+
+                <div id="streak-indicator-box">
+                    <div class="streak-flame">🔥</div>
+                    <div class="streak-info">
+                        <span class="streak-label">DAILY STREAK</span>
+                        <span id="sidebar-streak-count">0 Days</span>
+                    </div>
+                    <div class="streak-target-hint" id="sidebar-streak-hint">Next: 3 days</div>
+                </div>
             </div>
         </div>
 
         <script src="js/config.js"></script>
+        <script src="js/daily-challenge.js"></script>
         <script src="js/sidebar.js"></script>
     </body>
 </html>
