@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.1] - 2026-02-18
+
+## Added
+
+- New Achievement: Added "First Flight" ✈️. This new milestone is awarded the moment you complete your very first Daily Country Challenge with a full Bingo.
+
 ## [1.5.0] - 2026-02-18
 
 ### Added

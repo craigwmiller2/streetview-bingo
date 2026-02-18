@@ -237,6 +237,16 @@ const ACH_DATA = [
         hidden: true,
     },
     {
+        id: "daily_hero_1",
+        name: "First Flight",
+        desc: "Complete your first Daily Country Challenge",
+        icon: "✈️",
+        type: "milestone",
+        goal: 1,
+        goalType: "stat",
+        statKey: "dailyChallengeWins",
+    },
+    {
         id: "daily_hero_5",
         name: "Five-Star Resident",
         desc: "Complete 5 Daily Country Challenges",

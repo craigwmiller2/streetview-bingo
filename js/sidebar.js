@@ -477,7 +477,7 @@ async function checkAchievements(finalDuration, stats) {
 
     // --- DYNAMIC DAILY HERO MILESTONES ---
     // This checks how many unique daily challenges have been won
-    const dailyHeroMilestones = [5, 10, 25, 50];
+    const dailyHeroMilestones = [1, 5, 10, 25, 50];
     const totalDailyWins = stats.dailyChallengeWins || 0;
 
     dailyHeroMilestones.forEach((count) => {
