@@ -155,6 +155,7 @@ async function updateDailyChallengeHUD() {
     // Launch Button Logic
     document.getElementById("btn-launch-challenge").onclick = () => {
         const url = `https://www.google.com/maps/search/${encodeURIComponent(daily.name)}`;
+
         browser.tabs.create({ url });
     };
 }

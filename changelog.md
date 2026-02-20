@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.4] - 2026-02-20
+
+### Added
+
+- Added a new achievment for earning a bingo in Australia
+
 ## [1.5.3] - 2026-02-18
 
 ### Changed

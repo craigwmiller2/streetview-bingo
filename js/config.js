@@ -76,6 +76,13 @@ const ACH_DATA = [
         type: "exploration",
     },
     {
+        id: "bingo_down_under",
+        name: "oƃuᴉq",
+        desc: "¡ɐᴉlɐɹʇsn∀ uᴉ oƃuᴉq ɐ ʇǝפ",
+        icon: "🇦🇺",
+        type: "exploration",
+    },
+    {
         id: "streak_3",
         name: "Streak Hunter",
         desc: "Play for 3 consecutive days",

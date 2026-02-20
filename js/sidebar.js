@@ -468,6 +468,7 @@ async function checkAchievements(finalDuration, stats) {
         island_hopper: visited("united kingdom") && visited("australia"),
         scandinavian_scout: visited("norway") && visited("sweden") && visited("denmark"),
         elite_explorer: isBingo && isLeetTime,
+        bingo_down_under: visited("australia") && isBingo,
     };
 
     // --- DYNAMIC STREAK MILESTONES ---
