@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.5] - 2026-02-21
+
+### Fixed
+
+- Fixed the logic for the Australia bingo achievement
+
 ## [1.5.4] - 2026-02-20
 
 ### Added

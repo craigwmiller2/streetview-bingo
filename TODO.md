@@ -10,4 +10,3 @@
 - [ ] Play sound effects during specific events:
     - [ ] Finding 5 items within 5 seconds
     - [ ]
-- [x] Create an achievement for earning a bingo in Australia (oƃuᴉq)
