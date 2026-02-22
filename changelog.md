@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.6] - 2026-02-22
+
+### Fixed
+
+- Fixed logic for checking country played in by using the "display_name" key within returned location query
+
 ## [1.5.5] - 2026-02-21
 
 ### Fixed

@@ -261,12 +261,13 @@ async function triggerEndGame(title, bgColor) {
     const historyData = await browser.storage.local.get("world_history");
     const history = historyData.world_history || [];
     const lastGame = history[history.length - 1];
-    const locationDisplay = lastGame ? `${lastGame.city}, ${lastGame.country}` : "Unknown Location";
+
+    const locationDisplay = lastGame ? lastGame.displayName : "Unknown Location";
 
     // 3. DAILY COUNTRY CHALLENGE LOGIC
     // Get the global target from our new daily-challenge.js logic
     const dailyTarget = getDailyCountry();
-    const playedCountry = lastGame ? lastGame.country : "";
+    const playedCountry = lastGame ? lastGame.displayName : "";
 
     // Update daily stats (Best score / Completion status)
     await updateDailyChallengeProgress(playedCountry, dailyTarget.name, gameData.length);
@@ -330,16 +331,6 @@ function parseCoords(url) {
 
 async function updateGlobalStats(finalDuration) {
     const data = await browser.storage.local.get("global_stats");
-    // let global = data.global_stats || {
-    //     totalAttempts: 0,
-    //     totalBingos: 0,
-    //     itemCounts: {},
-    //     fastestFullBoard: null,
-    //     history: [],
-    //     totalPlaytime: 0, // NEW
-    //     currentStreak: 0, // NEW
-    //     lastPlayedTimestamp: null, // NEW
-    // };
 
     let global = data.global_stats || {};
     if (!global.itemCounts) global.itemCounts = {}; // CRITICAL FIX
@@ -574,6 +565,7 @@ async function processWorldData() {
 
     let locationName = "Unknown Location";
     let countryName = "Unknown Country";
+    let displayName = "Unknown Location";
 
     try {
         const response = await fetch(
@@ -583,8 +575,10 @@ async function processWorldData() {
             },
         );
         const data = await response.json();
+
         locationName = data.address.city || data.address.town || data.address.village || "Remote Area";
         countryName = data.address.country || "Unknown Country";
+        displayName = data.display_name || "Unknown Location";
     } catch (e) {
         console.error("Geocoding failed", e);
     }
@@ -596,6 +590,7 @@ async function processWorldData() {
         lng: avgLng,
         city: locationName,
         country: countryName,
+        displayName: displayName,
         found: gameData.length,
         isBingo: gameData.length === 25,
         timestamp: Date.now(),

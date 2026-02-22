@@ -9,4 +9,4 @@
 - [ ] Update sounds: https://www.voicy.network/official-soundboards/games/unreal-tournament
 - [ ] Play sound effects during specific events:
     - [ ] Finding 5 items within 5 seconds
-    - [ ]
+- [ ] Add a "Finish" button to bingo game that lets users finish the game and collect their findings
