@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.6.0] - 2026-02-24
+
+### Added
+
+- Geospatial Tracking: Implemented Equirectangular projection distance math to track player movement in Street View.
+- Dynamic HUD: Added a real-time distance counter and mode-specific progress ring colors (Standard/Blue, Random/Purple, Infinite/Orange).
+- Achievement System v2: Added 7 new achievements including tactical distance challenges (Perfect Seed, Neighbourhood Watch) and long-term collection goals (Animal Planet).
+- Advanced Game Modes: Fully integrated "Random Mode" with custom shuffling animations and unique achievement logic.
+
+### Fixed
+
+- Timer Synchronisation: Fixed "Ghost Timer" bug where previous session data flickered on new game start.
+- Pause Logic: Resolved Infinite Mode "time jump" by implementing a totalPausedTime subtraction system.
+- Data Integrity: Expanded world_history schema to store foundItems, enabling cross-session achievement tracking.
+- UI Polish: Added intro transitions for the mode badge and fixed the "Frozen HUD" issue during Bingo triggers.
+
 ## [1.5.6] - 2026-02-22
 
 ### Fixed
