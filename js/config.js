@@ -1,4 +1,4 @@
-const ITEMS = [
+const CORE_ITEMS = [
     "Lawnmower",
     "Trampoline",
     "Hose Reel",
@@ -25,6 +25,60 @@ const ITEMS = [
     "Speed Limit Sign",
     "A Ladder",
 ];
+
+const EXPANSION_ITEMS = [
+    "Cement Mixer",
+    "Bus",
+    "Statue",
+    "Washing Line",
+    "Boat",
+    "Bird",
+    "Bollard",
+    "Taxi",
+    "Palm Tree",
+    "Traffic Cone",
+    "Roadworks Sign",
+    "Tractor",
+    "Yellow Car",
+    "Scaffolding",
+    "Wooden Pallet",
+    "Solar Panels",
+    "Bus Shelter",
+    "Shipping Container",
+    "Streetview Car Reflection",
+    "Greenhouse",
+    "Umbrella/Parasol",
+    "Pickup Truck",
+];
+
+// This replaces your old 'const ITEMS'
+let ITEMS = [...CORE_ITEMS];
+
+/**
+ * Fisher-Yates shuffle algorithm for true randomness
+ */
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[array.length - 1]] = [array[array.length - 1], array[i]];
+    }
+    return array;
+}
+
+function generateRandomBoard() {
+    // 1. Combine everything into one big pool
+    const fullPool = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+
+    // 2. Fisher-Yates Shuffle (Unbiased)
+    // We iterate backwards, swapping each element with a random one before it
+    for (let i = fullPool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [fullPool[i], fullPool[j]] = [fullPool[j], fullPool[i]];
+    }
+
+    // 3. Take the first 25 items from the now-scrambled list
+    return fullPool.slice(0, 25);
+}
 
 const ACH_DATA = [
     {
@@ -274,23 +328,38 @@ const ACH_DATA = [
         statKey: "dailyChallengeWins",
     },
     {
-        id: "daily_hero_25",
-        name: "Global Citizen",
-        desc: "Complete 25 Daily Country Challenges",
-        icon: "🌍",
-        type: "milestone",
-        goal: 25,
-        goalType: "stat",
-        statKey: "dailyChallengeWins",
+        id: "local_legend",
+        name: "Local Legend",
+        icon: "🏘️",
+        desc: "Achieve a Bingo while travelling less than 1km total.",
+        type: "tactical",
     },
     {
-        id: "daily_hero_50",
-        name: "World Ambassador",
-        desc: "Complete 50 Daily Country Challenges",
-        icon: "🗺️",
+        id: "chaos_tamer",
+        name: "Chaos Tamer",
+        icon: "🎲",
+        desc: "Achieve a Bingo in Random Mode for the first time.",
         type: "milestone",
-        goal: 50,
-        goalType: "stat",
-        statKey: "dailyChallengeWins",
+    },
+    {
+        id: "adapt_overcome",
+        name: "Adapt & Overcome",
+        icon: "🧠",
+        desc: "Achieve 5 Bingos in Random Mode.",
+        type: "milestone",
+    },
+    {
+        id: "rng_master",
+        name: "RNG Master",
+        icon: "⚡",
+        desc: "Achieve a Bingo in Random Mode in under 5 minutes.",
+        type: "sprint",
+    },
+    {
+        id: "perfect_seed",
+        name: "Perfect Seed",
+        icon: "🌱",
+        desc: "Achieve a Bingo with less than 500m total distance between all finds.",
+        type: "tactical",
     },
 ];

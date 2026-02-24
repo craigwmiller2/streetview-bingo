@@ -13,8 +13,49 @@ function formatTotalDuration(ms) {
 async function loadStats() {
     // 1. Fetch all data from storage
     const storage = await browser.storage.local.get(["global_stats", "world_history"]);
-    const stats = storage.global_stats;
-    const worldHistory = storage.world_history || [];
+    let stats = storage.global_stats;
+    let worldHistory = storage.world_history || [];
+
+    // --- NEW: AUTOMATIC DATA MIGRATION ---
+    let needsUpdate = false;
+
+    if (stats && stats.totalAttempts > 0) {
+        // A. Handle modeCounts initialization
+        if (!stats.modeCounts) {
+            stats.modeCounts = { Standard: stats.totalAttempts, Random: 0, Infinite: 0 };
+            needsUpdate = true;
+        } else {
+            // Check for discrepancy between total attempts and sum of modes
+            const countedTotal =
+                (stats.modeCounts["Standard"] || 0) +
+                (stats.modeCounts["Random"] || 0) +
+                (stats.modeCounts["Infinite"] || 0);
+
+            if (stats.totalAttempts > countedTotal) {
+                stats.modeCounts["Standard"] += stats.totalAttempts - countedTotal;
+                needsUpdate = true;
+            }
+        }
+
+        // B. Handle missing 'mode' in individual history records
+        worldHistory = worldHistory.map((game) => {
+            if (!game.mode) {
+                game.mode = "Standard"; // Assume legacy games are Standard
+                needsUpdate = true;
+            }
+            return game;
+        });
+
+        // C. Save back to storage if any fixes were made
+        if (needsUpdate) {
+            await browser.storage.local.set({
+                global_stats: stats,
+                world_history: worldHistory,
+            });
+            console.log("Migration: Legacy data successfully updated to Standard mode.");
+        }
+    }
+    // --- END MIGRATION ---
 
     // If no stats exist, show a friendly message
     if (!stats || stats.totalAttempts === 0) {
@@ -47,7 +88,8 @@ async function loadStats() {
 
     // --- 2. Item Frequency Bar Chart ---
     const itemCounts = stats.itemCounts || {};
-    const allItemEntries = ITEMS.map((name) => [name, itemCounts[name] || 0]);
+    const totalPool = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+    const allItemEntries = totalPool.map((name) => [name, itemCounts[name] || 0]);
     allItemEntries.sort((a, b) => b[1] - a[1]);
 
     const list = document.getElementById("item-rank");
@@ -111,6 +153,32 @@ async function loadStats() {
             });
     }
 
+    // --- NEW: Game Mode Breakdown (Added between sections 3 and 4) ---
+    const modeCounts = stats.modeCounts || { Standard: 0, Random: 0, Infinite: 0 };
+    const totalGames = stats.totalAttempts || 1;
+    const modeContainer = document.getElementById("mode-breakdown-container");
+
+    if (modeContainer) {
+        modeContainer.innerHTML = "";
+        Object.entries(modeCounts).forEach(([mode, count]) => {
+            const percentage = Math.round((count / totalGames) * 100);
+            const modeRow = document.createElement("div");
+            modeRow.className = "mode-stats-row";
+            modeRow.innerHTML = `
+                <div class="mode-info">
+                    <span class="mode-dot mode-${mode.toLowerCase()}"></span>
+                    <span class="mode-name">${mode}</span>
+                    <span class="mode-count">${count} games</span>
+                </div>
+                <div class="mode-bar-bg">
+                    <div class="mode-bar-fill mode-${mode.toLowerCase()}" style="width: ${percentage}%"></div>
+                </div>
+                <div class="mode-percent">${percentage}%</div>
+            `;
+            modeContainer.appendChild(modeRow);
+        });
+    }
+
     // --- 4. Recent Activity Table ---
     const historyBody = document.getElementById("history-body");
     if (stats.history && stats.history.length > 0) {
@@ -122,9 +190,11 @@ async function loadStats() {
             const secs = totalSeconds % 60;
             const timeStr = `${mins}m ${secs.toString().padStart(2, "0")}s`;
             const statusClass = game.status === "Completed" ? "status-completed" : "status-timeout";
+            const mode = game.mode || "Standard";
 
             row.innerHTML = `
                 <td>${game.date}</td>
+                <td><span class="mode-badge-table mode-${mode.toLowerCase()}">${mode}</span></td>
                 <td class="${statusClass}">${game.status}</td>
                 <td>${game.itemsFound}/25</td>
                 <td>${timeStr}</td>
@@ -161,8 +231,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function copyStatsToClipboard(stats) {
-    console.log(stats);
-
     // Format logic (as discussed previously)
     // const hours = Math.floor((stats.totalPlaytime || 0) / 3600);
     // const mins = Math.floor(((stats.totalPlaytime || 0) % 3600) / 60);
@@ -187,6 +255,7 @@ async function copyStatsToClipboard(stats) {
 
     const text = [
         `🗺️ Street View Bingo`,
+        `🔢 Total Attempts: ${stats.totalAttempts || 0}`,
         `🎯 Bingos: ${stats.totalBingos || 0}`,
         `🔥 Streak: ${stats.currentStreak || 0} days`,
         `⏱️ Best Time: ${fMins}m ${fSecs}s`,

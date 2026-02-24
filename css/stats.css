@@ -260,3 +260,86 @@ h1 {
 #share-stats-btn:active {
     transform: translateY(0);
 }
+
+.mode-stats-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+.mode-info {
+    display: flex;
+    align-items: center;
+    width: 160px;
+    gap: 8px;
+}
+
+.mode-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.mode-bar-bg {
+    flex-grow: 1;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mode-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease-out;
+}
+
+/* Reusing your established mode colors */
+.mode-standard {
+    background-color: #3498db;
+}
+.mode-random {
+    background-color: #8e44ad;
+}
+.mode-infinite {
+    background-color: #f39c12;
+}
+
+.mode-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+.mode-percent {
+    width: 40px;
+    text-align: right;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* Small badges for the stats table */
+.mode-badge-table {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: white;
+}
+
+.mode-standard {
+    background-color: #3498db;
+}
+.mode-random {
+    background-color: #8e44ad;
+}
+.mode-infinite {
+    background-color: #f39c12;
+}
+
+#history-table td {
+    vertical-align: middle;
+}

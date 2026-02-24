@@ -8,7 +8,7 @@
     --text-dark: #000000;
 
     /* Primary Action Colors */
-    --color-primary: #3498db;
+    --color-primary: #4285f4;
     --color-success: #2ecc71;
     --color-danger: #e74c3c;
     --color-warning: #e67e22;
@@ -197,6 +197,7 @@ button:active {
     fill: none;
     stroke-width: 8;
     stroke-linecap: round;
+    stroke-dasharray: 283;
     transition:
         stroke-dashoffset 1s linear,
         stroke 1s linear;
@@ -240,6 +241,8 @@ button:active {
     transition:
         transform 0.1s,
         background-color var(--transition-speed);
+
+    opacity: 0;
 }
 
 .cell span {
@@ -302,7 +305,7 @@ button:active {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    min-height: 100%;
     /* Combine the blur with the dynamic background color */
     background: var(--overlay-bg);
     backdrop-filter: blur(5px);
@@ -310,7 +313,7 @@ button:active {
     align-items: center;
     justify-content: center;
     z-index: 100;
-    border-radius: var(--radius-large);
+    /* border-radius: var(--radius-large); */
     animation: overlayFadeIn 0.5s ease-out forwards;
 }
 
@@ -342,8 +345,8 @@ button:active {
 #final-map-launch-btn {
     background: white !important;
     color: var(--text-main) !important;
-    border-radius: var(--radius-round);
-    padding: 12px 24px;
+    border-radius: var(--radius-standard);
+    padding: 8px 16px;
     font-size: 1rem;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     opacity: 0;
@@ -414,6 +417,13 @@ button:active {
     &:hover {
         transform: translateX(0) scale(1.05);
     }
+}
+
+/* Unique styling for Random Mode achievements */
+.achievement-toast.random-category {
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    border-left: 5px solid #ffffff;
+    box-shadow: 0 0 20px rgba(108, 92, 231, 0.4);
 }
 
 .ach-icon-wrap {
@@ -658,6 +668,10 @@ button:active {
     background: #3498db;
 }
 
+#btn-infinite {
+    background-color: #f39c12;
+}
+
 /* Streak Indicator (Modified to remove fixed positioning) */
 #streak-indicator-box {
     display: flex;
@@ -728,4 +742,178 @@ button:active {
     &:hover {
         background: #2c3e50;
     }
+}
+
+/* Animation: Cells fan out from the center to their grid positions */
+@keyframes shuffleFromCenter {
+    0% {
+        transform: translate(var(--center-x), var(--center-y)) scale(0);
+        opacity: 0;
+    }
+    60% {
+        transform: translate(0, 0) scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Keep the cells visible once the animation class is removed */
+.cell:not(.shuffling) {
+    opacity: 1;
+}
+
+/* Ensure they are visible during the animation itself */
+.cell.shuffling {
+    animation: shuffleFromCenter 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    position: relative;
+    /* Opacity is handled by the keyframes, but setting it here 
+       as well prevents any flickering at the start of the frame */
+    opacity: 0;
+}
+
+/* Random Mode Specific Styles */
+#bingo-grid.random-mode .cell.found {
+    border: 3px solid #8e44ad !important; /* The same purple as your button */
+    box-shadow: 0 0 15px rgba(142, 68, 173, 0.4);
+}
+
+.control-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr; /* Give more prominence to the Save button */
+    gap: 10px;
+    opacity: 0;
+    animation: fadeInControlGrid 0.5s ease-out 5.5s forwards;
+
+    button {
+        padding: 8px;
+        text-align: left;
+        font-size: 0.75rem;
+        gap: 8px;
+    }
+}
+
+@keyframes fadeInControlGrid {
+    100% {
+        opacity: 1;
+    }
+}
+
+.btn-success {
+    background-color: var(--color-success) !important;
+    color: white;
+}
+
+.btn-danger-outline {
+    background-color: transparent !important;
+    color: var(--color-danger) !important;
+    border: 2px solid var(--color-danger) !important;
+}
+
+.btn-danger-outline:hover {
+    background-color: var(--color-danger) !important;
+    color: white !important;
+}
+
+.end-game-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.secondary-btn-white {
+    background: transparent !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.secondary-btn-white:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* --- Dynamic Grid Themes --- */
+
+/* Standard Mode: Blue */
+#bingo-grid.standard-mode .cell.found {
+    border: 3px solid #3498db !important;
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.4);
+}
+
+/* Random Mode: Purple (Existing) */
+#bingo-grid.random-mode .cell.found {
+    border: 3px solid #8e44ad !important;
+    box-shadow: 0 0 15px rgba(142, 68, 173, 0.4);
+}
+/* Infinite Mode: Orange */
+#bingo-grid.infinite-mode .cell.found {
+    border: 3px solid #f39c12 !important;
+    box-shadow: 0 0 15px rgba(243, 156, 18, 0.4);
+}
+
+/* Container for the badge */
+#active-mode-display {
+    display: none;
+    text-align: center;
+    margin-bottom: 15px;
+    margin-top: 5px;
+}
+
+/* The badge itself */
+.mode-badge-title {
+    display: inline-block;
+    padding: 4px 16px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Mode Specific Backgrounds */
+.mode-badge-title.mode-standard {
+    background-color: #3498db;
+}
+.mode-badge-title.mode-random {
+    background-color: #8e44ad;
+}
+.mode-badge-title.mode-infinite {
+    background-color: #f39c12;
+}
+
+/* Styling for the text display during Infinite Count Up */
+#bingo-grid.infinite-mode ~ #timer-container #timer-text {
+    color: #f39c12;
+    text-shadow: 0 0 5px rgba(243, 156, 18, 0.2);
+}
+
+/* Make the progress ring static orange for Infinite mode */
+#bingo-grid.infinite-mode ~ #timer-container .timer-progress {
+    stroke: #f39c12 !important;
+    transition: none;
+}
+
+#distance-stats {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    margin-top: 5px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+}
+
+/* Optional: Make it look "Active" when a game is running */
+#timer-container[style*="display: block"] #distance-stats {
+    animation: fadeIn 0.5s ease-out;
 }

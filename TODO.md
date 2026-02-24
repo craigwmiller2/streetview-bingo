@@ -10,3 +10,28 @@
 - [ ] Play sound effects during specific events:
     - [ ] Finding 5 items within 5 seconds
 - [ ] Add a "Finish" button to bingo game that lets users finish the game and collect their findings
+
+## New Items
+
+- Cement Mixer
+- Bus
+- Statue
+- Washing Line
+- Boat
+- Bird
+- Bollard
+- Taxi
+- Palm Tree
+- Traffic Cone
+- Roadworks Sign
+- Tractor
+- Yellow Car
+- Scaffolding
+- Widden Pallet
+- Solar Panels
+- Bus Shelter
+- Shipping Container
+- Streetview Car Reflection
+- Greenhouse
+- Umbrella/Parasol
+- Pickup Truck

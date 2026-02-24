@@ -16,18 +16,75 @@ let timeLeft = 0;
 let initialTime = 600; // 10 mins
 let gameStartTime = null;
 let isPaused = false;
+let totalPausedTime = 0;
+let pauseStartTime = null;
+let totalDistanceTraveled = 0;
 const FULL_DASH_ARRAY = 283;
 
 /**
  * Game State Controller with Countdown
  */
-window.startGame = function (mode) {
-    // 1. Initial UI Setup (Happens immediately)
+window.startGame = async function (mode) {
+    const grid = document.getElementById("bingo-grid");
+    const modeBadge = document.getElementById("mode-badge-title");
+
+    // --- NEW: Reset Timer UI immediately to prevent ghosting ---
+    const textDisplay = document.getElementById("timer-text");
+    const progressCircle = document.querySelector(".timer-progress");
+
+    if (textDisplay) textDisplay.textContent = "10:00"; // Default starting look
+    if (progressCircle) {
+        progressCircle.style.strokeDashoffset = "0"; // Reset the ring to full
+        progressCircle.style.transition = "none"; // Disable animation during reset
+    }
+
+    // 1. Initial UI Setup
     document.getElementById("mode-menu").style.display = "none";
     document.getElementById("main-header").style.display = "none";
     document.getElementById("controls").style.display = "block";
+
+    // 2. Clear previous classes
+    grid.classList.remove("standard-mode", "random-mode", "infinite-mode");
+    modeBadge.className = ""; // Reset badge classes
+
+    // Reset pause state and timers
+    totalPausedTime = 0;
+    pauseStartTime = null;
+
+    // Reset distance for the new game
+    totalDistanceTraveled = 0;
+
+    let modeLabel = "Standard";
+    if (mode === "random") {
+        modeLabel = "Random";
+        ITEMS = generateRandomBoard();
+        grid.classList.add("random-mode");
+        modeBadge.classList.add("mode-badge-title", "mode-random");
+    } else if (mode === "infinite") {
+        modeLabel = "Infinite";
+        ITEMS = [...CORE_ITEMS];
+        grid.classList.add("infinite-mode");
+        modeBadge.classList.add("mode-badge-title", "mode-infinite");
+    } else {
+        ITEMS = [...CORE_ITEMS];
+        grid.classList.add("standard-mode");
+        modeBadge.classList.add("mode-badge-title", "mode-standard");
+    }
+
+    modeBadge.textContent = `${modeLabel} Mode`;
+
+    // Save the mode along with the session items
+    await browser.storage.local.set({
+        session_items: ITEMS,
+        current_game_mode: modeLabel,
+    });
+
     gameData = [];
-    generateGrid();
+    document.getElementById("bingo-grid").innerHTML = "";
+    // generateGrid();
+
+    // 3. Generate Grid with Animation
+    // generateGridWithAnimation();
 
     // 2. Prepare the Countdown Overlay
     const overlay = document.getElementById("start-countdown");
@@ -52,18 +109,23 @@ window.startGame = function (mode) {
         } else if (count === 0) {
             numberDisplay.textContent = "GO!";
             numberDisplay.classList.add("go-text");
+
+            // --- NEW: Trigger Shuffle Animation RIGHT NOW ---
+            // This happens while "GO!" is on screen but before overlay vanishes
+            setTimeout(() => {
+                generateGridWithAnimation();
+                document.getElementById("active-mode-display").style.display = "block";
+            }, 1000);
         } else {
             clearInterval(countdownInterval);
             overlay.style.display = "none";
 
             // Start the Game
             gameStartTime = Date.now();
-            if (mode === "10min") {
-                timeLeft = initialTime;
-                document.getElementById("timer-container").style.display = "block";
+            if (mode === "10min" || mode === "random" || mode === "infinite") {
+                timeLeft = initialTime; // Only used for countdown modes
+                document.getElementById("timer-container").style.display = "block"; // Now visible for Infinite!
                 startTimer();
-            } else {
-                document.getElementById("timer-container").style.display = "none";
             }
         }
     }, 1000);
@@ -82,20 +144,24 @@ function generateGrid() {
 }
 
 function togglePause() {
-    if (document.getElementById("timer-container").style.display === "none") return; // Only for 10min mode
-
+    // Note: We now allow pausing in all modes including Infinite
     isPaused = !isPaused;
     const overlay = document.getElementById("pause-overlay");
     const grid = document.getElementById("bingo-grid");
 
     if (isPaused) {
+        pauseStartTime = Date.now(); // Record the moment pause began
         overlay.style.display = "flex";
-        grid.style.pointerEvents = "none"; // Disable all clicks on the grid
         grid.style.filter = "blur(4px)";
+        grid.style.pointerEvents = "none";
     } else {
+        // Calculate how long this specific pause lasted and add it to the total
+        if (pauseStartTime) {
+            totalPausedTime += Date.now() - pauseStartTime;
+        }
         overlay.style.display = "none";
-        grid.style.pointerEvents = "auto";
         grid.style.filter = "none";
+        grid.style.pointerEvents = "auto";
     }
 }
 
@@ -124,7 +190,31 @@ async function handleCapture(itemName, cellElement) {
             timestamp: new Date().toISOString(),
         };
 
+        // 1. Store the previous length before pushing
+        const previousLength = gameData.length;
         gameData.push(find);
+
+        // 2. Distance Logic: Only run if there's a "previous" item to compare to
+        if (previousLength > 0) {
+            const currentFind = gameData[gameData.length - 1];
+            const previousFind = gameData[gameData.length - 2];
+
+            if (previousFind.coords && currentFind.coords) {
+                const d = calculateDistance(
+                    previousFind.coords.lat,
+                    previousFind.coords.lng,
+                    currentFind.coords.lat,
+                    currentFind.coords.lng,
+                );
+
+                // Ignore movements less than 1m (GPS noise) and impossible jumps
+                if (d > 1 && d < 10000000) {
+                    totalDistanceTraveled += d;
+                }
+            }
+        }
+
+        // 3. UI Updates
         cellElement.classList.remove("capturing");
         cellElement.classList.add("found");
         cellElement.style.backgroundImage = `url(${screenshot})`;
@@ -139,78 +229,169 @@ async function handleCapture(itemName, cellElement) {
         };
         cellElement.appendChild(undoBtn);
 
+        // Sync the HUD immediately so the player sees the 0m or +Xm change
+        refreshHUD();
         checkWinCondition();
     } catch (error) {
         cellElement.classList.remove("capturing");
         cellElement.innerHTML = originalContent;
         if (error.message === "WrongTab") alert("Switch to Google Maps!");
+        console.error("Capture Error:", error);
+    }
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // Earth's radius in metres
+
+    // Convert degrees to radians
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+
+    // x = distance along the parallel (longitude)
+    // y = distance along the meridian (latitude)
+    const x = Δλ * Math.cos((φ1 + φ2) / 2);
+    const y = Δφ;
+
+    // Distance = sqrt(x² + y²) * R
+    return Math.sqrt(x * x + y * y) * R;
+}
+
+function checkWinCondition() {
+    if (gameData.length === 25) {
+        soundBingo.play();
+        triggerEndGame("🎉 BINGO!", "rgba(46, 204, 113, 0.9)");
     }
 }
 
 function handleUndo(itemName, cellElement) {
-    const index = gameData.map((f) => f.item).lastIndexOf(itemName);
-    if (index > -1) gameData.splice(index, 1);
+    // 1. Find the index of the specific item being undone
+    const index = gameData.findIndex((f) => f.item === itemName);
 
+    if (index > -1) {
+        // 2. Only subtract distance if there was a "previous" item to jump from
+        if (index > 0) {
+            const current = gameData[index];
+            const previous = gameData[index - 1];
+
+            if (current.coords && previous.coords) {
+                const jumpDistance = calculateDistance(
+                    previous.coords.lat,
+                    previous.coords.lng,
+                    current.coords.lat,
+                    current.coords.lng,
+                );
+
+                // Subtract the distance this specific find added
+                totalDistanceTraveled = Math.max(0, totalDistanceTraveled - jumpDistance);
+            }
+        }
+
+        // 3. Remove the item from the data array
+        gameData.splice(index, 1);
+    }
+
+    // 4. Reset Cell UI
     cellElement.classList.remove("found");
     cellElement.style.backgroundImage = "none";
     cellElement.innerHTML = `<span>${itemName}</span>`;
     cellElement.onclick = () => handleCapture(itemName, cellElement);
+
+    // 5. Update HUD to show the new reduced distance
+    refreshHUD();
+}
+
+function refreshHUD() {
+    const grid = document.getElementById("bingo-grid");
+    const textDisplay = document.getElementById("timer-text");
+    const progressCircle = document.querySelector(".timer-progress");
+
+    // Safety: Don't calculate if the game hasn't technically started yet
+    if (!gameStartTime || !textDisplay || !progressCircle) return;
+
+    const isRandom = grid.classList.contains("random-mode");
+    const isInfinite = grid.classList.contains("infinite-mode");
+    let displayMins, displaySecs;
+
+    const distanceDisplay = document.getElementById("distance-stats"); // Add this to your HTML
+    if (distanceDisplay) {
+        // Convert to km for a cleaner look if it's long, or meters for precision
+        const distText =
+            totalDistanceTraveled < 1000
+                ? `${Math.floor(totalDistanceTraveled)}m`
+                : `${(totalDistanceTraveled / 1000).toFixed(2)}km`;
+
+        distanceDisplay.textContent = `Distance Travelled: ${distText}`;
+
+        // Optional: Turn text red if they fail "Perfect Seed"
+        // if (totalDistanceTraveled >= 500) {
+        //     distanceDisplay.style.color = "#e74c3c";
+        // }
+    }
+
+    if (isInfinite) {
+        // --- INFINITE MODE: Count UP (Adjusted for Pauses) ---
+        // Subtract totalPausedTime so the clock doesn't jump forward
+        const elapsed = Math.floor((Date.now() - gameStartTime - totalPausedTime) / 1000);
+        displayMins = Math.floor(elapsed / 60);
+        displaySecs = elapsed % 60;
+
+        progressCircle.style.strokeDashoffset = 0;
+        progressCircle.style.stroke = "#f39c12";
+    } else {
+        // --- 10 MIN MODES (Standard & Random): Count DOWN ---
+        const percentage = Math.max(0, timeLeft / initialTime);
+        displayMins = Math.floor(timeLeft / 60);
+        displaySecs = timeLeft % 60;
+
+        // Calculate the ring progress
+        const offset = FULL_DASH_ARRAY - percentage * FULL_DASH_ARRAY;
+        progressCircle.style.strokeDashoffset = offset;
+
+        // Set color based on mode
+        if (isRandom) {
+            progressCircle.style.stroke = "#8e44ad"; // Purple for Random
+        } else {
+            const hue = percentage * 210; // Blue to Green for Standard
+            progressCircle.style.stroke = `hsl(${hue}, 80%, 50%)`;
+        }
+    }
+
+    textDisplay.textContent = `${displayMins}:${displaySecs.toString().padStart(2, "0")}`;
 }
 
 function startTimer() {
     const progressCircle = document.querySelector(".timer-progress");
-    const textDisplay = document.getElementById("timer-text");
-    const pauseBtn = document.getElementById("pause-btn");
+    const grid = document.getElementById("bingo-grid");
 
-    progressCircle.style.strokeDasharray = `${FULL_DASH_ARRAY} ${FULL_DASH_ARRAY}`;
+    // Identify modes based on the grid class we set in startGame
+    const isInfinite = grid.classList.contains("infinite-mode");
 
-    const updateUI = () => {
-        const percentage = Math.max(0, timeLeft / initialTime);
-        const hue = percentage * 210;
-        progressCircle.style.stroke = `hsl(${hue}, 80%, 50%)`;
-        const mins = Math.floor(timeLeft / 60);
-        const secs = timeLeft % 60;
-        textDisplay.textContent = `${mins}:${secs.toString().padStart(2, "0")}`;
-        const offset = FULL_DASH_ARRAY - percentage * FULL_DASH_ARRAY;
-        progressCircle.style.strokeDashoffset = offset;
+    // Re-enable transition for timed modes
+    if (!isInfinite) {
+        progressCircle.style.transition = "stroke-dashoffset 1s linear, stroke 1s linear";
+    }
 
-        if (timeLeft <= 10 && timeLeft > 0 && !isPaused) {
-            // Check pause here
-            progressCircle.style.animation = "pulse 0.5s infinite alternate";
-            soundTick.currentTime = 0;
-            soundTick.play().catch(() => {});
-        } else {
-            progressCircle.style.animation = "none";
-        }
-    };
+    refreshHUD();
 
-    updateUI();
-
-    // Clear any existing interval before starting a new one
     if (timerInterval) clearInterval(timerInterval);
 
     timerInterval = setInterval(() => {
-        if (isPaused) return; // THE PAUSE LOGIC
+        if (isPaused) return;
 
-        timeLeft--;
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            timeLeft = 0;
-            updateUI();
-            soundDefeat.play();
-            triggerEndGame("⏰ TIME'S UP!", "rgba(192, 57, 43, 0.9)");
+        if (isInfinite) {
+            refreshHUD();
         } else {
-            updateUI();
+            timeLeft--;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                triggerEndGame("⏰ TIME'S UP!", "rgba(192, 57, 43, 0.9)");
+                soundDefeat.play();
+            }
+            refreshHUD();
         }
     }, 1000);
-}
-
-function checkWinCondition() {
-    if (document.querySelectorAll(".cell.found").length === 25) {
-        clearInterval(timerInterval);
-        soundBingo.play();
-        triggerEndGame("🏆 BOARD CLEARED!", "rgba(46, 204, 113, 0.9)");
-    }
 }
 
 /**
@@ -240,16 +421,25 @@ async function triggerEndGame(title, bgColor) {
 
     clearInterval(timerInterval);
 
+    // --- NEW: Hide the active game controls ---
+    document.getElementById("controls").style.display = "none";
+
+    // Capture the exact moment the game ended
+    const endTime = Date.now();
+
     let finalDuration;
-    const isInfinite = document.getElementById("timer-container").style.display === "none";
+    const isInfinite = grid.classList.contains("infinite-mode");
 
     if (isInfinite) {
-        finalDuration = Date.now() - gameStartTime;
+        finalDuration = endTime - gameStartTime - totalPausedTime;
     } else if (timeLeft <= 0) {
         finalDuration = initialTime * 1000;
     } else {
         finalDuration = (initialTime - timeLeft) * 1000;
     }
+
+    // Ensure finalDuration isn't negative or NaN due to early exits
+    finalDuration = Math.max(0, finalDuration);
 
     const absoluteEndTime = gameStartTime + finalDuration;
     document.querySelectorAll(".cell").forEach((c) => (c.onclick = null));
@@ -285,7 +475,10 @@ async function triggerEndGame(title, bgColor) {
                 <p>Items Found: <strong>${gameData.length}</strong></p>
                 <p>Final Time: <strong>${formatTime(finalDuration / 1000)}</strong></p>
             </div>
-            <button id="final-map-launch-btn" class="primary-btn">View Findings Map</button>
+            <div class="end-game-actions">
+                <button id="final-map-launch-btn" class="primary-btn">View Findings Map</button>
+                <button id="back-to-menu-btn" class="secondary-btn-white">Return to Main Menu</button>
+            </div>
         </div>
     `;
 
@@ -293,7 +486,7 @@ async function triggerEndGame(title, bgColor) {
     grid.appendChild(overlay);
 
     // 4. Update stats and catch Personal Best flag
-    const { isNewRecord, updatedStats } = await updateGlobalStats(finalDuration);
+    const { isNewRecord, updatedStats } = await updateGlobalStats(finalDuration, totalDistanceTraveled);
 
     if (isNewRecord) {
         showAchievementToast([
@@ -308,13 +501,26 @@ async function triggerEndGame(title, bgColor) {
     }
 
     // 5. Check achievements using the FRESHLY updated stats
-    await checkAchievements(finalDuration, updatedStats);
+    await checkAchievements(finalDuration, updatedStats, totalDistanceTraveled);
+
+    // --- NEW: Event Listener for the Menu Button ---
+    document.getElementById("back-to-menu-btn").onclick = () => {
+        // This effectively 'resets' the UI for a fresh start
+        isPaused = false;
+        document.getElementById("mode-menu").style.display = "block";
+        document.getElementById("main-header").style.display = "block";
+        document.getElementById("timer-container").style.display = "none";
+        document.getElementById("active-mode-display").style.display = "none";
+        document.getElementById("bingo-grid").innerHTML = "";
+        overlay.remove();
+    };
 
     document.getElementById("final-map-launch-btn").addEventListener("click", async () => {
         await browser.storage.local.set({
             current_game: gameData,
             start_time: gameStartTime,
             end_time: absoluteEndTime,
+            session_distance: totalDistanceTraveled,
         });
         await openOrFocusTab("map.html");
     });
@@ -329,11 +535,19 @@ function parseCoords(url) {
     return match ? { lat: parseFloat(match[1]), lng: parseFloat(match[2]) } : null;
 }
 
-async function updateGlobalStats(finalDuration) {
-    const data = await browser.storage.local.get("global_stats");
+async function updateGlobalStats(finalDuration, distance) {
+    const data = await browser.storage.local.get(["global_stats", "current_game_mode"]);
 
     let global = data.global_stats || {};
-    if (!global.itemCounts) global.itemCounts = {}; // CRITICAL FIX
+    if (!global.itemCounts) global.itemCounts = {};
+    if (!global.modeCounts) global.modeCounts = { Standard: 0, Random: 0, Infinite: 0 };
+
+    if (typeof global.totalBingos !== "number") {
+        global.totalBingos = 0;
+    }
+
+    const modeName = data.current_game_mode || "Standard";
+    global.modeCounts[modeName] = (global.modeCounts[modeName] || 0) + 1;
 
     global.totalAttempts = (global.totalAttempts || 0) + 1;
     global.totalPlaytime = (global.totalPlaytime || 0) + finalDuration;
@@ -385,6 +599,7 @@ async function updateGlobalStats(finalDuration) {
         status: gameStatus,
         itemsFound: gameData.length,
         duration: finalDuration,
+        mode: modeName,
     };
 
     if (!global.history) global.history = [];
@@ -395,11 +610,13 @@ async function updateGlobalStats(finalDuration) {
         global.itemCounts[find.item] = (global.itemCounts[find.item] || 0) + 1;
     });
 
+    global.totalCareerDistance = (global.totalCareerDistance || 0) + distance;
+
     await browser.storage.local.set({ global_stats: global });
     return { isNewRecord, updatedStats: global };
 }
 
-async function checkAchievements(finalDuration, stats) {
+async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
     const data = await browser.storage.local.get(["achievements", "world_history", "achievement_dates"]);
     const history = data.world_history || [];
     const lastGame = history[history.length - 1];
@@ -411,6 +628,12 @@ async function checkAchievements(finalDuration, stats) {
     const isLeetTime = now.getHours() === 13 && now.getMinutes() === 37;
     const isBingo = gameData.length === 25;
     const uniqueCountries = new Set(history.map((game) => game.country)).size;
+
+    // Identify if the game just finished was Random
+    const currentMode = stats.history[0]?.mode || "Standard";
+
+    // Calculate Random Mode Wins
+    const randomWins = history.filter((game) => game.mode === "Random" && game.isBingo).length;
 
     const firstFind = gameData[0];
     const firstFindTime = firstFind ? new Date(firstFind.timestamp).getTime() - gameStartTime : null;
@@ -460,6 +683,11 @@ async function checkAchievements(finalDuration, stats) {
         scandinavian_scout: visited("norway") && visited("sweden") && visited("denmark"),
         elite_explorer: isBingo && isLeetTime,
         bingo_down_under: isBingo && lastGame?.country.toLowerCase().includes("australia"),
+        local_legend: isBingo && totalDistanceTraveled <= 1000,
+        chaos_tamer: isBingo && currentMode === "Random",
+        adapt_overcome: randomWins >= 5,
+        rng_master: isBingo && currentMode === "Random" && finalDuration < 300000,
+        perfect_seed: isBingo && totalDistanceTraveled < 500,
     };
 
     // --- DYNAMIC STREAK MILESTONES ---
@@ -471,7 +699,7 @@ async function checkAchievements(finalDuration, stats) {
 
     // --- DYNAMIC DAILY HERO MILESTONES ---
     // This checks how many unique daily challenges have been won
-    const dailyHeroMilestones = [1, 5, 10, 25, 50];
+    const dailyHeroMilestones = [1, 5, 10];
     const totalDailyWins = stats.dailyChallengeWins || 0;
 
     dailyHeroMilestones.forEach((count) => {
@@ -511,9 +739,10 @@ function showAchievementToast(unlockedObjects) {
         setTimeout(() => {
             const toast = document.createElement("div");
 
-            // Logic: Personal Best defaults to 'legendary' styling,
-            // otherwise use the new achievement 'type'
-            const toastClass = ach.id === "personal_best" ? "legendary" : ach.type;
+            const randomAchIds = ["chaos_tamer", "adapt_overcome", "rng_master"];
+            const isRandomAch = randomAchIds.includes(ach.id);
+
+            const toastClass = ach.id === "personal_best" ? "legendary" : isRandomAch ? "random-category" : ach.type;
             toast.className = `achievement-toast ${toastClass}`;
 
             const headerText = ach.id === "personal_best" ? "Record Broken!" : "Achievement Unlocked!";
@@ -583,6 +812,10 @@ async function processWorldData() {
         console.error("Geocoding failed", e);
     }
 
+    // NEW: Get the mode that was saved at the start of the game
+    const sessionData = await browser.storage.local.get("current_game_mode");
+    const modeName = sessionData.current_game_mode || "Standard";
+
     const storage = await browser.storage.local.get("world_history");
     const worldHistory = storage.world_history || [];
     worldHistory.push({
@@ -593,6 +826,7 @@ async function processWorldData() {
         displayName: displayName,
         found: gameData.length,
         isBingo: gameData.length === 25,
+        mode: modeName,
         timestamp: Date.now(),
     });
     await browser.storage.local.set({ world_history: worldHistory });
@@ -652,31 +886,99 @@ async function updateSidebarStreak() {
 }
 updateSidebarStreak();
 
+/**
+ * NEW: Animated Grid Generation for Random Mode
+ * This creates a more dynamic feel when starting a random board game
+ */
+function generateGridWithAnimation() {
+    const grid = document.getElementById("bingo-grid");
+    grid.innerHTML = "";
+
+    // Get the center point of the grid container
+    const gridRect = grid.getBoundingClientRect();
+    const centerX = gridRect.width / 2;
+    const centerY = gridRect.height / 2;
+
+    ITEMS.forEach((item, index) => {
+        const cell = document.createElement("div");
+        cell.className = "cell shuffling";
+
+        // Temporarily add to DOM to get its dimensions/position for math
+        grid.appendChild(cell);
+
+        const cellRect = cell.getBoundingClientRect();
+        const cellCenterX = cell.offsetLeft + cellRect.width / 2;
+        const cellCenterY = cell.offsetTop + cellRect.height / 2;
+
+        // Calculate the distance from this cell to the grid center
+        const diffX = centerX - cellCenterX;
+        const diffY = centerY - cellCenterY;
+
+        // Set CSS variables so the animation knows where 'center' is for THIS cell
+        cell.style.setProperty("--center-x", `${diffX}px`);
+        cell.style.setProperty("--center-y", `${diffY}px`);
+
+        // Stagger the animation
+        cell.style.animationDelay = `${index * 0.04}s`;
+
+        cell.innerHTML = `<span>${item}</span>`;
+        cell.onclick = () => handleCapture(item, cell);
+
+        // Cleanup: remove the class after animation to re-enable hover styles
+        setTimeout(
+            () => {
+                cell.classList.remove("shuffling");
+            },
+            800 + index * 40,
+        );
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // pause button logic
     document.getElementById("pause-btn").onclick = togglePause;
     document.getElementById("resume-btn").onclick = togglePause;
 
     document.getElementById("btn-10min").onclick = () => startGame("10min");
+    document.getElementById("btn-random").onclick = () => startGame("random");
     document.getElementById("btn-infinite").onclick = () => startGame("infinite");
     document.getElementById("view-achievements-btn").onclick = () => openOrFocusTab("achievements.html");
     document.getElementById("view-stats-btn").onclick = () => openOrFocusTab("stats.html");
     document.getElementById("view-world-btn").onclick = () => openOrFocusTab("world.html");
     document.getElementById("btn-settings").onclick = () => openOrFocusTab("settings.html");
 
+    // Finish and Save Logic
+    document.getElementById("finish-btn").onclick = () => {
+        if (gameData.length === 0) {
+            alert("You haven't found any items yet!");
+            return;
+        }
+
+        if (confirm("End game and save your findings to your stats and map?")) {
+            // Trigger the same logic as a timeout or Bingo
+            triggerEndGame("🏁 SESSION COMPLETE", "rgba(52, 152, 219, 0.9)");
+        }
+    };
+
+    // Update the existing Reset logic to be the "Discard" button
     document.getElementById("reset-btn").onclick = async () => {
-        if (confirm("Reset game?")) {
+        if (confirm("Discard this game? No items found will be saved to your history.")) {
             clearInterval(timerInterval);
             isPaused = false;
+
+            // Return to main menu without calling triggerEndGame
             document.getElementById("pause-overlay").style.display = "none";
             document.getElementById("bingo-grid").style.filter = "none";
             document.getElementById("bingo-grid").style.pointerEvents = "auto";
             gameData = [];
+
             document.getElementById("mode-menu").style.display = "block";
             document.getElementById("main-header").style.display = "block";
             document.getElementById("controls").style.display = "none";
             document.getElementById("timer-container").style.display = "none";
+            document.getElementById("active-mode-display").style.display = "none";
             document.getElementById("bingo-grid").innerHTML = "";
+
             const overlay = document.getElementById("win-overlay");
             if (overlay) overlay.remove();
         }

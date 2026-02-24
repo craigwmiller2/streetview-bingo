@@ -2,7 +2,6 @@ async function initWorldMap() {
     const data = await browser.storage.local.get("world_history");
     const history = data.world_history || [];
 
-    // Initialize map centered on the world
     const map = L.map("world-map").setView([20, 0], 2);
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
@@ -11,9 +10,6 @@ async function initWorldMap() {
         maxZoom: 20,
     }).addTo(map);
 
-    // 1. Initialize the Cluster Group
-    // spiderfyOnMaxZoom: spreads out markers that are at the exact same location
-    // showCoverageOnHover: shows the area bounds of a cluster
     const clusters = L.markerClusterGroup({
         showCoverageOnHover: false,
         zoomToBoundsOnClick: true,
@@ -21,7 +17,6 @@ async function initWorldMap() {
         disableClusteringAtZoom: 15,
     });
 
-    // Helper function for the copy logic (CSP safe)
     async function handleCopyClick(lat, lng, btn) {
         const url = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
         try {
@@ -42,7 +37,9 @@ async function initWorldMap() {
         const color = point.isBingo ? "#2ecc71" : "#e74c3c";
         const svUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${point.lat},${point.lng}`;
 
-        // 2. Create marker with custom DivIcon to replicate your circle style
+        // NEW: Get the mode from the history point
+        const mode = point.mode || "Standard";
+
         const marker = L.marker([point.lat, point.lng], {
             icon: L.divIcon({
                 className: "custom-bingo-dot",
@@ -62,8 +59,10 @@ async function initWorldMap() {
 
         marker.bindPopup(`
             <div style="font-family: sans-serif; min-width: 160px; text-align: center;">
-                <strong style="font-size: 1.1rem; display: block; margin-bottom: 2px;">${point.city}</strong>
-                <span style="color: #7f8c8d; font-size: 0.9rem;">${point.country}</span>
+                <span class="mode-badge-mini mode-${mode.toLowerCase()}">${mode}</span>
+                
+                <strong style="font-size: 1.1rem; display: block; margin-bottom: 2px;">${point.displayName}</strong>
+                <span style="color: #7f8c8d; font-size: 0.9rem;">Country: ${point.country}</span>
                 <hr style="margin: 8px 0; border: 0; border-top: 1px solid #eee;">
                 
                 <div style="margin-bottom: 8px; font-size: 0.9rem;">
@@ -90,14 +89,11 @@ async function initWorldMap() {
             </div>
         `);
 
-        // 3. Add marker to the cluster group
         clusters.addLayer(marker);
     });
 
-    // 4. Add the cluster group to the map
     map.addLayer(clusters);
 
-    // CSP FIX: Event delegation for buttons inside popups
     map.on("popupopen", function (e) {
         const container = e.popup._contentNode;
         const copyBtn = container.querySelector(".share-copy-btn");
@@ -105,8 +101,6 @@ async function initWorldMap() {
         if (copyBtn) {
             const lat = copyBtn.getAttribute("data-lat");
             const lng = copyBtn.getAttribute("data-lng");
-
-            // Attach listener to fresh DOM element
             copyBtn.addEventListener("click", () => {
                 handleCopyClick(lat, lng, copyBtn);
             });

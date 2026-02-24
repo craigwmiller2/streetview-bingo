@@ -83,3 +83,44 @@ h1 {
 .leaflet-popup-tip {
     background: white;
 }
+
+/* --- Mode Badges for World Map Popups --- */
+
+.mode-badge-mini {
+    display: inline-block;
+    color: white;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Using your existing logic/colors from the sidebar and map recap */
+.mode-standard {
+    background-color: var(--primary-color);
+}
+
+.mode-random {
+    background-color: #8e44ad; /* Purple */
+}
+
+.mode-infinite {
+    background-color: #f39c12; /* Gold/Orange */
+}
+
+/* Popup specific layout adjustments */
+.world-popup-content {
+    font-family: inherit;
+    min-width: 160px;
+    text-align: center;
+}
+
+.world-popup-content hr {
+    margin: 8px 0;
+    border: 0;
+    border-top: 1px solid #eee;
+}

@@ -193,3 +193,36 @@ button {
     font-weight: 500;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+/* Mode Badge Styling */
+.mode-badge-summary {
+    display: inline-block;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.mode-standard {
+    background: #3498db;
+}
+.mode-random {
+    background: #8e44ad;
+}
+.mode-infinite {
+    background: #f39c12;
+}
+
+/* Marker Popup Styling */
+.popup-mode-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    opacity: 0.8;
+    display: block;
+    margin-bottom: 2px;
+}
