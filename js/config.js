@@ -362,4 +362,32 @@ const ACH_DATA = [
         desc: "Achieve a Bingo with less than 500m total distance between all finds.",
         type: "tactical",
     },
+    {
+        id: "neighbourhood_watch",
+        name: "Neighbourhood Watch",
+        icon: "🏘️",
+        desc: "Achieve a BINGO while traveling less than 2km.",
+        type: "tactical",
+    },
+    {
+        id: "point_of_interest",
+        name: "Point of Interest",
+        icon: "📍",
+        desc: "Find 5 items without moving from your current spot.",
+        type: "observation",
+    },
+    {
+        id: "animal_planet",
+        name: "Animal Planet",
+        icon: "🐾",
+        desc: "Find a Dog or Cat in 5 different countries.",
+        type: "collection",
+    },
+    {
+        id: "close_call",
+        name: "Close Call",
+        icon: "⏲️",
+        desc: "Achieve a BINGO with 10 seconds or less remaining.",
+        type: "sprint",
+    },
 ];

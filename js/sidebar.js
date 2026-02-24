@@ -19,6 +19,8 @@ let isPaused = false;
 let totalPausedTime = 0;
 let pauseStartTime = null;
 let totalDistanceTraveled = 0;
+let capturesAtCurrentLocation = 0;
+let lastCaptureCoords = null;
 const FULL_DASH_ARRAY = 283;
 
 /**
@@ -193,6 +195,28 @@ async function handleCapture(itemName, cellElement) {
         // 1. Store the previous length before pushing
         const previousLength = gameData.length;
         gameData.push(find);
+
+        if (lastCaptureCoords) {
+            const distFromLast = calculateDistance(
+                lastCaptureCoords.lat,
+                lastCaptureCoords.lng,
+                coords.lat,
+                coords.lng,
+            );
+
+            // If moved less than 5 meters, consider it the "same location"
+            if (distFromLast <= 5) {
+                capturesAtCurrentLocation++;
+            } else {
+                capturesAtCurrentLocation = 1; // Reset to 1 if they moved
+            }
+        } else {
+            capturesAtCurrentLocation = 1; // First item of the game
+        }
+        lastCaptureCoords = coords;
+
+        // Store the highest streak in the find object so checkAchievements can see it
+        find.locationStreak = capturesAtCurrentLocation;
 
         // 2. Distance Logic: Only run if there's a "previous" item to compare to
         if (previousLength > 0) {
@@ -624,6 +648,8 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
     let earned = data.achievements || [];
     let newUnlocks = [];
 
+    const isInfinite = document.getElementById("bingo-grid").classList.contains("infinite-mode");
+
     const now = new Date();
     const isLeetTime = now.getHours() === 13 && now.getMinutes() === 37;
     const isBingo = gameData.length === 25;
@@ -652,6 +678,14 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
                 (game.city && game.city.toLowerCase().includes(placeName.toLowerCase())) ||
                 (game.country && game.country.toLowerCase().includes(placeName.toLowerCase())),
         );
+
+    // logic for Animal Planet: "Find a Dog or Cat in 5 different countries"
+    const animalCountries = new Set(
+        history.filter((g) => g.foundItems && g.foundItems.includes("Dog or Cat")).map((g) => g.country),
+    ).size;
+
+    // logic for Point of Interest: Check if any find reached a streak of 5
+    const maxLocationStreak = Math.max(...gameData.map((f) => f.locationStreak || 0), 0);
 
     // --- LOGIC MAP ---
     const logicMap = {
@@ -688,6 +722,10 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
         adapt_overcome: randomWins >= 5,
         rng_master: isBingo && currentMode === "Random" && finalDuration < 300000,
         perfect_seed: isBingo && totalDistanceTraveled < 500,
+        neighbourhood_watch: isBingo && totalDistanceTraveled <= 2000,
+        point_of_interest: maxLocationStreak >= 5,
+        animal_planet: animalCountries >= 5,
+        close_call: isBingo && !isInfinite && timeLeft > 0 && timeLeft <= 10,
     };
 
     // --- DYNAMIC STREAK MILESTONES ---
@@ -825,6 +863,7 @@ async function processWorldData() {
         country: countryName,
         displayName: displayName,
         found: gameData.length,
+        foundItems: gameData.map((f) => f.item),
         isBingo: gameData.length === 25,
         mode: modeName,
         timestamp: Date.now(),
