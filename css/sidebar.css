@@ -905,7 +905,7 @@ button:active {
 #distance-stats {
     text-align: center;
     font-size: 0.75rem;
-    font-weight: 800;
+    font-weight: 400;
     color: var(--text-muted);
     margin-top: 5px;
     letter-spacing: 0.5px;

@@ -49,6 +49,15 @@ const EXPANSION_ITEMS = [
     "Greenhouse",
     "Umbrella/Parasol",
     "Pickup Truck",
+    "Scooter",
+    "Stop Sign",
+    "Wind Turbine",
+    "Metal Fence",
+    "Bridge",
+    "Crane",
+    "Golf Cart",
+    "Hot Tub",
+    "Zebra Crossing",
 ];
 
 // This replaces your old 'const ITEMS'
