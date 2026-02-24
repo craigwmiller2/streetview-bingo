@@ -35,7 +35,7 @@ const EXPANSION_ITEMS = [
     "Bird",
     "Bollard",
     "Taxi",
-    "Palm Tree",
+    "Tree",
     "Traffic Cone",
     "Roadworks Sign",
     "Tractor",
@@ -51,13 +51,11 @@ const EXPANSION_ITEMS = [
     "Pickup Truck",
     "Scooter",
     "Stop Sign",
-    "Wind Turbine",
     "Metal Fence",
     "Bridge",
     "Crane",
-    "Golf Cart",
-    "Hot Tub",
     "Zebra Crossing",
+    "Chimney",
 ];
 
 // This replaces your old 'const ITEMS'
@@ -383,7 +381,7 @@ const ACH_DATA = [
         name: "Point of Interest",
         icon: "📍",
         desc: "Find 5 items without moving from your current spot.",
-        type: "observation",
+        type: "tactical",
     },
     {
         id: "animal_planet",
@@ -398,5 +396,19 @@ const ACH_DATA = [
         icon: "⏲️",
         desc: "Achieve a BINGO with 10 seconds or less remaining.",
         type: "sprint",
+    },
+    {
+        id: "no_return",
+        name: "Yellow Car! No Return!",
+        icon: "🟡",
+        desc: "Found a Yellow Car! (No return!)",
+        type: "collection",
+    },
+    {
+        id: "i_see_you",
+        name: "I See You!",
+        icon: "👁️",
+        desc: "Caught someone staring directly at the Street View car.",
+        type: "collection",
     },
 ];

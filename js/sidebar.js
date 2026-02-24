@@ -3,12 +3,14 @@ const soundBingo = new Audio(browser.runtime.getURL("audio/bingo.mp3"));
 const soundDefeat = new Audio(browser.runtime.getURL("audio/defeat.mp3"));
 const soundAchievement = new Audio(browser.runtime.getURL("audio/achievement.ogg"));
 const soundCountdown = new Audio(browser.runtime.getURL("audio/countdown.mp3"));
+const soundAlert = new Audio(browser.runtime.getURL("audio/alert.mp3"));
 
 soundTick.load();
 soundBingo.load();
 soundDefeat.load();
 soundAchievement.load();
 soundCountdown.load();
+soundAlert.load();
 
 let gameData = [];
 let timerInterval = null;
@@ -196,6 +198,11 @@ async function handleCapture(itemName, cellElement) {
         const previousLength = gameData.length;
         gameData.push(find);
 
+        if (itemName.toLowerCase().includes("looking directly at street view car")) {
+            soundAlert.currentTime = 0;
+            soundAlert.play();
+        }
+
         if (lastCaptureCoords) {
             const distFromLast = calculateDistance(
                 lastCaptureCoords.lat,
@@ -368,6 +375,25 @@ function refreshHUD() {
         const percentage = Math.max(0, timeLeft / initialTime);
         displayMins = Math.floor(timeLeft / 60);
         displaySecs = timeLeft % 60;
+
+        // --- NEW: Ticking Logic for last 10 seconds ---
+        if (timeLeft <= 10 && timeLeft > 0) {
+            soundTick.currentTime = 0; // Reset sound to allow rapid replay
+            soundTick.play();
+
+            // Visual feedback: Flash red and scale up slightly
+            textDisplay.style.color = "#e74c3c";
+            textDisplay.style.fontWeight = "bold";
+            textDisplay.style.transform = "translate(-50%, -50%) scale(1.2)";
+            progressCircle.style.strokeWidth = "10";
+            setTimeout(() => {
+                textDisplay.style.transform = "translate(-50%, -50%) scale(1)";
+                progressCircle.style.strokeWidth = "8";
+            }, 150);
+        } else {
+            textDisplay.style.color = ""; // Reset to default CSS color
+            textDisplay.style.fontWeight = "";
+        }
 
         // Calculate the ring progress
         const offset = FULL_DASH_ARRAY - percentage * FULL_DASH_ARRAY;
@@ -726,6 +752,8 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
         point_of_interest: maxLocationStreak >= 5,
         animal_planet: animalCountries >= 5,
         close_call: isBingo && !isInfinite && timeLeft > 0 && timeLeft <= 10,
+        no_return: gameData.some((f) => f.item === "Yellow Car"),
+        i_see_you: gameData.some((f) => f.item.toLowerCase().includes("looking directly at street view car")),
     };
 
     // --- DYNAMIC STREAK MILESTONES ---
