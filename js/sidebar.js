@@ -169,7 +169,7 @@ function togglePause() {
     }
 }
 
-async function handleCapture(itemName, cellElement) {
+async function handleCapture(itemObj, cellElement) {
     if (isPaused || cellElement.classList.contains("found") || cellElement.classList.contains("capturing")) return;
 
     cellElement.classList.add("capturing");
@@ -187,7 +187,7 @@ async function handleCapture(itemName, cellElement) {
 
         const coords = parseCoords(tab.url);
         const find = {
-            item: itemName,
+            item: itemObj.id,
             locationUrl: tab.url,
             coords: coords,
             image: screenshot,
@@ -198,7 +198,7 @@ async function handleCapture(itemName, cellElement) {
         const previousLength = gameData.length;
         gameData.push(find);
 
-        if (itemName.toLowerCase().includes("looking directly at street view car")) {
+        if (itemObj.id.toLowerCase().includes("looking directly at street view car")) {
             soundAlert.currentTime = 0;
             soundAlert.play();
         }
@@ -249,14 +249,14 @@ async function handleCapture(itemName, cellElement) {
         cellElement.classList.remove("capturing");
         cellElement.classList.add("found");
         cellElement.style.backgroundImage = `url(${screenshot})`;
-        cellElement.innerHTML = `<span>${itemName}</span>`;
+        cellElement.innerHTML = `<span>${itemObj.name}</span>`;
 
         const undoBtn = document.createElement("button");
         undoBtn.className = "undo-btn";
         undoBtn.innerHTML = "✕";
         undoBtn.onclick = (e) => {
             e.stopPropagation();
-            handleUndo(itemName, cellElement);
+            handleUndo(itemObj.id, cellElement);
         };
         cellElement.appendChild(undoBtn);
 
@@ -988,7 +988,12 @@ function generateGridWithAnimation() {
         // Stagger the animation
         cell.style.animationDelay = `${index * 0.04}s`;
 
-        cell.innerHTML = `<span>${item}</span>`;
+        // Display the user-friendly name
+        cell.innerHTML = `<span>${item.name}</span>`;
+
+        // Store the ID in a data attribute for the capture logic
+        cell.dataset.itemId = item.id;
+
         cell.onclick = () => handleCapture(item, cell);
 
         // Cleanup: remove the class after animation to re-enable hover styles

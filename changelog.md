@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.6.1] - 2026-02-26
+
+- Decoupled the bingo items into an ID and Name so that item names can be changed without affecting found items already in localStrorage.
+
 ## [1.6.0] - 2026-02-24
 
 ### Added

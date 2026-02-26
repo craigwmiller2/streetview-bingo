@@ -6,6 +6,12 @@ L.Icon.Default.mergeOptions({
     shadowUrl: browser.runtime.getURL("images/marker-shadow.png"),
 });
 
+function getItemDisplayName(id) {
+    const allItems = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+    const match = allItems.find((item) => item.id === id);
+    return match ? match.name : id;
+}
+
 async function initMap() {
     // 1. Fetch all session data from storage
     const data = await browser.storage.local.get([
@@ -57,11 +63,13 @@ async function initMap() {
             const currentPos = L.latLng(find.coords.lat, find.coords.lng);
             pathPoints.push(currentPos);
 
+            const displayName = getItemDisplayName(find.item);
+
             // Marker with mode identification in popup
             L.marker(currentPos).addTo(map).bindPopup(`
                 <div style="text-align:center">
                     <strong class="popup-mode-label" style="color:var(--text-muted); font-size:0.7rem;">${modeName} Mode</strong><br>
-                    <b>${find.item}</b><br>
+                    <b>${displayName}</b><br>
                     <img src="${find.image}" width="100" style="border-radius:4px; margin-top:5px">
                 </div>
             `);
@@ -71,11 +79,11 @@ async function initMap() {
             itemDiv.className = "grid-item";
             itemDiv.innerHTML = `
                 <img src="${find.image}">
-                <div class="label">${find.item}</div>
+                <div class="label">${displayName}</div>
             `;
             itemDiv.onclick = () => {
                 document.getElementById("lightbox-img").src = find.image;
-                document.getElementById("lightbox-caption").textContent = find.item;
+                document.getElementById("lightbox-caption").textContent = displayName;
                 document.getElementById("lightbox").style.display = "flex";
             };
             shareGrid.appendChild(itemDiv);
@@ -83,16 +91,18 @@ async function initMap() {
     });
 
     // 5. Identify Missing Items
-    const missingItems = activeItems.filter((item) => !foundItemNames.includes(item));
+    // Note: foundItemNames contains IDs (strings). item is an object {id, name}.
+    const missingItems = activeItems.filter((itemObj) => !foundItemNames.includes(itemObj.id));
+
     if (missingItems.length > 0) {
         const missingSection = document.createElement("div");
         missingSection.id = "missing-items-summary";
         missingSection.innerHTML = `
-            <h3 class="missing-title">🔍 Items Not Found (${missingItems.length})</h3>
-            <div class="missing-tags-container">
-                ${missingItems.map((item) => `<span class="missing-tag">${item}</span>`).join("")}
-            </div>
-        `;
+        <h3 class="missing-title">🔍 Items Not Found (${missingItems.length})</h3>
+        <div class="missing-tags-container">
+            ${missingItems.map((itemObj) => `<span class="missing-tag">${itemObj.name}</span>`).join("")}
+        </div>
+    `;
         document.getElementById("share-container").appendChild(missingSection);
     }
 

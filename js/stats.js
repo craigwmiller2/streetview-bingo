@@ -10,6 +10,15 @@ function formatTotalDuration(ms) {
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
 }
 
+/**
+ * Resolves an ID string to its current Display Name
+ */
+function getItemDisplayName(id) {
+    const allItems = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+    const match = allItems.find((item) => item.id === id);
+    return match ? match.name : id; // Fallback to ID if no match (for old legacy data)
+}
+
 async function loadStats() {
     // 1. Fetch all data from storage
     const storage = await browser.storage.local.get(["global_stats", "world_history"]);
@@ -89,7 +98,12 @@ async function loadStats() {
     // --- 2. Item Frequency Bar Chart ---
     const itemCounts = stats.itemCounts || {};
     const totalPool = [...CORE_ITEMS, ...EXPANSION_ITEMS];
-    const allItemEntries = totalPool.map((name) => [name, itemCounts[name] || 0]);
+
+    // Map the objects in the pool to their stored counts using the ID
+    const allItemEntries = totalPool.map((itemObj) => {
+        return [itemObj.name, itemCounts[itemObj.id] || 0];
+    });
+
     allItemEntries.sort((a, b) => b[1] - a[1]);
 
     const list = document.getElementById("item-rank");
@@ -244,14 +258,20 @@ async function copyStatsToClipboard(stats) {
 
     // all items and counts
     const itemCounts = stats.itemCounts || {};
-    const mostFoundItem = Object.entries(itemCounts).reduce(
+    // find raw IDs with highest/lowest counts
+    const mostFoundId = Object.entries(itemCounts).reduce(
         (max, entry) => (entry[1] > max[1] ? entry : max),
         ["N/A", 0],
     )[0];
-    const leastFoundItem = Object.entries(itemCounts).reduce(
+
+    const leastFoundId = Object.entries(itemCounts).reduce(
         (min, entry) => (entry[1] < min[1] ? entry : min),
         ["N/A", Infinity],
     )[0];
+
+    // Convert IDs to Display Names for the clipboard
+    const mostFoundName = getItemDisplayName(mostFoundId);
+    const leastFoundName = getItemDisplayName(leastFoundId);
 
     const text = [
         `🗺️ Street View Bingo`,
@@ -260,8 +280,8 @@ async function copyStatsToClipboard(stats) {
         `🔥 Streak: ${stats.currentStreak || 0} days`,
         `⏱️ Best Time: ${fMins}m ${fSecs}s`,
         `🌍 Total Time: ${hours}h ${mins}m`,
-        `📈 Most Found Item: ${mostFoundItem || "N/A"}`,
-        `📉 Least Found Item: ${leastFoundItem || "N/A"}`,
+        `📈 Most Found Item: ${mostFoundName || "N/A"}`,
+        `📉 Least Found Item: ${leastFoundName || "N/A"}`,
         `🛰️ Play! - https://craigwmiller2.github.io/streetview-bingo/`,
     ].join("\n");
 
