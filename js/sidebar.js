@@ -170,6 +170,10 @@ function togglePause() {
 }
 
 async function handleCapture(itemObj, cellElement) {
+    // Safety check: Determine ID and Name regardless of if itemObj is an object or string
+    const itemId = itemObj && typeof itemObj === "object" ? itemObj.id : itemObj;
+    const itemName = itemObj && typeof itemObj === "object" ? itemObj.name : itemObj;
+
     if (isPaused || cellElement.classList.contains("found") || cellElement.classList.contains("capturing")) return;
 
     cellElement.classList.add("capturing");
@@ -187,7 +191,7 @@ async function handleCapture(itemObj, cellElement) {
 
         const coords = parseCoords(tab.url);
         const find = {
-            item: itemObj.id,
+            item: itemId, // Save the ID for logic and localStorage
             locationUrl: tab.url,
             coords: coords,
             image: screenshot,
@@ -198,7 +202,8 @@ async function handleCapture(itemObj, cellElement) {
         const previousLength = gameData.length;
         gameData.push(find);
 
-        if (itemObj.id.toLowerCase().includes("looking directly at street view car")) {
+        // Achievement/Sound Logic uses the ID
+        if (itemId && itemId.toLowerCase().includes("looking directly at street view car")) {
             soundAlert.currentTime = 0;
             soundAlert.play();
         }
@@ -249,14 +254,14 @@ async function handleCapture(itemObj, cellElement) {
         cellElement.classList.remove("capturing");
         cellElement.classList.add("found");
         cellElement.style.backgroundImage = `url(${screenshot})`;
-        cellElement.innerHTML = `<span>${itemObj.name}</span>`;
+        cellElement.innerHTML = `<span>${itemName}</span>`;
 
         const undoBtn = document.createElement("button");
         undoBtn.className = "undo-btn";
         undoBtn.innerHTML = "✕";
         undoBtn.onclick = (e) => {
             e.stopPropagation();
-            handleUndo(itemObj.id, cellElement);
+            handleUndo(itemId, cellElement);
         };
         cellElement.appendChild(undoBtn);
 
@@ -296,9 +301,8 @@ function checkWinCondition() {
     }
 }
 
-function handleUndo(itemName, cellElement) {
-    // 1. Find the index of the specific item being undone
-    const index = gameData.findIndex((f) => f.item === itemName);
+function handleUndo(itemId, cellElement) {
+    const index = gameData.findIndex((f) => f.item === itemId);
 
     if (index > -1) {
         // 2. Only subtract distance if there was a "previous" item to jump from
@@ -323,11 +327,16 @@ function handleUndo(itemName, cellElement) {
         gameData.splice(index, 1);
     }
 
-    // 4. Reset Cell UI
+    // Lookup the display name for the reset cell
+    const allItems = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+    const originalItem = allItems.find((i) => i.id === itemId);
+    const displayName = originalItem ? originalItem.name : itemId;
+
     cellElement.classList.remove("found");
     cellElement.style.backgroundImage = "none";
-    cellElement.innerHTML = `<span>${itemName}</span>`;
-    cellElement.onclick = () => handleCapture(itemName, cellElement);
+    cellElement.innerHTML = `<span>${displayName}</span>`;
+
+    cellElement.onclick = () => handleCapture(originalItem || itemId, cellElement);
 
     // 5. Update HUD to show the new reduced distance
     refreshHUD();
@@ -719,14 +728,14 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
         speed_demon: isBingo && finalDuration < 300000,
         gardener: (stats.itemCounts["Lawnmower"] || 0) >= 5,
         caravan_hunter: (stats.itemCounts["Caravan"] || 0) >= 5,
-        master_hunter: ITEMS.every((item) => (stats.itemCounts[item] || 0) >= 5),
+        master_hunter: ITEMS.every((item) => (stats.itemCounts[item.id || item] || 0) >= 5),
         world_traveler: uniqueCountries >= 5,
         marathoner: stats.totalPlaytime >= 3600000,
         london_calling: visited("london"),
         the_patriot:
             gameData.some((f) => f.item === "A Flag") &&
-            (lastGame?.country.toLowerCase().includes("united states") ||
-                lastGame?.country.toLowerCase().includes("usa")),
+            (lastGame?.country?.toLowerCase().includes("united states") ||
+                lastGame?.country?.toLowerCase().includes("usa")),
         quick_start: firstFindTime !== null && firstFindTime < 5000,
         animal_lover: (stats.itemCounts["Dog or Cat"] || 0) >= 10,
         double_tap: doubleTapAchieved,
@@ -753,7 +762,7 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
         animal_planet: animalCountries >= 5,
         close_call: isBingo && !isInfinite && timeLeft > 0 && timeLeft <= 10,
         no_return: gameData.some((f) => f.item === "Yellow Car"),
-        i_see_you: gameData.some((f) => f.item.toLowerCase().includes("looking directly at street view car")),
+        i_see_you: gameData.some((f) => f.item && f.item.toLowerCase().includes("looking directly at street view car")),
     };
 
     // --- DYNAMIC STREAK MILESTONES ---
@@ -960,49 +969,31 @@ updateSidebarStreak();
 function generateGridWithAnimation() {
     const grid = document.getElementById("bingo-grid");
     grid.innerHTML = "";
-
-    // Get the center point of the grid container
     const gridRect = grid.getBoundingClientRect();
     const centerX = gridRect.width / 2;
     const centerY = gridRect.height / 2;
 
-    ITEMS.forEach((item, index) => {
+    ITEMS.forEach((itemObj, index) => {
         const cell = document.createElement("div");
         cell.className = "cell shuffling";
-
-        // Temporarily add to DOM to get its dimensions/position for math
         grid.appendChild(cell);
 
         const cellRect = cell.getBoundingClientRect();
         const cellCenterX = cell.offsetLeft + cellRect.width / 2;
         const cellCenterY = cell.offsetTop + cellRect.height / 2;
 
-        // Calculate the distance from this cell to the grid center
-        const diffX = centerX - cellCenterX;
-        const diffY = centerY - cellCenterY;
-
-        // Set CSS variables so the animation knows where 'center' is for THIS cell
-        cell.style.setProperty("--center-x", `${diffX}px`);
-        cell.style.setProperty("--center-y", `${diffY}px`);
-
-        // Stagger the animation
+        cell.style.setProperty("--center-x", `${centerX - cellCenterX}px`);
+        cell.style.setProperty("--center-y", `${centerY - cellCenterY}px`);
         cell.style.animationDelay = `${index * 0.04}s`;
 
-        // Display the user-friendly name
-        cell.innerHTML = `<span>${item.name}</span>`;
+        // UI Label
+        cell.innerHTML = `<span>${itemObj.name}</span>`;
+        cell.dataset.itemId = itemObj.id;
 
-        // Store the ID in a data attribute for the capture logic
-        cell.dataset.itemId = item.id;
+        // Click handler passes the whole object
+        cell.onclick = () => handleCapture(itemObj, cell);
 
-        cell.onclick = () => handleCapture(item, cell);
-
-        // Cleanup: remove the class after animation to re-enable hover styles
-        setTimeout(
-            () => {
-                cell.classList.remove("shuffling");
-            },
-            800 + index * 40,
-        );
+        setTimeout(() => cell.classList.remove("shuffling"), 800 + index * 40);
     });
 }
 

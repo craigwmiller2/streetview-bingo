@@ -1,7 +1,7 @@
 const CORE_ITEMS = [
     { id: "Lawnmower", name: "Lawnmower" },
     { id: "Trampoline", name: "Trampoline" },
-    { id: "Hose Reel", name: "Hose Reel" },
+    { id: "Hose Reel", name: "Hose" },
     { id: "Dog or Cat", name: "Dog or Cat" },
     { id: "BBQ", name: "BBQ" },
     { id: "Motorbike or Quadbike", name: "Motorbike or Quadbike" },
