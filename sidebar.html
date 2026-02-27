@@ -14,7 +14,6 @@
             <header class="menu-header" id="main-header">
                 <div class="logo">🗺️🎯</div>
                 <h1>Street View Bingo</h1>
-                <p class="tagline">The ultimate explorer's game</p>
             </header>
 
             <div id="mode-menu">
@@ -196,7 +195,10 @@
                     </button>
                 </div>
             </div>
-            <div id="sidebar-dashboard">
+            <div id="dashboard-container" class="dashboard-visible">
+                <div id="dashboard-tab">
+                    <span id="tab-arrow">▼</span>
+                </div>
                 <div id="daily-challenge-box">
                     <div class="challenge-header">
                         <span class="hud-label">🌍 DAILY CHALLENGE</span>
@@ -212,6 +214,24 @@
                     </div>
                 </div>
 
+                <div id="bounty-dashboard" class="sidebar-section">
+                    <div class="hud-label">
+                        <span class="bounty-icon">🏆</span>
+                        <strong>DAILY BOUNTY</strong>
+                    </div>
+                    <div id="bounty-card" class="bounty-card">
+                        <span class="bounty-hint">
+                            Find in
+                            <span class="random-mode-label">Random Mode!</span>
+                        </span>
+                        <div class="bounty-info">
+                            <span id="bounty-item-name">---</span>
+                            <span id="bounty-streak-display">Streak: 0 Days</span>
+                        </div>
+                        <div id="bounty-status" class="bounty-status">Unclaimed</div>
+                    </div>
+                </div>
+
                 <div id="streak-indicator-box">
                     <div class="streak-flame">🔥</div>
                     <div class="streak-info">
@@ -224,6 +244,7 @@
         </div>
 
         <script src="js/config.js"></script>
+        <script src="js/bounty.js"></script>
         <script src="js/daily-challenge.js"></script>
         <script src="js/sidebar.js"></script>
     </body>

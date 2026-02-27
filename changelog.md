@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.0] - 2026-02-27
+
+- Added Bounty mode to find specific daily item within Random mode
+- Add daily Bounty streak tracking
+
 ## [1.6.1] - 2026-02-26
 
 - Decoupled the bingo items into an ID and Name so that item names can be changed without affecting found items already in localStrorage.

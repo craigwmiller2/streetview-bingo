@@ -36,6 +36,9 @@ window.startGame = async function (mode) {
     const textDisplay = document.getElementById("timer-text");
     const progressCircle = document.querySelector(".timer-progress");
 
+    const dashboard = document.getElementById("dashboard-container");
+    if (dashboard) dashboard.classList.add("dashboard-hidden");
+
     if (textDisplay) textDisplay.textContent = "10:00"; // Default starting look
     if (progressCircle) {
         progressCircle.style.strokeDashoffset = "0"; // Reset the ring to full
@@ -252,6 +255,7 @@ async function handleCapture(itemObj, cellElement) {
 
         // 3. UI Updates
         cellElement.classList.remove("capturing");
+        // cellElement.classList.remove("bounty-highlight");
         cellElement.classList.add("found");
         cellElement.style.backgroundImage = `url(${screenshot})`;
         cellElement.innerHTML = `<span>${itemName}</span>`;
@@ -476,7 +480,12 @@ function formatTime(totalSeconds) {
  */
 async function triggerEndGame(title, bgColor) {
     const grid = document.getElementById("bingo-grid");
+    const isRandom = grid.classList.contains("random-mode");
     if (document.getElementById("win-overlay")) return;
+
+    // Reveal the dashboard when the game completes
+    const dashboard = document.getElementById("dashboard-container");
+    if (dashboard) dashboard.classList.remove("dashboard-hidden");
 
     clearInterval(timerInterval);
 
@@ -521,14 +530,40 @@ async function triggerEndGame(title, bgColor) {
     // Update daily stats (Best score / Completion status)
     await updateDailyChallengeProgress(playedCountry, dailyTarget.name, gameData.length);
 
+    // --- NEW: BOUNTY CHECK LOGIC ---
+    let bountyWasClaimedThisSpecificGame = false;
+    if (isRandom) {
+        const storage = await browser.storage.local.get(["session_items", "last_bounty_claimed"]);
+        const sessionItems = storage.session_items || [];
+        const today = new Date().toLocaleDateString("en-GB");
+
+        if (storage.last_bounty_claimed !== today) {
+            const bountyResult = checkBountySuccess(sessionItems, gameData);
+            if (bountyResult.success) {
+                bountyWasClaimedThisSpecificGame = true;
+                // AWAIT this so the storage is updated before we check stats
+                await markBountyClaimed();
+            }
+        }
+    }
+
     // Create the enhanced overlay
     const overlay = document.createElement("div");
     overlay.id = "win-overlay";
     overlay.style.setProperty("--overlay-bg", bgColor);
 
+    // Insert the Bounty Badge only if they actually claimed it this game
     overlay.innerHTML = `
         <div class="win-content">
             <h1 class="end-game-title">${title}</h1>
+            ${
+                bountyWasClaimedThisSpecificGame
+                    ? `
+                <div class="bounty-win-badge" style="background:#f1c40f; color:#000; padding:5px 10px; border-radius:4px; font-weight:bold; margin-bottom:15px; font-size:0.9rem; animation: pulse 2s infinite;">
+                    🏆 DAILY BOUNTY CLAIMED!
+                </div>`
+                    : ""
+            }
             <div class="end-game-stats">
                 <p>Location: <strong>${locationDisplay}</strong></p>
                 <p>Items Found: <strong>${gameData.length}</strong></p>
@@ -562,14 +597,15 @@ async function triggerEndGame(title, bgColor) {
     // 5. Check achievements using the FRESHLY updated stats
     await checkAchievements(finalDuration, updatedStats, totalDistanceTraveled);
 
+    document.getElementById("timer-container").style.display = "none";
+    document.getElementById("active-mode-display").style.display = "none";
+
     // --- NEW: Event Listener for the Menu Button ---
     document.getElementById("back-to-menu-btn").onclick = () => {
         // This effectively 'resets' the UI for a fresh start
         isPaused = false;
         document.getElementById("mode-menu").style.display = "block";
         document.getElementById("main-header").style.display = "block";
-        document.getElementById("timer-container").style.display = "none";
-        document.getElementById("active-mode-display").style.display = "none";
         document.getElementById("bingo-grid").innerHTML = "";
         overlay.remove();
     };
@@ -763,6 +799,10 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
         close_call: isBingo && !isInfinite && timeLeft > 0 && timeLeft <= 10,
         no_return: gameData.some((f) => f.item === "Yellow Car"),
         i_see_you: gameData.some((f) => f.item && f.item.toLowerCase().includes("looking directly at street view car")),
+        bounty_1: stats.maxBountyStreak >= 1,
+        bounty_3: stats.bountyStreak >= 3,
+        bounty_7: stats.bountyStreak >= 7,
+        bounty_30: stats.bountyStreak >= 30,
     };
 
     // --- DYNAMIC STREAK MILESTONES ---
@@ -966,16 +1006,31 @@ updateSidebarStreak();
  * NEW: Animated Grid Generation for Random Mode
  * This creates a more dynamic feel when starting a random board game
  */
-function generateGridWithAnimation() {
+async function generateGridWithAnimation() {
     const grid = document.getElementById("bingo-grid");
     grid.innerHTML = "";
+
+    const isRandom = grid.classList.contains("random-mode");
+    const dailyBounty = getDailyBounty();
+
     const gridRect = grid.getBoundingClientRect();
     const centerX = gridRect.width / 2;
     const centerY = gridRect.height / 2;
 
+    // --- NEW: Check if already claimed today ---
+    const storage = await browser.storage.local.get("last_bounty_claimed");
+    const today = new Date().toLocaleDateString("en-GB");
+    const alreadyClaimed = storage.last_bounty_claimed === today;
+
     ITEMS.forEach((itemObj, index) => {
         const cell = document.createElement("div");
         cell.className = "cell shuffling";
+
+        // Only highlight if: 1. Random Mode, 2. Matches ID, 3. NOT already claimed
+        if (isRandom && itemObj.id === dailyBounty.id && !alreadyClaimed) {
+            cell.classList.add("bounty-highlight");
+        }
+
         grid.appendChild(cell);
 
         const cellRect = cell.getBoundingClientRect();
@@ -997,7 +1052,43 @@ function generateGridWithAnimation() {
     });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+/**
+ * Helper to update the Sidebar Bounty Card on load
+ */
+async function initBountyUI() {
+    const bounty = getDailyBounty();
+    const nameEl = document.getElementById("bounty-item-name");
+    const statusEl = document.getElementById("bounty-status");
+    const cardEl = document.getElementById("bounty-card");
+
+    if (!nameEl) return;
+
+    nameEl.textContent = bounty.name;
+
+    // 1. Fetch BOTH the claim date AND the global stats for the streak
+    const data = await browser.storage.local.get(["last_bounty_claimed", "global_stats"]);
+    const today = new Date().toLocaleDateString("en-GB");
+    const stats = data.global_stats || {};
+
+    // 2. Handle Claimed Visuals
+    if (data.last_bounty_claimed === today) {
+        statusEl.textContent = "CLAIMED ✨";
+        if (cardEl) cardEl.classList.add("bounty-claimed");
+    } else {
+        statusEl.textContent = "UNCLAIMED";
+        if (cardEl) cardEl.classList.remove("bounty-claimed");
+    }
+
+    // 3. Update the Streak Display on load/refresh
+    const currentStreak = stats.bountyStreak || 0;
+    updateBountyDashboardUI(currentStreak);
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const storage = await browser.storage.local.get("last_bounty_claimed");
+    const today = new Date().toLocaleDateString("en-GB");
+    setBountyCache(storage.last_bounty_claimed === today);
+
     // pause button logic
     document.getElementById("pause-btn").onclick = togglePause;
     document.getElementById("resume-btn").onclick = togglePause;
@@ -1044,7 +1135,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const overlay = document.getElementById("win-overlay");
             if (overlay) overlay.remove();
+
+            const dashboard = document.getElementById("dashboard-container");
+            if (dashboard) dashboard.classList.remove("dashboard-hidden");
         }
+    };
+
+    document.getElementById("dashboard-tab").onclick = () => {
+        const container = document.getElementById("dashboard-container");
+        container.classList.toggle("dashboard-hidden");
     };
 
     const launchMapsBtn = document.getElementById("launch-maps-btn");
@@ -1059,4 +1158,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof updateDailyChallengeHUD === "function") {
         updateDailyChallengeHUD();
     }
+
+    // --- NEW: BOUNTY INITIALIZATION ---
+    // This ensures the Bounty Card shows the correct item and status on load
+    initBountyUI();
 });

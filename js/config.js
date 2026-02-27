@@ -1,3 +1,14 @@
+let cachedBountyClaimed = false;
+
+// This allows the sidebar to update the "truth" before the game starts
+function setBountyCache(status) {
+    cachedBountyClaimed = status;
+}
+
+function checkIfBountyClaimed() {
+    return cachedBountyClaimed;
+}
+
 const CORE_ITEMS = [
     { id: "Lawnmower", name: "Lawnmower" },
     { id: "Trampoline", name: "Trampoline" },
@@ -73,19 +84,57 @@ function shuffle(array) {
     return array;
 }
 
-function generateRandomBoard() {
-    // 1. Combine everything into one big pool
-    const fullPool = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+// function generateRandomBoard() {
+//     // 1. Combine everything into one big pool
+//     const fullPool = [...CORE_ITEMS, ...EXPANSION_ITEMS];
 
-    // 2. Fisher-Yates Shuffle (Unbiased)
-    // We iterate backwards, swapping each element with a random one before it
+//     // 2. Fisher-Yates Shuffle (Unbiased)
+//     // We iterate backwards, swapping each element with a random one before it
+//     for (let i = fullPool.length - 1; i > 0; i--) {
+//         const j = Math.floor(Math.random() * (i + 1));
+//         [fullPool[i], fullPool[j]] = [fullPool[j], fullPool[i]];
+//     }
+
+//     // 3. Take the first 25 items from the now-scrambled list
+//     return fullPool.slice(0, 25);
+// }
+
+function generateRandomBoard() {
+    // 1. Get the current bounty and check if it's already been claimed today
+    const dailyBounty = getDailyBounty();
+    // Note: ensure cachedBountyClaimed is synced in sidebar.js before calling this
+    const forceBounty = !checkIfBountyClaimed();
+
+    // 2. Create the pool
+    let fullPool = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+    let selectedItems = [];
+
+    if (forceBounty) {
+        // Find the bounty in the pool and move it to our selected list
+        const bountyIndex = fullPool.findIndex((item) => item.id === dailyBounty.id);
+        if (bountyIndex !== -1) {
+            selectedItems.push(fullPool.splice(bountyIndex, 1)[0]);
+        }
+    }
+
+    // 3. Fisher-Yates Shuffle the remaining pool
     for (let i = fullPool.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [fullPool[i], fullPool[j]] = [fullPool[j], fullPool[i]];
     }
 
-    // 3. Take the first 25 items from the now-scrambled list
-    return fullPool.slice(0, 25);
+    // 4. Fill the remaining slots (24 or 25)
+    const needed = 25 - selectedItems.length;
+    selectedItems = [...selectedItems, ...fullPool.slice(0, needed)];
+
+    // 5. Final Shuffle of the 25 items
+    // This ensures the Bounty isn't always at the top-left of the grid
+    for (let i = selectedItems.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [selectedItems[i], selectedItems[j]] = [selectedItems[j], selectedItems[i]];
+    }
+
+    return selectedItems;
 }
 
 const ACH_DATA = [
@@ -411,5 +460,33 @@ const ACH_DATA = [
         icon: "👁️",
         desc: "Caught someone staring directly at the Street View car.",
         type: "collection",
+    },
+    {
+        id: "bounty_1",
+        name: "First Blood",
+        icon: "🎯",
+        type: "milestone",
+        desc: "Claim your first Daily Bounty.",
+    },
+    {
+        id: "bounty_3",
+        name: "Bounty Hunter",
+        icon: "🏹",
+        type: "milestone",
+        desc: "Achieve a 3-day Bounty streak.",
+    },
+    {
+        id: "bounty_7",
+        name: "Golden Scout",
+        icon: "👑",
+        type: "milestone",
+        desc: "Achieve a 7-day Bounty streak.",
+    },
+    {
+        id: "bounty_30",
+        name: "Legendary Tracker",
+        icon: "🛡️",
+        type: "milestone",
+        desc: "Achieve a 30-day Bounty streak.",
     },
 ];
