@@ -23,6 +23,7 @@ let pauseStartTime = null;
 let totalDistanceTraveled = 0;
 let capturesAtCurrentLocation = 0;
 let lastCaptureCoords = null;
+let selectedRuleset = "standard";
 const FULL_DASH_ARRAY = 283;
 
 /**
@@ -31,18 +32,18 @@ const FULL_DASH_ARRAY = 283;
 window.startGame = async function (mode) {
     const grid = document.getElementById("bingo-grid");
     const modeBadge = document.getElementById("mode-badge-title");
-
-    // --- NEW: Reset Timer UI immediately to prevent ghosting ---
     const textDisplay = document.getElementById("timer-text");
     const progressCircle = document.querySelector(".timer-progress");
 
+    // --- DASHBOARD AUTO-HIDE ---
     const dashboard = document.getElementById("dashboard-container");
     if (dashboard) dashboard.classList.add("dashboard-hidden");
 
-    if (textDisplay) textDisplay.textContent = "10:00"; // Default starting look
+    // Reset Timer UI
+    if (textDisplay) textDisplay.textContent = "10:00";
     if (progressCircle) {
-        progressCircle.style.strokeDashoffset = "0"; // Reset the ring to full
-        progressCircle.style.transition = "none"; // Disable animation during reset
+        progressCircle.style.strokeDashoffset = "0";
+        progressCircle.style.transition = "none";
     }
 
     // 1. Initial UI Setup
@@ -52,35 +53,43 @@ window.startGame = async function (mode) {
 
     // 2. Clear previous classes
     grid.classList.remove("standard-mode", "random-mode", "infinite-mode");
-    modeBadge.className = ""; // Reset badge classes
+    modeBadge.className = "";
 
-    // Reset pause state and timers
     totalPausedTime = 0;
     pauseStartTime = null;
-
-    // Reset distance for the new game
     totalDistanceTraveled = 0;
 
+    // --- NEW HYBRID LOGIC ---
+    // We check for these flags independently
+    const isRandom = mode.includes("random");
+    const isInfinite = mode.includes("infinite");
+
     let modeLabel = "Standard";
-    if (mode === "random") {
+
+    // A. Handle Board Generation
+    if (isRandom) {
         modeLabel = "Random";
         ITEMS = generateRandomBoard();
         grid.classList.add("random-mode");
         modeBadge.classList.add("mode-badge-title", "mode-random");
-    } else if (mode === "infinite") {
-        modeLabel = "Infinite";
-        ITEMS = [...CORE_ITEMS];
-        grid.classList.add("infinite-mode");
-        modeBadge.classList.add("mode-badge-title", "mode-infinite");
     } else {
         ITEMS = [...CORE_ITEMS];
         grid.classList.add("standard-mode");
         modeBadge.classList.add("mode-badge-title", "mode-standard");
     }
 
+    // B. Handle Infinite Modifier
+    if (isInfinite) {
+        modeLabel = isRandom ? "Random Infinite" : "Infinite";
+        grid.classList.add("infinite-mode");
+        // We override the badge classes if it's infinite
+        modeBadge.classList.remove("mode-standard", "mode-random");
+        modeBadge.classList.add("mode-infinite");
+    }
+
     modeBadge.textContent = `${modeLabel} Mode`;
 
-    // Save the mode along with the session items
+    // Save state
     await browser.storage.local.set({
         session_items: ITEMS,
         current_game_mode: modeLabel,
@@ -88,27 +97,21 @@ window.startGame = async function (mode) {
 
     gameData = [];
     document.getElementById("bingo-grid").innerHTML = "";
-    // generateGrid();
 
-    // 3. Generate Grid with Animation
-    // generateGridWithAnimation();
-
-    // 2. Prepare the Countdown Overlay
+    // 3. Prepare the Countdown Overlay
     const overlay = document.getElementById("start-countdown");
     const numberDisplay = document.getElementById("countdown-number");
     overlay.style.display = "flex";
 
     let count = 3;
     numberDisplay.textContent = count;
-    numberDisplay.className = ""; // Reset any previous 'go-text' class
+    numberDisplay.className = "";
     soundCountdown.play();
 
     const countdownInterval = setInterval(() => {
         count--;
-
-        // Reset animation by removing the display element and triggering a reflow
         numberDisplay.style.animation = "none";
-        numberDisplay.offsetHeight; // This "magic" line triggers a reflow
+        numberDisplay.offsetHeight;
         numberDisplay.style.animation = null;
 
         if (count > 0) {
@@ -117,8 +120,6 @@ window.startGame = async function (mode) {
             numberDisplay.textContent = "GO!";
             numberDisplay.classList.add("go-text");
 
-            // --- NEW: Trigger Shuffle Animation RIGHT NOW ---
-            // This happens while "GO!" is on screen but before overlay vanishes
             setTimeout(() => {
                 generateGridWithAnimation();
                 document.getElementById("active-mode-display").style.display = "block";
@@ -127,13 +128,12 @@ window.startGame = async function (mode) {
             clearInterval(countdownInterval);
             overlay.style.display = "none";
 
-            // Start the Game
             gameStartTime = Date.now();
-            if (mode === "10min" || mode === "random" || mode === "infinite") {
-                timeLeft = initialTime; // Only used for countdown modes
-                document.getElementById("timer-container").style.display = "block"; // Now visible for Infinite!
-                startTimer();
-            }
+
+            // --- TIMER ---
+            timeLeft = initialTime;
+            document.getElementById("timer-container").style.display = "block";
+            startTimer();
         }
     }, 1000);
 };
@@ -1084,18 +1084,87 @@ async function initBountyUI() {
     updateBountyDashboardUI(currentStreak);
 }
 
+// Helper to reset menu back to "Play" after game starts or finishes
+function resetMenu() {
+    document.getElementById("menu-main").classList.remove("hidden");
+    document.getElementById("menu-ruleset").classList.add("hidden");
+    document.getElementById("menu-duration").classList.add("hidden");
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     const storage = await browser.storage.local.get("last_bounty_claimed");
     const today = new Date().toLocaleDateString("en-GB");
     setBountyCache(storage.last_bounty_claimed === today);
 
+    // main menu buttons
+    const menuMain = document.getElementById("menu-main");
+    const menuRuleset = document.getElementById("menu-ruleset");
+    const menuDuration = document.getElementById("menu-duration");
+
+    // --- NAVIGATION LOGIC ---
+
+    // 1. Main -> Ruleset
+    document.getElementById("nav-single-round").onclick = () => {
+        menuMain.classList.add("hidden");
+        menuRuleset.classList.remove("hidden");
+    };
+
+    // 2. Ruleset -> Duration
+    document.getElementById("select-standard").onclick = () => {
+        selectedRuleset = "standard";
+        // UI Polish
+        document.getElementById("select-standard").classList.add("selected");
+        document.getElementById("select-random").classList.remove("selected");
+
+        menuRuleset.classList.add("hidden");
+        menuDuration.classList.remove("hidden");
+    };
+
+    document.getElementById("select-random").onclick = () => {
+        selectedRuleset = "random";
+        // UI Polish
+        document.getElementById("select-random").classList.add("selected");
+        document.getElementById("select-standard").classList.remove("selected");
+
+        menuRuleset.classList.add("hidden");
+        menuDuration.classList.remove("hidden");
+    };
+
+    // 3. Back Buttons
+    document.querySelectorAll(".nav-back-btn").forEach((btn) => {
+        btn.onclick = () => {
+            if (!menuDuration.classList.contains("hidden")) {
+                menuDuration.classList.add("hidden");
+                menuRuleset.classList.remove("hidden");
+            } else if (!menuRuleset.classList.contains("hidden")) {
+                menuRuleset.classList.add("hidden");
+                menuMain.classList.remove("hidden");
+            }
+        };
+    });
+
+    // --- START GAME LOGIC ---
+
+    document.getElementById("btn-start-10min").onclick = () => {
+        // Use our tracker to start the right game
+        startGame(selectedRuleset === "random" ? "random" : "10min");
+        resetMenu(); // Helper to reset menu state for next time
+    };
+
+    document.getElementById("btn-start-infinite").onclick = () => {
+        // If selectedRuleset is "random", pass "random-infinite", otherwise just "infinite"
+        const mode = selectedRuleset === "random" ? "random-infinite" : "infinite";
+        startGame(mode);
+        resetMenu();
+    };
+
     // pause button logic
     document.getElementById("pause-btn").onclick = togglePause;
     document.getElementById("resume-btn").onclick = togglePause;
 
-    document.getElementById("btn-10min").onclick = () => startGame("10min");
-    document.getElementById("btn-random").onclick = () => startGame("random");
-    document.getElementById("btn-infinite").onclick = () => startGame("infinite");
+    // document.getElementById("btn-10min").onclick = () => startGame("10min");
+    // document.getElementById("btn-random").onclick = () => startGame("random");
+    // document.getElementById("btn-infinite").onclick = () => startGame("infinite");
     document.getElementById("view-achievements-btn").onclick = () => openOrFocusTab("achievements.html");
     document.getElementById("view-stats-btn").onclick = () => openOrFocusTab("stats.html");
     document.getElementById("view-world-btn").onclick = () => openOrFocusTab("world.html");
