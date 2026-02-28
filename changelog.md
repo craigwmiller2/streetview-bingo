@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1] - 2026-02-28
+
+- Updated UI for game mode selection
+- Added infinite mode for the Random mode game type
+- Added a new logo
+- Added a new font
+
 ## [1.7.0] - 2026-02-27
 
 - Added Bounty mode to find specific daily item within Random mode
