@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Adventure Mode - Street View Bingo</title>
+        <link rel="stylesheet" href="lib/leaflet.css" />
+        <link rel="stylesheet" href="css/adventure.css" />
+    </head>
+    <body>
+        <div id="adventure-layout">
+            <aside id="level-sidebar">
+                <div class="header">
+                    <button id="btn-back-main">← Back to Menu</button>
+                    <h1 id="country-title">Adventure Mode</h1>
+                    <p id="total-progress">Total Stars: 0/0</p>
+                </div>
+
+                <div id="level-card" class="hidden">
+                    <div id="level-preview-img"></div>
+                    <h2 id="lvl-city">Select a Level</h2>
+                    <h3 id="lvl-title">---</h3>
+                    <p id="lvl-desc">Select a pin on the map to see level details and requirements.</p>
+
+                    <div class="star-rating">
+                        <span id="star-1" class="star">☆</span>
+                        <span id="star-2" class="star">☆</span>
+                        <span id="star-3" class="star">☆</span>
+                    </div>
+
+                    <div class="requirements">
+                        <h4>Requirements</h4>
+                        <ul>
+                            <li>13 Items: 1 Star</li>
+                            <li>20 Items: 2 Stars</li>
+                            <li>Bingo: 3 Stars</li>
+                        </ul>
+                    </div>
+
+                    <button id="btn-start-level" class="btn-play">START LEVEL</button>
+                </div>
+            </aside>
+
+            <main id="map-container">
+                <div id="adventure-map"></div>
+            </main>
+        </div>
+
+        <script src="lib/leaflet.js"></script>
+        <script src="js/adventure-data.js"></script>
+        <script src="js/adventure.js"></script>
+    </body>
+</html>

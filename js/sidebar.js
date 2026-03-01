@@ -489,6 +489,36 @@ async function triggerEndGame(title, bgColor) {
 
     clearInterval(timerInterval);
 
+    const storage = await browser.storage.local.get("active_adventure");
+    const adventure = storage.active_adventure;
+    let adventureStars = 0;
+
+    if (adventure) {
+        const countryData = ADVENTURE_CONFIG[adventure.countryId];
+        const levelData = countryData.levels.find((l) => l.id === adventure.levelId);
+        const currentCoords = await getCurrentLocationFromURL();
+
+        if (currentCoords) {
+            const distanceMoved = calculateDistance(
+                levelData.coords[0],
+                levelData.coords[1],
+                currentCoords.lat,
+                currentCoords.lng,
+            );
+
+            const maxAllowed = levelData.maxDistance || 10000;
+
+            if (distanceMoved > maxAllowed) {
+                showAdventureFailure(distanceMoved, maxAllowed);
+                return;
+            }
+        }
+
+        // --- NEW: SAVE ADVENTURE PROGRESS ---
+        // We calculate and save the stars here before clearing gameData
+        adventureStars = await saveAdventureProgress(gameData.length);
+    }
+
     // --- NEW: Hide the active game controls ---
     document.getElementById("controls").style.display = "none";
 
@@ -625,9 +655,72 @@ async function triggerEndGame(title, bgColor) {
     updateDailyChallengeHUD(); // Refresh the new Daily Challenge HUD state
 }
 
+function showAdventureFailure(moved, limit) {
+    const movedKm = (moved / 1000).toFixed(1);
+    const limitKm = (limit / 1000).toFixed(1);
+
+    alert(
+        `🚨 OUT OF BOUNDS!\n\nYou strayed ${movedKm}km from the starting point.\nThe limit for this level is ${limitKm}km.\n\nYour progress has not been saved!`,
+    );
+
+    // Reset the game and return to menu
+    location.reload();
+}
+
+async function getCurrentLocationFromURL() {
+    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    const url = tabs[0].url;
+
+    // Google Maps URLs look like: .../@lat,lng,zoom...
+    const match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (match) {
+        return {
+            lat: parseFloat(match[1]),
+            lng: parseFloat(match[2]),
+        };
+    }
+    return null;
+}
+
 function parseCoords(url) {
     const match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
     return match ? { lat: parseFloat(match[1]), lng: parseFloat(match[2]) } : null;
+}
+
+// Inside triggerEndGame in sidebar.js
+async function saveAdventureProgress(foundCount) {
+    const storage = await browser.storage.local.get(["active_adventure", "adventure_progress"]);
+    const active = storage.active_adventure;
+    const progress = storage.adventure_progress || {};
+
+    if (!active) return;
+
+    // 1. Calculate Stars
+    let stars = 0;
+    if (foundCount >= 25) stars = 3;
+    else if (foundCount >= 20) stars = 2;
+    else if (foundCount >= 13) stars = 1;
+
+    // 2. Initialize country in progress if it doesn't exist
+    if (!progress[active.countryId]) {
+        progress[active.countryId] = {};
+    }
+
+    // 3. Update if better than previous attempt
+    const currentLvl = progress[active.countryId][active.levelId] || { stars: 0, completed: false };
+
+    progress[active.countryId][active.levelId] = {
+        stars: Math.max(stars, currentLvl.stars),
+        completed: stars > 0 || currentLvl.completed,
+    };
+
+    // 4. Save back to storage
+    await browser.storage.local.set({ adventure_progress: progress });
+
+    // 5. Clear active adventure so next game is normal
+    await browser.storage.local.remove("active_adventure");
+
+    console.log("Adventure Progress Saved!", progress);
 }
 
 async function updateGlobalStats(finalDuration, distance) {
@@ -1096,6 +1189,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     const today = new Date().toLocaleDateString("en-GB");
     setBountyCache(storage.last_bounty_claimed === today);
 
+    // --- ADVENTURE AUTO-START CHECK ---
+    const adventureData = await browser.storage.local.get("active_adventure");
+    if (adventureData.active_adventure && adventureData.active_adventure.isNewGame) {
+        // 1. Mark the game as "started" so it doesn't loop on refresh
+        const updatedAdventure = { ...adventureData.active_adventure, isNewGame: false };
+        await browser.storage.local.set({ active_adventure: updatedAdventure });
+
+        // 2. Force the ruleset to Standard (as requested for Adventure Mode)
+        selectedRuleset = "standard";
+
+        // 3. Kick off the 10-minute game immediately
+        // This bypasses the menu and goes straight to the 3-2-1 countdown
+        startGame("10min");
+    }
+
     // main menu buttons
     const menuMain = document.getElementById("menu-main");
     const menuRuleset = document.getElementById("menu-ruleset");
@@ -1123,8 +1231,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("select-random").onclick = () => {
         selectedRuleset = "random";
         // UI Polish
-        document.getElementById("select-random").classList.add("selected");
-        document.getElementById("select-standard").classList.remove("selected");
+        // document.getElementById("select-random").classList.add("selected");
+        // document.getElementById("select-standard").classList.remove("selected");
 
         menuRuleset.classList.add("hidden");
         menuDuration.classList.remove("hidden");
@@ -1207,6 +1315,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const dashboard = document.getElementById("dashboard-container");
             if (dashboard) dashboard.classList.remove("dashboard-hidden");
+
+            // Add this line to clear the adventure context
+            await browser.storage.local.remove("active_adventure");
+
+            location.reload();
         }
     };
 

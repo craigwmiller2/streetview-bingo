@@ -1,0 +1,177 @@
+/* rubik-regular - latin */
+@font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Rubik";
+    font-style: normal;
+    font-weight: 400;
+    src: url("../fonts/rubik-v31-latin-regular.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+/* rubik-600 - latin */
+@font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Rubik";
+    font-style: normal;
+    font-weight: 600;
+    src: url("../fonts/rubik-v31-latin-600.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+/* rubik-700 - latin */
+@font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Rubik";
+    font-style: normal;
+    font-weight: 700;
+    src: url("../fonts/rubik-v31-latin-700.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+/* rubik-800 - latin */
+@font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Rubik";
+    font-style: normal;
+    font-weight: 800;
+    src: url("../fonts/rubik-v31-latin-800.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+/* rubik-900 - latin */
+@font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Rubik";
+    font-style: normal;
+    font-weight: 900;
+    src: url("../fonts/rubik-v31-latin-900.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+:root {
+    --primary: #3498db;
+    --success: #2ecc71;
+    --locked: #95a5a6;
+    --bg: #2c3e50;
+    --text: #ecf0f1;
+}
+
+body,
+html,
+#adventure-layout {
+    height: 100%;
+    margin: 0;
+    font-family: "Rubik", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+}
+
+#adventure-layout {
+    display: flex;
+}
+
+#level-sidebar {
+    width: 350px;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+#map-container {
+    flex: 1;
+}
+
+#adventure-map {
+    height: 100%;
+    width: 100%;
+}
+
+.btn-play {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 20px;
+    font-size: 1.1rem;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Container for the DivIcon - resets Leaflet defaults */
+.custom-level-icon {
+    background: none !important;
+    border: none !important;
+}
+
+.marker-square {
+    width: 40px;
+    height: 40px;
+    background: #3498db; /* Default Blue */
+    border: 3px solid white;
+    border-radius: 10px; /* Rounded corners */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    user-select: none;
+}
+
+.marker-id {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.marker-stars {
+    font-size: 8px;
+    color: #f1c40f; /* Gold Stars */
+    margin-top: 2px;
+}
+
+/* State: Completed (Green) */
+.marker-square.completed {
+    background: #2ecc71;
+}
+
+/* State: Locked (Gray) */
+.marker-square.locked {
+    background: #7f8c8d !important;
+    opacity: 0.6;
+    filter: grayscale(1);
+    cursor: not-allowed;
+}
+
+/* Hover effect for unlocked levels */
+.marker-square.unlocked:not(.locked):hover {
+    transform: translateY(-5px);
+    filter: brightness(1.1);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
+}
+
+.star-rating {
+    font-size: 2rem;
+    color: #f1c40f;
+    text-align: center;
+    margin: 15px 0;
+}
+
+.star.earned {
+    content: "★";
+    color: #f1c40f;
+}
+
+.level-label {
+    background: #000;
+    color: #fff;
+    border: 1px solid var(--primary);
+}
