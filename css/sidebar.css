@@ -1212,3 +1212,29 @@ button:active {
 #select-standard {
     background-color: #3498db;
 }
+
+/* adventure.css or sidebar.css */
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: 50%;
+    left: 50%;
+    z-index: 10000;
+    pointer-events: none;
+}
+
+@keyframes confetti-explosion {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(0deg);
+        opacity: 1;
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        /* This creates the random trajectory */
+        transform: translate(var(--tx), var(--ty)) rotate(var(--tr));
+        opacity: 0;
+    }
+}

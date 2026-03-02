@@ -1,5 +1,4 @@
 async function loadAchievements() {
-    // FIX: Added "global_stats" to the request list
     const data = await browser.storage.local.get([
         "achievements",
         "achievement_dates",
@@ -9,13 +8,15 @@ async function loadAchievements() {
 
     const earned = data.achievements || [];
     const earnedDates = data.achievement_dates || {};
-    // const stats = data.global_stats || { itemCounts: {}, totalPlaytime: 0, dailyChallengeWins: 0, currentStreak: 0 };
     const stats = data.global_stats || {};
+
+    // Ensure nested objects exist
     if (!stats.itemCounts) stats.itemCounts = {};
     if (!stats.dailyChallengeWins) stats.dailyChallengeWins = 0;
+    // Lifetime distance from global_stats
+    const lifetimeDist = stats.totalCareerDistance || 0;
 
     const history = data.world_history || [];
-
     const list = document.getElementById("achievements-list");
     list.innerHTML = "";
 
@@ -34,7 +35,7 @@ async function loadAchievements() {
                 (game.country && game.country.toLowerCase().includes(placeName.toLowerCase())),
         );
 
-    // --- 2. Category Grouping & Rendering ---
+    // --- 2. Category Grouping ---
     const grouped = ACH_DATA.reduce((acc, ach) => {
         if (!acc[ach.type]) acc[ach.type] = [];
         acc[ach.type].push(ach);
@@ -63,53 +64,62 @@ async function loadAchievements() {
 
         achievements.forEach((ach) => {
             const isUnlocked = earned.includes(ach.id);
-
-            // Determine if we should mask the content
             const shouldHide = ach.hidden && !isUnlocked;
 
             const card = document.createElement("div");
             card.className = `ach-card ${ach.type} ${isUnlocked ? "unlocked" : ""} ${shouldHide ? "is-hidden-secret" : ""}`;
 
-            // Values to display
             const icon = shouldHide ? "❓" : ach.icon;
             const name = shouldHide ? "Secret Achievement" : ach.name;
             const desc = shouldHide ? "This achievement is hidden. Keep exploring to find it!" : ach.desc;
 
             let progressHtml = "";
-            if (!isUnlocked && ach.goal) {
+
+            // --- INTEGRATED DISTANCE & STAT PROGRESS LOGIC ---
+            if (!isUnlocked && (ach.goal || ach.goalType === "distance")) {
                 let current = 0;
+                let goal = ach.goal;
+                let displayCurrent = "";
+                let displayGoal = "";
+
                 if (ach.goalType === "item") {
-                    // This now works because stats.itemCounts is populated
                     current = stats.itemCounts[ach.itemKey] || 0;
+                    displayCurrent = current;
+                    displayGoal = goal;
                 } else if (ach.goalType === "stat") {
                     current = stats[ach.statKey] || 0;
+
+                    // Formatting for specific stats
+                    if (ach.statKey === "totalPlaytime") {
+                        displayCurrent = Math.floor(current / 60000) + "m";
+                        displayGoal = Math.floor(goal / 60000) + "m";
+                    } else if (ach.statKey === "currentStreak") {
+                        displayCurrent = current + " Days";
+                        displayGoal = goal + " Days";
+                    } else {
+                        displayCurrent = current;
+                        displayGoal = goal;
+                    }
+                } else if (ach.goalType === "distance") {
+                    // Logic specifically for distance achievements
+                    current = lifetimeDist;
+                    goal = ach.threshold; // Assumes your config uses 'threshold' for distance
+
+                    // Format meters to KM for display
+                    displayCurrent = (current / 1000).toFixed(1) + "km";
+                    displayGoal = (goal / 1000).toLocaleString() + "km";
                 } else if (ach.goalType === "custom") {
-                    // Specific logic for our new exploration goals
                     if (ach.id === "island_hopper") {
                         current = (visited("united kingdom") ? 1 : 0) + (visited("australia") ? 1 : 0);
                     } else if (ach.id === "scandinavian_scout") {
                         current =
                             (visited("norway") ? 1 : 0) + (visited("sweden") ? 1 : 0) + (visited("denmark") ? 1 : 0);
                     }
+                    displayCurrent = current;
+                    displayGoal = goal;
                 }
 
-                const percent = Math.min(100, Math.round((current / ach.goal) * 100));
-
-                let displayCurrent = current;
-                let displayGoal = ach.goal;
-
-                if (ach.statKey === "totalPlaytime") {
-                    displayCurrent = Math.floor(current / 60000) + "m";
-                    displayGoal = Math.floor(ach.goal / 60000) + "m";
-                }
-                // Optional: Add a suffix for wins or days to make it clearer
-                else if (ach.statKey === "dailyChallengeWins") {
-                    displayCurrent = current + " Wins";
-                    displayGoal = ach.goal + " Wins";
-                } else if (ach.statKey === "currentStreak") {
-                    displayCurrent = current + " Days";
-                    displayGoal = ach.goal + " Days";
-                }
+                const percent = Math.min(100, Math.round((current / goal) * 100));
 
                 progressHtml = `
                     <div class="ach-progress-wrapper">
@@ -119,7 +129,7 @@ async function loadAchievements() {
                 `;
             }
 
-            const dateDisplay = earnedDates[ach.id] || "Achieved before v1.2.0";
+            const dateDisplay = earnedDates[ach.id] || "Achieved recently";
 
             card.innerHTML = `
                 <div class="ach-icon">${icon}</div>
@@ -132,31 +142,24 @@ async function loadAchievements() {
                 </div>
             `;
 
-            card.setAttribute("data-id", ach.id); // For deep linking
-
+            card.setAttribute("data-id", ach.id);
             grid.appendChild(card);
         });
 
         section.appendChild(grid);
         list.appendChild(section);
+    }
 
-        const targetId = window.location.hash.substring(1); // remove the '#'
-        if (targetId) {
-            // Find the card with a matching data attribute or ID
-            // Note: You'll need to ensure your cards have an ID set during creation
-            const targetCard = document.querySelector(`[data-id="${targetId}"]`);
-
-            if (targetCard) {
-                setTimeout(() => {
-                    targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
-                    targetCard.classList.add("highlight-pulse");
-
-                    // Remove the highlight after the animation finishes
-                    setTimeout(() => {
-                        targetCard.classList.remove("highlight-pulse");
-                    }, 3000);
-                }, 500); // Small delay to ensure rendering is 100% complete
-            }
+    // --- 3. Deep Linking Logic ---
+    const targetId = window.location.hash.substring(1);
+    if (targetId) {
+        const targetCard = document.querySelector(`[data-id="${targetId}"]`);
+        if (targetCard) {
+            setTimeout(() => {
+                targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+                targetCard.classList.add("highlight-pulse");
+                setTimeout(() => targetCard.classList.remove("highlight-pulse"), 3000);
+            }, 500);
         }
     }
 }

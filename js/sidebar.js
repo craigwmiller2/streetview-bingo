@@ -302,6 +302,8 @@ function checkWinCondition() {
     if (gameData.length === 25) {
         soundBingo.play();
         triggerEndGame("🎉 BINGO!", "rgba(46, 204, 113, 0.9)");
+
+        spawnPerfectScoreConfetti();
     }
 }
 
@@ -366,7 +368,7 @@ function refreshHUD() {
                 ? `${Math.floor(totalDistanceTraveled)}m`
                 : `${(totalDistanceTraveled / 1000).toFixed(2)}km`;
 
-        distanceDisplay.textContent = `Distance Travelled: ${distText}`;
+        distanceDisplay.textContent = `Distance: ${distText}`;
 
         // Optional: Turn text red if they fail "Perfect Seed"
         // if (totalDistanceTraveled >= 500) {
@@ -489,36 +491,6 @@ async function triggerEndGame(title, bgColor) {
 
     clearInterval(timerInterval);
 
-    const storage = await browser.storage.local.get("active_adventure");
-    const adventure = storage.active_adventure;
-    let adventureStars = 0;
-
-    if (adventure) {
-        const countryData = ADVENTURE_CONFIG[adventure.countryId];
-        const levelData = countryData.levels.find((l) => l.id === adventure.levelId);
-        const currentCoords = await getCurrentLocationFromURL();
-
-        if (currentCoords) {
-            const distanceMoved = calculateDistance(
-                levelData.coords[0],
-                levelData.coords[1],
-                currentCoords.lat,
-                currentCoords.lng,
-            );
-
-            const maxAllowed = levelData.maxDistance || 10000;
-
-            if (distanceMoved > maxAllowed) {
-                showAdventureFailure(distanceMoved, maxAllowed);
-                return;
-            }
-        }
-
-        // --- NEW: SAVE ADVENTURE PROGRESS ---
-        // We calculate and save the stars here before clearing gameData
-        adventureStars = await saveAdventureProgress(gameData.length);
-    }
-
     // --- NEW: Hide the active game controls ---
     document.getElementById("controls").style.display = "none";
 
@@ -624,6 +596,8 @@ async function triggerEndGame(title, bgColor) {
         soundAchievement.play();
     }
 
+    const foundCount = gameData.length;
+
     // 5. Check achievements using the FRESHLY updated stats
     await checkAchievements(finalDuration, updatedStats, totalDistanceTraveled);
 
@@ -655,18 +629,6 @@ async function triggerEndGame(title, bgColor) {
     updateDailyChallengeHUD(); // Refresh the new Daily Challenge HUD state
 }
 
-function showAdventureFailure(moved, limit) {
-    const movedKm = (moved / 1000).toFixed(1);
-    const limitKm = (limit / 1000).toFixed(1);
-
-    alert(
-        `🚨 OUT OF BOUNDS!\n\nYou strayed ${movedKm}km from the starting point.\nThe limit for this level is ${limitKm}km.\n\nYour progress has not been saved!`,
-    );
-
-    // Reset the game and return to menu
-    location.reload();
-}
-
 async function getCurrentLocationFromURL() {
     const tabs = await browser.tabs.query({ active: true, currentWindow: true });
     const url = tabs[0].url;
@@ -687,42 +649,6 @@ function parseCoords(url) {
     return match ? { lat: parseFloat(match[1]), lng: parseFloat(match[2]) } : null;
 }
 
-// Inside triggerEndGame in sidebar.js
-async function saveAdventureProgress(foundCount) {
-    const storage = await browser.storage.local.get(["active_adventure", "adventure_progress"]);
-    const active = storage.active_adventure;
-    const progress = storage.adventure_progress || {};
-
-    if (!active) return;
-
-    // 1. Calculate Stars
-    let stars = 0;
-    if (foundCount >= 25) stars = 3;
-    else if (foundCount >= 20) stars = 2;
-    else if (foundCount >= 13) stars = 1;
-
-    // 2. Initialize country in progress if it doesn't exist
-    if (!progress[active.countryId]) {
-        progress[active.countryId] = {};
-    }
-
-    // 3. Update if better than previous attempt
-    const currentLvl = progress[active.countryId][active.levelId] || { stars: 0, completed: false };
-
-    progress[active.countryId][active.levelId] = {
-        stars: Math.max(stars, currentLvl.stars),
-        completed: stars > 0 || currentLvl.completed,
-    };
-
-    // 4. Save back to storage
-    await browser.storage.local.set({ adventure_progress: progress });
-
-    // 5. Clear active adventure so next game is normal
-    await browser.storage.local.remove("active_adventure");
-
-    console.log("Adventure Progress Saved!", progress);
-}
-
 async function updateGlobalStats(finalDuration, distance) {
     const data = await browser.storage.local.get(["global_stats", "current_game_mode"]);
 
@@ -739,6 +665,8 @@ async function updateGlobalStats(finalDuration, distance) {
 
     global.totalAttempts = (global.totalAttempts || 0) + 1;
     global.totalPlaytime = (global.totalPlaytime || 0) + finalDuration;
+
+    global.totalCareerDistance = (global.totalCareerDistance || 0) + distance;
 
     // 2. Daily Streak Logic
     const now = new Date();
@@ -896,6 +824,10 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
         bounty_3: stats.bountyStreak >= 3,
         bounty_7: stats.bountyStreak >= 7,
         bounty_30: stats.bountyStreak >= 30,
+        dist_10km: (stats.totalCareerDistance || 0) >= 10000,
+        dist_100km: (stats.totalCareerDistance || 0) >= 100000,
+        dist_1000km: (stats.totalCareerDistance || 0) >= 1000000,
+        dist_40k: (stats.totalCareerDistance || 0) >= 40075000,
     };
 
     // --- DYNAMIC STREAK MILESTONES ---
@@ -1177,6 +1109,46 @@ async function initBountyUI() {
     updateBountyDashboardUI(currentStreak);
 }
 
+function spawnPerfectScoreConfetti() {
+    const colors = ["#f1c40f", "#e74c3c", "#3498db", "#2ecc71", "#9b59b6", "#ffffff"];
+    const shapes = ["50%", "0%", "20%"]; // Circle, Square, Slightly rounded
+
+    for (let i = 0; i < 120; i++) {
+        const confetti = document.createElement("div");
+        confetti.className = "confetti";
+
+        // Randomize appearance
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const shape = shapes[Math.floor(Math.random() * shapes.length)];
+
+        // Randomize trajectory (The "Explosion" math)
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 100 + Math.random() * 250; // Distance of spread
+        const tx = Math.cos(angle) * velocity + "px";
+        const ty = Math.sin(angle) * velocity + "px";
+        const tr = Math.random() * 720 - 360 + "deg"; // Total rotation
+
+        confetti.style.backgroundColor = color;
+        confetti.style.borderRadius = shape;
+        confetti.style.setProperty("--tx", tx);
+        confetti.style.setProperty("--ty", ty);
+        confetti.style.setProperty("--tr", tr);
+
+        // Randomize size and duration
+        const size = Math.random() * 8 + 4 + "px";
+        confetti.style.width = size;
+        confetti.style.height = size;
+
+        const duration = 1.5 + Math.random() * 2 + "s";
+        confetti.style.animation = `confetti-explosion ${duration} cubic-bezier(0.1, 0.8, 0.3, 1) forwards`;
+
+        document.body.appendChild(confetti);
+
+        // Cleanup
+        setTimeout(() => confetti.remove(), 4000);
+    }
+}
+
 // Helper to reset menu back to "Play" after game starts or finishes
 function resetMenu() {
     document.getElementById("menu-main").classList.remove("hidden");
@@ -1188,21 +1160,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const storage = await browser.storage.local.get("last_bounty_claimed");
     const today = new Date().toLocaleDateString("en-GB");
     setBountyCache(storage.last_bounty_claimed === today);
-
-    // --- ADVENTURE AUTO-START CHECK ---
-    const adventureData = await browser.storage.local.get("active_adventure");
-    if (adventureData.active_adventure && adventureData.active_adventure.isNewGame) {
-        // 1. Mark the game as "started" so it doesn't loop on refresh
-        const updatedAdventure = { ...adventureData.active_adventure, isNewGame: false };
-        await browser.storage.local.set({ active_adventure: updatedAdventure });
-
-        // 2. Force the ruleset to Standard (as requested for Adventure Mode)
-        selectedRuleset = "standard";
-
-        // 3. Kick off the 10-minute game immediately
-        // This bypasses the menu and goes straight to the 3-2-1 countdown
-        startGame("10min");
-    }
 
     // main menu buttons
     const menuMain = document.getElementById("menu-main");
@@ -1315,9 +1272,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const dashboard = document.getElementById("dashboard-container");
             if (dashboard) dashboard.classList.remove("dashboard-hidden");
-
-            // Add this line to clear the adventure context
-            await browser.storage.local.remove("active_adventure");
 
             location.reload();
         }

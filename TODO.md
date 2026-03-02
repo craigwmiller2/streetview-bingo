@@ -11,3 +11,4 @@
     - [ ] Finding 5 items within 5 seconds
 - [x] Add a "Finish" button to bingo game that lets users finish the game and collect their findings
 - [x] Add an achievement for finding a Yellow Car titled "No Return!"
+- [ ] Change the "Adventure Mode" into "World Quests"?
