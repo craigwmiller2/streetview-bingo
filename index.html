@@ -172,17 +172,34 @@
             const canvas = document.getElementById("background-canvas");
             const ctx = canvas.getContext("2d");
             let particles = [];
-            const particleCount = 100; // Increased slightly for better density
+            const particleCount = 100;
             const connectionDistance = 160;
             const mouse = { x: null, y: null, radius: 150 };
 
-            // Track mouse position
+            // --- NEW: Click Interaction ---
+            window.addEventListener("mousedown", (e) => {
+                mouse.x = e.x;
+                mouse.y = e.y;
+
+                particles.forEach((p) => {
+                    const dx = p.x - mouse.x;
+                    const dy = p.y - mouse.y;
+                    const dist = Math.hypot(dx, dy);
+                    const force = 1000 / dist; // The closer the particle, the stronger the push
+
+                    if (dist < 300) {
+                        // Impact radius
+                        p.vx += (dx / dist) * force;
+                        p.vy += (dy / dist) * force;
+                    }
+                });
+            });
+
             window.addEventListener("mousemove", (e) => {
                 mouse.x = e.x;
                 mouse.y = e.y;
             });
 
-            // Reset mouse when it leaves the window
             window.addEventListener("mouseout", () => {
                 mouse.x = null;
                 mouse.y = null;
@@ -198,8 +215,7 @@
                         vx: (Math.random() - 0.5) * 0.6,
                         vy: (Math.random() - 0.5) * 0.6,
                         size: Math.random() * 2 + 1,
-                        originalVx: 0,
-                        originalVy: 0,
+                        friction: 0.95, // Added to slow particles back down after a pulse
                     });
                 }
             }
@@ -215,21 +231,19 @@
                 for (let i = 0; i < particles.length; i++) {
                     let p = particles[i];
 
-                    // --- MOUSE INTERACTION LOGIC ---
+                    // Mouse Attraction (Magnetic)
                     if (mouse.x !== null) {
                         let dx = mouse.x - p.x;
                         let dy = mouse.y - p.y;
                         let dist = Math.hypot(dx, dy);
 
                         if (dist < mouse.radius) {
-                            // Gentle attraction: pull particles toward mouse
                             const force = (mouse.radius - dist) / mouse.radius;
-                            p.x += (dx / dist) * force * 2;
-                            p.y += (dy / dist) * force * 2;
+                            p.x += (dx / dist) * force * 1.5;
+                            p.y += (dy / dist) * force * 1.5;
 
-                            // Draw connection to mouse
-                            ctx.strokeStyle = `rgba(52, 152, 219, ${force * 0.5})`;
-                            ctx.lineWidth = 1;
+                            ctx.strokeStyle = `rgba(52, 152, 219, ${force * 0.3})`;
+                            ctx.lineWidth = 0.8;
                             ctx.beginPath();
                             ctx.moveTo(p.x, p.y);
                             ctx.lineTo(mouse.x, mouse.y);
@@ -237,23 +251,30 @@
                         }
                     }
 
-                    // Standard Movement
+                    // Apply friction to return to normal speed after a click
+                    p.vx *= p.friction;
+                    p.vy *= p.friction;
+
+                    // Ensure they keep moving slightly even with friction
+                    if (Math.abs(p.vx) < 0.2) p.vx += (Math.random() - 0.5) * 0.1;
+                    if (Math.abs(p.vy) < 0.2) p.vy += (Math.random() - 0.5) * 0.1;
+
                     p.x += p.vx;
                     p.y += p.vy;
 
-                    // Screen Wrap (Cleaner than bouncing for a map feel)
+                    // Screen Wrap
                     if (p.x < 0) p.x = canvas.width;
                     if (p.x > canvas.width) p.x = 0;
                     if (p.y < 0) p.y = canvas.height;
                     if (p.y > canvas.height) p.y = 0;
 
                     // Draw Particle
-                    ctx.fillStyle = "rgba(52, 152, 219, 0.7)";
+                    ctx.fillStyle = "rgba(52, 152, 219, 0.8)";
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Standard Inter-particle Connections
+                    // Standard Connections
                     for (let j = i + 1; j < particles.length; j++) {
                         let p2 = particles[j];
                         let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
@@ -275,7 +296,6 @@
                 resize();
                 init();
             });
-
             init();
             draw();
         </script>
