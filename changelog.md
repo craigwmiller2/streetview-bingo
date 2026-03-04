@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.7.3] - 2026-03-04
+
+- Timer fix!
+
 ## [1.7.2] - 2026-03-04
 
 - Change sound effect for last 12 seconds of the round.
