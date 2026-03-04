@@ -4,18 +4,20 @@ const soundDefeat = new Audio(browser.runtime.getURL("audio/defeat.mp3"));
 const soundAchievement = new Audio(browser.runtime.getURL("audio/achievement.ogg"));
 const soundCountdown = new Audio(browser.runtime.getURL("audio/countdown.mp3"));
 const soundAlert = new Audio(browser.runtime.getURL("audio/alert.mp3"));
+const soundDrowning = new Audio(browser.runtime.getURL("audio/sonic-drowning.mp3"));
 
-soundTick.load();
+// soundTick.load();
 soundBingo.load();
-soundDefeat.load();
+// soundDefeat.load();
 soundAchievement.load();
 soundCountdown.load();
 soundAlert.load();
+soundDrowning.load();
 
 let gameData = [];
 let timerInterval = null;
 let timeLeft = 0;
-let initialTime = 600; // 10 mins
+let initialTime = 15; // 10 mins
 let gameStartTime = null;
 let isPaused = false;
 let totalPausedTime = 0;
@@ -392,9 +394,10 @@ function refreshHUD() {
         displaySecs = timeLeft % 60;
 
         // --- NEW: Ticking Logic for last 10 seconds ---
-        if (timeLeft <= 10 && timeLeft > 0) {
-            soundTick.currentTime = 0; // Reset sound to allow rapid replay
-            soundTick.play();
+        if (timeLeft <= 12 && timeLeft > 0) {
+            // soundTick.currentTime = 0; // Reset sound to allow rapid replay
+            // soundTick.play();
+            soundDrowning.play();
 
             // Visual feedback: Flash red and scale up slightly
             textDisplay.style.color = "#e74c3c";
@@ -452,7 +455,7 @@ function startTimer() {
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
                 triggerEndGame("⏰ TIME'S UP!", "rgba(192, 57, 43, 0.9)");
-                soundDefeat.play();
+                // soundDefeat.play();
             }
             refreshHUD();
         }

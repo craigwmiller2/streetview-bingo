@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.7.2] - 2026-03-04
+
+- Change sound effect for last 12 seconds of the round.
+
 ## [1.7.1] - 2026-02-28
 
 - Updated UI for game mode selection
