@@ -26,6 +26,7 @@ let totalDistanceTraveled = 0;
 let capturesAtCurrentLocation = 0;
 let lastCaptureCoords = null;
 let selectedRuleset = "standard";
+let undoUsedInCurrentGame = false;
 const FULL_DASH_ARRAY = 283;
 
 /**
@@ -36,6 +37,10 @@ window.startGame = async function (mode) {
     const modeBadge = document.getElementById("mode-badge-title");
     const textDisplay = document.getElementById("timer-text");
     const progressCircle = document.querySelector(".timer-progress");
+    undoUsedInCurrentGame = false;
+
+    const body = document.querySelector("body");
+    body.classList.add("game-active");
 
     // --- DASHBOARD AUTO-HIDE ---
     const dashboard = document.getElementById("dashboard-container");
@@ -303,6 +308,10 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 function checkWinCondition() {
     if (gameData.length === 25) {
         soundBingo.play();
+        // stop soundDrowning sound from playing and reset it for the next game
+        soundDrowning.pause();
+        soundDrowning.currentTime = 0;
+
         triggerEndGame("🎉 BINGO!", "rgba(46, 204, 113, 0.9)");
 
         spawnPerfectScoreConfetti();
@@ -311,6 +320,7 @@ function checkWinCondition() {
 
 function handleUndo(itemId, cellElement) {
     const index = gameData.findIndex((f) => f.item === itemId);
+    undoUsedInCurrentGame = true;
 
     if (index > -1) {
         // 2. Only subtract distance if there was a "previous" item to jump from
@@ -486,6 +496,8 @@ function formatTime(totalSeconds) {
 async function triggerEndGame(title, bgColor) {
     const grid = document.getElementById("bingo-grid");
     const isRandom = grid.classList.contains("random-mode");
+    const body = document.querySelector("body");
+    body.classList.remove("game-active");
     if (document.getElementById("win-overlay")) return;
 
     // Reveal the dashboard when the game completes
@@ -735,6 +747,23 @@ async function updateGlobalStats(finalDuration, distance) {
     return { isNewRecord, updatedStats: global };
 }
 
+/**
+ * Helper to check for an item ID within a specific geographical context
+ * @param {Array} gameData - Current session finds
+ * @param {Object} lastGame - Geocoded data from Nominatim
+ * @param {String} targetId - The item ID to look for
+ * @param {Array|String} countries - Country name(s) to match
+ */
+function checkExploration(gameData, lastGame, targetId, countries) {
+    const itemFound = gameData.some((f) => f.item === targetId);
+
+    // Convert single string to array for easier checking
+    const countryList = Array.isArray(countries) ? countries : [countries];
+    const countryMatch = countryList.some((c) => lastGame?.country?.toLowerCase().includes(c.toLowerCase()));
+
+    return itemFound && countryMatch;
+}
+
 async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
     const data = await browser.storage.local.get(["achievements", "world_history", "achievement_dates"]);
     const history = data.world_history || [];
@@ -792,10 +821,7 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
         world_traveler: uniqueCountries >= 5,
         marathoner: stats.totalPlaytime >= 3600000,
         london_calling: visited("london"),
-        the_patriot:
-            gameData.some((f) => f.item === "A Flag") &&
-            (lastGame?.country?.toLowerCase().includes("united states") ||
-                lastGame?.country?.toLowerCase().includes("usa")),
+        the_patriot: checkExploration(gameData, lastGame, "A Flag", ["United States", "USA"]),
         quick_start: firstFindTime !== null && firstFindTime < 5000,
         animal_lover: (stats.itemCounts["Dog or Cat"] || 0) >= 10,
         double_tap: doubleTapAchieved,
@@ -831,6 +857,58 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
         dist_100km: (stats.totalCareerDistance || 0) >= 100000,
         dist_1000km: (stats.totalCareerDistance || 0) >= 1000000,
         dist_40k: (stats.totalCareerDistance || 0) >= 40075000,
+        north_star: checkExploration(gameData, lastGame, "A Flag", ["Norway", "Sweden", "Finland"]),
+        shrimp_on_barbie: checkExploration(gameData, lastGame, "BBQ", "Australia"),
+        alpine_rider: checkExploration(gameData, lastGame, "Motorbike or Quadbike", ["Switzerland", "Austria"]),
+        suburban_scout: checkExploration(gameData, lastGame, "Lawnmower", "United Kingdom"),
+        world_citizen: checkExploration(gameData, lastGame, "Dog or Cat", "Japan"),
+
+        inception: checkExploration(gameData, lastGame, "Streetview Car Reflection", ["United States", "USA"]),
+        lost_in_translation: checkExploration(gameData, lastGame, "Streetview Car Reflection", "Japan"),
+        paddock_paparazzi: checkExploration(gameData, lastGame, "Streetview Car Reflection", "Australia"),
+        unlikely_tourist: checkExploration(gameData, lastGame, "Trampoline", ["Brazil", "Thailand"]),
+        mediterranean_breeze: checkExploration(gameData, lastGame, "Air Conditioning Unit", [
+            "Italy",
+            "Greece",
+            "Spain",
+        ]),
+        canal_cruiser: checkExploration(gameData, lastGame, "Bicycle", "Netherlands"),
+        high_altitude_ac: checkExploration(gameData, lastGame, "Air Conditioning Unit", ["Switzerland", "Austria"]),
+        american_roadtrip: checkExploration(gameData, lastGame, "Pickup Truck", ["United States", "USA"]),
+        tokyo_drifter:
+            checkExploration(gameData, lastGame, "Scooter", "Japan") ||
+            checkExploration(gameData, lastGame, "Motorbike or Quadbike", "Japan"),
+        pampas_power: checkExploration(gameData, lastGame, "Tractor", ["Argentina", "Brazil"]),
+        desert_dish: checkExploration(gameData, lastGame, "A Satellite Dish", ["United Arab Emirates", "Jordan"]),
+        canadian_cabin: checkExploration(gameData, lastGame, "Wooden Pallet", "Canada"),
+        hat_trick: sortedFinds.some((find, index) => {
+            if (index < 2) return false;
+            const current = new Date(find.timestamp).getTime();
+            const twoAgo = new Date(sortedFinds[index - 2].timestamp).getTime();
+            return current - twoAgo <= 5000;
+        }),
+        no_time_to_waste:
+            sortedFinds.filter((find) => {
+                const timeSinceStart = new Date(find.timestamp).getTime() - gameStartTime;
+                return timeSinceStart <= 60000;
+            }).length >= 10,
+        minimalist:
+            isBingo &&
+            gameData.every((find, index) => {
+                if (index === 0) return true;
+                const prev = gameData[index - 1];
+                const dist = calculateDistance(prev.coords.lat, prev.coords.lng, find.coords.lat, find.coords.lng);
+                return dist <= 500;
+            }),
+        sharpshooter: isBingo && !undoUsedInCurrentGame,
+        patience_is_a_virtue:
+            isBingo &&
+            (() => {
+                if (gameData.length < 2) return false;
+                const last = new Date(sortedFinds[24].timestamp).getTime();
+                const secondToLast = new Date(sortedFinds[23].timestamp).getTime();
+                return last - secondToLast >= 120000; // 120,000ms = 2 mins
+            })(),
     };
 
     // --- DYNAMIC STREAK MILESTONES ---
@@ -1254,6 +1332,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Update the existing Reset logic to be the "Discard" button
     document.getElementById("reset-btn").onclick = async () => {
         if (confirm("Discard this game? No items found will be saved to your history.")) {
+            const body = document.querySelector("body");
+            body.classList.remove("game-active");
             clearInterval(timerInterval);
             isPaused = false;
 

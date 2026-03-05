@@ -148,7 +148,7 @@ async function updateDailyChallengeHUD() {
         badge.innerText = "COMPLETED";
         badge.classList.add("completed");
     } else {
-        badge.innerText = "PENDING";
+        badge.innerText = "UNCOMPLETED";
         badge.classList.remove("completed");
     }
 

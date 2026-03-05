@@ -80,6 +80,44 @@ body {
     background: var(--bg-main);
     color: var(--text-main);
     margin: 0;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* The Subtle Bingo Grid Overlay */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200%; /* Extra width for the parallax/drift effect */
+    height: 200%;
+    z-index: -1;
+
+    /* Creating the grid lines */
+    background-image:
+        linear-gradient(rgba(52, 152, 219, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(52, 152, 219, 0.05) 1px, transparent 1px);
+
+    /* Grid sizing (30px matches a nice blueprint scale) */
+    background-size: 40px 40px;
+
+    /* Animation for a subtle "drifting map" feel */
+    animation: grid-drift 1s linear infinite forwards;
+    pointer-events: none;
+}
+
+body.game-active::before {
+    animation-play-state: paused; /* Pause the grid drift when the game is active */
+}
+
+@keyframes grid-drift {
+    from {
+        transform: translate(0, 0);
+    }
+    to {
+        transform: translate(0, -40px);
+    }
 }
 
 .logo {
@@ -189,10 +227,12 @@ button {
 }
 .secondary-btn {
     color: var(--text-light);
-    background-color: #4285f4 !important; /* Google Blue */
+    /* background-color: #4285f4 !important; Google Blue */
+    background-color: var(--text-main);
     margin-top: 10px;
     font-size: 0.9rem;
     opacity: 0.9;
+    transition: opacity 0.2s;
 }
 
 .secondary-btn:hover {
@@ -206,7 +246,7 @@ button {
 
 #view-achievements-btn {
     background-color: var(--color-achievement);
-    color: var(--text-dark);
+    color: var(--text-main);
 }
 #reset-btn {
     background-color: var(--color-warning);
@@ -1033,6 +1073,10 @@ button:active {
 #bounty-dashboard {
     padding: 12px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+    .hud-label {
+        position: relative;
+    }
 }
 
 .bounty-card {
@@ -1079,6 +1123,10 @@ button:active {
         text-transform: uppercase;
         font-weight: 700;
     }
+}
+
+.golden-mastery .bounty-hint {
+    right: 22px;
 }
 
 .bounty-claimed {
@@ -1172,9 +1220,11 @@ button:active {
 .golden-mastery .bounty-icon::after {
     content: "👑";
     position: absolute;
-    font-size: 0.8rem;
-    top: -5px;
-    right: -5px;
+    font-size: 1.8rem;
+    top: -6px;
+    right: -19px;
+    z-index: 2;
+    transform: rotate(25deg);
 }
 
 .hidden {

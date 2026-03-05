@@ -25,6 +25,9 @@ async function loadStats() {
     let stats = storage.global_stats;
     let worldHistory = storage.world_history || [];
 
+    const distanceMeters = stats.totalCareerDistance || 0;
+    const distanceKm = (distanceMeters / 1000).toFixed(2);
+
     // --- NEW: AUTOMATIC DATA MIGRATION ---
     let needsUpdate = false;
 
@@ -216,6 +219,11 @@ async function loadStats() {
             historyBody.appendChild(row);
         });
     }
+
+    const distEl = document.getElementById("stats-lifetime-distance");
+    if (distEl) {
+        distEl.textContent = `${parseFloat(distanceKm).toLocaleString()} km`;
+    }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -233,11 +241,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (success) {
                 const originalText = shareBtn.innerHTML;
                 shareBtn.innerText = "Copied! ✨";
-                shareBtn.style.background = "#2ecc71"; // Success Green
+                shareBtn.style.background = "#0099ff"; // Success Green
 
                 setTimeout(() => {
                     shareBtn.innerHTML = originalText;
-                    shareBtn.style.background = "#6aaa64"; // Reset to Wordle Green
+                    shareBtn.style.background = "#2ecc71"; // Reset to Wordle Green
                 }, 2000);
             }
         });
@@ -245,9 +253,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function copyStatsToClipboard(stats) {
-    // Format logic (as discussed previously)
-    // const hours = Math.floor((stats.totalPlaytime || 0) / 3600);
-    // const mins = Math.floor(((stats.totalPlaytime || 0) % 3600) / 60);
     const hours = Math.floor((stats.totalPlaytime || 0) / 3600000);
     const mins = Math.floor(((stats.totalPlaytime || 0) % 3600000) / 60000);
 
@@ -273,6 +278,10 @@ async function copyStatsToClipboard(stats) {
     const mostFoundName = getItemDisplayName(mostFoundId);
     const leastFoundName = getItemDisplayName(leastFoundId);
 
+    // Calculate distance for the share text
+    const distanceMeters = stats.totalCareerDistance || 0;
+    const distanceKm = (distanceMeters / 1000).toFixed(2);
+
     const text = [
         `🗺️ Street View Bingo`,
         `🔢 Total Attempts: ${stats.totalAttempts || 0}`,
@@ -280,6 +289,7 @@ async function copyStatsToClipboard(stats) {
         `🔥 Streak: ${stats.currentStreak || 0} days`,
         `⏱️ Best Time: ${fMins}m ${fSecs}s`,
         `🌍 Total Time: ${hours}h ${mins}m`,
+        `🌍 Total Distance: ${parseFloat(distanceKm).toLocaleString()} km`, // Added Distance
         `📈 Most Found Item: ${mostFoundName || "N/A"}`,
         `📉 Least Found Item: ${leastFoundName || "N/A"}`,
         `🛰️ Play! - https://craigwmiller2.github.io/streetview-bingo/`,

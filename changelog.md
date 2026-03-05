@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.7.4] - 2026-03-05
+
+- Added a bunch of new achievements and a few UI tweaks
+
 ## [1.7.3] - 2026-03-04
 
 - Timer fix!
