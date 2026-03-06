@@ -515,34 +515,38 @@ async function triggerMayhemShuffle() {
     const grid = document.getElementById("bingo-grid");
     const cells = grid.querySelectorAll(".cell");
 
-    // 1. Create a pool excluding items currently FOUND on the board
+    // 1. Create a fresh, flat copy of every possible item
     const fullPool = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+
+    // 2. Map out exactly what IDs are currently marked as 'found'
     const foundIds = Array.from(cells)
         .filter((c) => c.classList.contains("found"))
         .map((c) => c.dataset.itemId);
 
-    let availablePool = fullPool.filter((item) => !foundIds.includes(item.id));
+    // 3. Filter the pool, then shuffle the CLONE
+    // We use .slice() or the spread operator to ensure we aren't touching a cached list
+    let availablePool = [...fullPool].filter((item) => !foundIds.includes(item.id));
+
+    // Re-verify your shuffle function is called here
     shuffle(availablePool);
 
     soundShuffle.currentTime = 0;
     soundShuffle.volume = 0.6;
     soundShuffle.play();
 
-    // 2. Loop through cells and swap unfound ones
+    // 4. Loop through cells and swap unfound ones
     cells.forEach((cell, index) => {
         if (!cell.classList.contains("found") && !cell.classList.contains("capturing")) {
             cell.classList.add("mayhem-swapping");
 
             setTimeout(() => {
-                const newItem = availablePool.pop();
-                if (newItem) {
-                    // CRITICAL: Update the global ITEMS array so handleCapture(itemObj) uses the new one
-                    ITEMS[index] = newItem;
+                // If the pool somehow ran out (unlikely), fallback to a random CORE item
+                const newItem = availablePool.length > 0 ? availablePool.pop() : CORE_ITEMS[0];
 
+                if (newItem) {
+                    ITEMS[index] = newItem;
                     cell.innerHTML = `<span>${newItem.name}</span>`;
                     cell.dataset.itemId = newItem.id;
-
-                    // Re-assign the click handler
                     cell.onclick = () => handleCapture(newItem, cell);
                 }
                 cell.classList.remove("mayhem-swapping");
@@ -717,6 +721,7 @@ async function triggerEndGame(title, bgColor) {
             start_time: gameStartTime,
             end_time: absoluteEndTime,
             session_distance: totalDistanceTraveled,
+            final_board_items: ITEMS,
         });
         await openOrFocusTab("map.html");
     });
@@ -993,6 +998,8 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
                 const secondToLast = new Date(sortedFinds[23].timestamp).getTime();
                 return last - secondToLast >= 120000; // 120,000ms = 2 mins
             })(),
+        mayhem_survivor: isBingo && currentMode === "Mayhem",
+        chaos_commander: isBingo && currentMode === "Mayhem Infinite",
     };
 
     // --- DYNAMIC STREAK MILESTONES ---
@@ -1044,10 +1051,24 @@ function showAchievementToast(unlockedObjects) {
         setTimeout(() => {
             const toast = document.createElement("div");
 
+            // 1. Identify Category Groups
             const randomAchIds = ["chaos_tamer", "adapt_overcome", "rng_master"];
-            const isRandomAch = randomAchIds.includes(ach.id);
+            const mayhemAchIds = ["mayhem_survivor", "chaos_commander", "taming_the_storm"];
 
-            const toastClass = ach.id === "personal_best" ? "legendary" : isRandomAch ? "random-category" : ach.type;
+            const isRandomAch = randomAchIds.includes(ach.id);
+            const isMayhemAch = mayhemAchIds.includes(ach.id);
+
+            // 2. Determine CSS Class
+            let toastClass = ach.type; // Default (exploration, collection, etc.)
+
+            if (ach.id === "personal_best") {
+                toastClass = "legendary";
+            } else if (isRandomAch) {
+                toastClass = "random-category";
+            } else if (isMayhemAch) {
+                toastClass = "mayhem-category"; // This matches your new CSS gradient!
+            }
+
             toast.className = `achievement-toast ${toastClass}`;
 
             const headerText = ach.id === "personal_best" ? "Record Broken!" : "Achievement Unlocked!";

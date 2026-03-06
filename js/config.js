@@ -77,9 +77,13 @@ let ITEMS = [...CORE_ITEMS];
  * Fisher-Yates shuffle algorithm for true randomness
  */
 function shuffle(array) {
+    // We iterate backwards from the last element
     for (let i = array.length - 1; i > 0; i--) {
+        // Pick a random index from 0 to i
         const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[array.length - 1]] = [array[array.length - 1], array[i]];
+
+        // Swap element at i with the element at random index j
+        [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
 }
@@ -677,6 +681,20 @@ const ACH_DATA = [
         name: "Patience is a Virtue",
         desc: "Wait at least 2 minutes between your 24th and 25th find",
         icon: "🧘",
+        type: "tactical",
+    },
+    {
+        id: "mayhem_survivor",
+        name: "Mayhem Survivor",
+        desc: "Achieve a BINGO in Mayhem Mode",
+        icon: "🌀",
+        type: "tactical",
+    },
+    {
+        id: "chaos_commander",
+        name: "Chaos Commander",
+        desc: "Achieve a BINGO in Mayhem Infinite Mode",
+        icon: "🔱",
         type: "tactical",
     },
 ];

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.1] - 2026-03-06
+
+- Fix: Fixed the shuffling of items in Mayhem mode
+- Fix: Output correct list of final missed items on findings screen
+- Added: Added two new Mayhem Mode Achievements
+
 ## [1.8.0] - 2026-03-06
 
 - Added new sound effects

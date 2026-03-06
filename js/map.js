@@ -19,6 +19,7 @@ async function initMap() {
         "start_time",
         "end_time",
         "session_items",
+        "final_board_items",
         "current_game_mode",
         "session_distance", // Our new source of truth
     ]);
@@ -29,7 +30,8 @@ async function initMap() {
     const endTimestamp = data.end_time;
     const distance = data.session_distance || 0; // Use pre-calculated value
 
-    const activeItems = data.session_items || CORE_ITEMS;
+    // --- MAYHEM FIX: Use final_board_items if they exist, otherwise fallback ---
+    const activeItems = data.final_board_items || data.session_items || CORE_ITEMS;
 
     if (finds.length === 0) {
         document.getElementById("share-container").innerHTML = "<h1>No data found. Go find some Bingo items!</h1>";
@@ -39,7 +41,10 @@ async function initMap() {
     // 2. Setup Mode Indicator on Summary
     const shareContainer = document.getElementById("share-container");
     const modeBadge = document.createElement("div");
-    modeBadge.className = `mode-badge-summary mode-${modeName.toLowerCase()}`;
+
+    // Normalize class name for hybrid modes (e.g., "Mayhem Infinite" -> "mode-mayhem-infinite")
+    const modeClass = modeName.toLowerCase().replace(/\s+/g, "-");
+    modeBadge.className = `mode-badge-summary mode-${modeClass}`;
     modeBadge.textContent = `${modeName} Mode`;
     shareContainer.insertBefore(modeBadge, shareContainer.firstChild);
 
@@ -56,7 +61,7 @@ async function initMap() {
     const pathPoints = [];
 
     // 4. Process Findings & Populate Map
-    const foundItemNames = finds.map((f) => f.item);
+    const foundItemIds = finds.map((f) => f.item);
 
     finds.forEach((find) => {
         if (find.coords) {
@@ -92,7 +97,7 @@ async function initMap() {
 
     // 5. Identify Missing Items
     // Note: foundItemNames contains IDs (strings). item is an object {id, name}.
-    const missingItems = activeItems.filter((itemObj) => !foundItemNames.includes(itemObj.id));
+    const missingItems = activeItems.filter((itemObj) => !foundItemIds.includes(itemObj.id));
 
     if (missingItems.length > 0) {
         const missingSection = document.createElement("div");
