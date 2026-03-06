@@ -1010,6 +1010,32 @@ button:active {
     box-shadow: 0 0 15px rgba(243, 156, 18, 0.4);
 }
 
+/* Mayhem Mode: Red/Magenta Pulse */
+#bingo-grid.mayhem-mode .cell.found {
+    border: 3px solid #e74c3c !important;
+    box-shadow:
+        0 0 15px rgba(231, 76, 60, 0.6),
+        inset 0 0 10px rgba(142, 68, 173, 0.4);
+    animation: mayhem-border-flicker 3s infinite alternate;
+}
+
+/* Subtle flicker effect specifically for Mayhem found cells */
+@keyframes mayhem-border-flicker {
+    0% {
+        border-color: #e74c3c;
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
+    }
+    100% {
+        border-color: #9b59b6;
+        box-shadow: 0 0 20px rgba(155, 89, 182, 0.8);
+    }
+}
+
+/* Ensure the Sonar Ping for Mayhem is also Red */
+#bingo-grid.mayhem-mode .cell.found::after {
+    border-color: #e74c3c;
+}
+
 /* Container for the badge */
 #active-mode-display {
     display: none;
@@ -1287,4 +1313,79 @@ button:active {
         transform: translate(var(--tx), var(--ty)) rotate(var(--tr));
         opacity: 0;
     }
+}
+/* 1. The Global Pulse (Flash the whole grid red) */
+.grid-glitch-pulse {
+    box-shadow: 0 0 30px rgba(231, 76, 60, 0.7);
+    transition: box-shadow 0.2s;
+}
+
+/* 2. The Cell Scramble (Hide text and shake while swapping) */
+.cell.mayhem-swapping {
+    background: rgba(231, 76, 60, 0.3) !important;
+    animation: mayhem-shake 0.5s ease-in-out;
+    color: transparent !important; /* Prevents text overlapping during swap */
+}
+
+@keyframes mayhem-shake {
+    0%,
+    100% {
+        transform: translate(0);
+        /* filter: hue-rotate(0deg); */
+    }
+    25% {
+        transform: translate(-3px, 3px);
+        /* filter: hue-rotate(90deg); */
+    }
+    50% {
+        transform: translate(3px, -3px);
+    }
+    75% {
+        transform: translate(-3px, -3px);
+        /* filter: hue-rotate(180deg); */
+    }
+}
+
+/* 3. The Sidebar Badge (Red/Purple gradient pulse) */
+.mode-mayhem {
+    background: linear-gradient(45deg, #e74c3c, #8e44ad) !important;
+    animation: pulse 1s infinite alternate;
+}
+
+.btn-mayhem {
+    background: linear-gradient(135deg, #e74c3c 0%, #8e44ad 100%) !important;
+    position: relative;
+    overflow: hidden;
+    border: none !important;
+}
+
+.btn-mayhem:hover {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+}
+
+.btn-mayhem .btn-subtitle {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.8;
+    font-weight: normal;
+    margin-top: -2px;
+}
+
+/* Optional pulse effect to make it stand out in the menu */
+@keyframes mayhem-button-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+    }
+}
+
+.btn-mayhem {
+    animation: mayhem-button-pulse 2s infinite;
 }

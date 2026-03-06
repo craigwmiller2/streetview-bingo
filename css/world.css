@@ -157,6 +157,10 @@ h1 {
     background-color: #f39c12; /* Gold/Orange */
 }
 
+.mode-mayhem {
+    background: linear-gradient(45deg, #e74c3c, #8e44ad); /* Red to Purple Gradient */
+}
+
 /* Popup specific layout adjustments */
 .world-popup-content {
     font-family: inherit;

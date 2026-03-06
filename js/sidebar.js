@@ -1,18 +1,20 @@
 const soundTick = new Audio(browser.runtime.getURL("audio/tick.mp3"));
-const soundBingo = new Audio(browser.runtime.getURL("audio/bingo.mp3"));
-const soundDefeat = new Audio(browser.runtime.getURL("audio/defeat.mp3"));
+const soundBingo = new Audio(browser.runtime.getURL("audio/sonic-bingo.mp3"));
+const soundGameover = new Audio(browser.runtime.getURL("audio/gameover.mp3"));
 const soundAchievement = new Audio(browser.runtime.getURL("audio/achievement.ogg"));
 const soundCountdown = new Audio(browser.runtime.getURL("audio/countdown.mp3"));
 const soundAlert = new Audio(browser.runtime.getURL("audio/alert.mp3"));
 const soundDrowning = new Audio(browser.runtime.getURL("audio/sonic-drowning.mp3"));
+const soundShuffle = new Audio(browser.runtime.getURL("audio/shuffle.mp3"));
 
 // soundTick.load();
 soundBingo.load();
-// soundDefeat.load();
+soundGameover.load();
 soundAchievement.load();
 soundCountdown.load();
 soundAlert.load();
 soundDrowning.load();
+soundShuffle.load();
 
 let gameData = [];
 let timerInterval = null;
@@ -27,6 +29,7 @@ let capturesAtCurrentLocation = 0;
 let lastCaptureCoords = null;
 let selectedRuleset = "standard";
 let undoUsedInCurrentGame = false;
+let lastMayhemMinute = -1;
 const FULL_DASH_ARRAY = 283;
 
 /**
@@ -59,7 +62,7 @@ window.startGame = async function (mode) {
     document.getElementById("controls").style.display = "block";
 
     // 2. Clear previous classes
-    grid.classList.remove("standard-mode", "random-mode", "infinite-mode");
+    grid.classList.remove("standard-mode", "random-mode", "infinite-mode", "mayhem-mode");
     modeBadge.className = "";
 
     totalPausedTime = 0;
@@ -70,11 +73,17 @@ window.startGame = async function (mode) {
     // We check for these flags independently
     const isRandom = mode.includes("random");
     const isInfinite = mode.includes("infinite");
+    const isMayhem = mode.includes("mayhem");
 
     let modeLabel = "Standard";
 
-    // A. Handle Board Generation
-    if (isRandom) {
+    // A. Handle Board Generation Base
+    if (isMayhem) {
+        modeLabel = "Mayhem";
+        ITEMS = generateRandomBoard();
+        grid.classList.add("mayhem-mode");
+        modeBadge.classList.add("mode-badge-title", "mode-mayhem");
+    } else if (isRandom) {
         modeLabel = "Random";
         ITEMS = generateRandomBoard();
         grid.classList.add("random-mode");
@@ -85,16 +94,22 @@ window.startGame = async function (mode) {
         modeBadge.classList.add("mode-badge-title", "mode-standard");
     }
 
-    // B. Handle Infinite Modifier
+    // B. Handle Infinite Modifier - Append it to the label!
     if (isInfinite) {
-        modeLabel = isRandom ? "Random Infinite" : "Infinite";
+        // This changes "Mayhem" to "Mayhem Infinite"
+        modeLabel = modeLabel === "Standard" ? "Infinite" : `${modeLabel} Infinite`;
         grid.classList.add("infinite-mode");
-        // We override the badge classes if it's infinite
-        modeBadge.classList.remove("mode-standard", "mode-random");
-        modeBadge.classList.add("mode-infinite");
+
+        if (!isMayhem) {
+            modeBadge.classList.remove("mode-standard", "mode-random");
+            modeBadge.classList.add("mode-infinite");
+        }
     }
 
     modeBadge.textContent = `${modeLabel} Mode`;
+
+    // Store for timer logic
+    grid.dataset.initialTime = initialTime;
 
     // Save state
     await browser.storage.local.set({
@@ -443,14 +458,14 @@ function startTimer() {
     const progressCircle = document.querySelector(".timer-progress");
     const grid = document.getElementById("bingo-grid");
 
-    // Identify modes based on the grid class we set in startGame
     const isInfinite = grid.classList.contains("infinite-mode");
+    const isMayhem = grid.classList.contains("mayhem-mode");
 
-    // Re-enable transition for timed modes
     if (!isInfinite) {
         progressCircle.style.transition = "stroke-dashoffset 1s linear, stroke 1s linear";
     }
 
+    lastMayhemMinute = 0; // Reset on start
     refreshHUD();
 
     if (timerInterval) clearInterval(timerInterval);
@@ -459,17 +474,84 @@ function startTimer() {
         if (isPaused) return;
 
         if (isInfinite) {
+            // MAYHEM FOR INFINITE
+            if (isMayhem) {
+                const elapsedSeconds = Math.floor((Date.now() - gameStartTime - totalPausedTime) / 1000);
+                const currentMinute = Math.floor(elapsedSeconds / 60);
+
+                // Trigger if we've entered a new minute and it's not the start (0)
+                if (currentMinute > 0 && currentMinute > lastMayhemMinute) {
+                    lastMayhemMinute = currentMinute;
+                    triggerMayhemShuffle();
+                }
+            }
             refreshHUD();
         } else {
             timeLeft--;
+
+            // MAYHEM FOR STANDARD
+            if (isMayhem && timeLeft > 0) {
+                const initialTimeVal = parseInt(grid.dataset.initialTime || 600);
+                const elapsed = initialTimeVal - timeLeft;
+                const currentMinute = Math.floor(elapsed / 60);
+
+                if (currentMinute > 0 && currentMinute > lastMayhemMinute) {
+                    lastMayhemMinute = currentMinute;
+                    triggerMayhemShuffle();
+                }
+            }
+
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
+                soundGameover.play();
                 triggerEndGame("⏰ TIME'S UP!", "rgba(192, 57, 43, 0.9)");
-                // soundDefeat.play();
             }
             refreshHUD();
         }
     }, 1000);
+}
+
+async function triggerMayhemShuffle() {
+    const grid = document.getElementById("bingo-grid");
+    const cells = grid.querySelectorAll(".cell");
+
+    // 1. Create a pool excluding items currently FOUND on the board
+    const fullPool = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+    const foundIds = Array.from(cells)
+        .filter((c) => c.classList.contains("found"))
+        .map((c) => c.dataset.itemId);
+
+    let availablePool = fullPool.filter((item) => !foundIds.includes(item.id));
+    shuffle(availablePool);
+
+    soundShuffle.currentTime = 0;
+    soundShuffle.volume = 0.6;
+    soundShuffle.play();
+
+    // 2. Loop through cells and swap unfound ones
+    cells.forEach((cell, index) => {
+        if (!cell.classList.contains("found") && !cell.classList.contains("capturing")) {
+            cell.classList.add("mayhem-swapping");
+
+            setTimeout(() => {
+                const newItem = availablePool.pop();
+                if (newItem) {
+                    // CRITICAL: Update the global ITEMS array so handleCapture(itemObj) uses the new one
+                    ITEMS[index] = newItem;
+
+                    cell.innerHTML = `<span>${newItem.name}</span>`;
+                    cell.dataset.itemId = newItem.id;
+
+                    // Re-assign the click handler
+                    cell.onclick = () => handleCapture(newItem, cell);
+                }
+                cell.classList.remove("mayhem-swapping");
+            }, 500);
+        }
+    });
+
+    grid.classList.add("grid-glitch-pulse");
+    setTimeout(() => grid.classList.remove("grid-glitch-pulse"), 1000);
 }
 
 /**
@@ -669,13 +751,15 @@ async function updateGlobalStats(finalDuration, distance) {
 
     let global = data.global_stats || {};
     if (!global.itemCounts) global.itemCounts = {};
-    if (!global.modeCounts) global.modeCounts = { Standard: 0, Random: 0, Infinite: 0 };
+    if (!global.modeCounts) global.modeCounts = { Standard: 0, Random: 0, Infinite: 0, Mayhem: 0 };
 
     if (typeof global.totalBingos !== "number") {
         global.totalBingos = 0;
     }
 
     const modeName = data.current_game_mode || "Standard";
+
+    // Check for Mayhem and add to counts
     global.modeCounts[modeName] = (global.modeCounts[modeName] || 0) + 1;
 
     global.totalAttempts = (global.totalAttempts || 0) + 1;
@@ -1258,20 +1342,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 2. Ruleset -> Duration
     document.getElementById("select-standard").onclick = () => {
         selectedRuleset = "standard";
-        // UI Polish
-        document.getElementById("select-standard").classList.add("selected");
-        document.getElementById("select-random").classList.remove("selected");
-
         menuRuleset.classList.add("hidden");
         menuDuration.classList.remove("hidden");
     };
 
     document.getElementById("select-random").onclick = () => {
         selectedRuleset = "random";
-        // UI Polish
-        // document.getElementById("select-random").classList.add("selected");
-        // document.getElementById("select-standard").classList.remove("selected");
+        menuRuleset.classList.add("hidden");
+        menuDuration.classList.remove("hidden");
+    };
 
+    // NEW: Mayhem Handler (Now flows to duration menu)
+    document.getElementById("select-mayhem").onclick = () => {
+        selectedRuleset = "mayhem"; // Set the tracker
         menuRuleset.classList.add("hidden");
         menuDuration.classList.remove("hidden");
     };
@@ -1292,14 +1375,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     // --- START GAME LOGIC ---
 
     document.getElementById("btn-start-10min").onclick = () => {
-        // Use our tracker to start the right game
-        startGame(selectedRuleset === "random" ? "random" : "10min");
-        resetMenu(); // Helper to reset menu state for next time
+        // Determine the specific mode string to pass to startGame
+        let mode = "10min";
+        if (selectedRuleset === "random") mode = "random";
+        if (selectedRuleset === "mayhem") mode = "mayhem-10min"; // New Mayhem branch
+
+        startGame(mode);
+        resetMenu();
     };
 
     document.getElementById("btn-start-infinite").onclick = () => {
-        // If selectedRuleset is "random", pass "random-infinite", otherwise just "infinite"
-        const mode = selectedRuleset === "random" ? "random-infinite" : "infinite";
+        // Determine the specific mode string for infinite
+        let mode = "infinite";
+        if (selectedRuleset === "random") mode = "random-infinite";
+        if (selectedRuleset === "mayhem") mode = "mayhem-infinite"; // New Mayhem branch
+
         startGame(mode);
         resetMenu();
     };
@@ -1325,6 +1415,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (confirm("End game and save your findings to your stats and map?")) {
             // Trigger the same logic as a timeout or Bingo
+            soundDrowning.pause();
+            soundDrowning.currentTime = 0;
             triggerEndGame("🏁 SESSION COMPLETE", "rgba(52, 152, 219, 0.9)");
         }
     };

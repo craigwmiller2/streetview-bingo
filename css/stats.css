@@ -351,6 +351,16 @@ h1 {
 .mode-infinite {
     background-color: #f39c12;
 }
+.mode-random-infinite {
+    background: linear-gradient(135deg, #8e44ad 0%, #f39c12 100%) !important;
+    color: white !important;
+}
+.mode-mayhem {
+    background: linear-gradient(45deg, #e74c3c, #8e44ad);
+}
+.mode-mayhem-infinite {
+    background: linear-gradient(45deg, #e74c3c, #8e44ad, #f39c12) !important;
+}
 
 .mode-count {
     font-size: 0.75rem;
@@ -374,16 +384,7 @@ h1 {
     font-weight: bold;
     text-transform: uppercase;
     color: white;
-}
-
-.mode-standard {
-    background-color: #3498db;
-}
-.mode-random {
-    background-color: #8e44ad;
-}
-.mode-infinite {
-    background-color: #f39c12;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 #history-table td {

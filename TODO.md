@@ -1,14 +1,7 @@
 # TODO
 
-- [x] Create a "Random Items" mode where 25 random items from a pool of items are displayed in the bingo grid
-- [x] Create a "Classic Mode" which is just the default 25 items in the set grid
-- [ ] Add different sound effects for failures with different bingo totals
-- [ ] Output total games played in stats sharing clipboard
-- [ ] Add a hidden achievement for completing a bingo without moving (only turning)
-- [ ] Use the smart tab thing for switching to "Open in Google Maps" for the daily country challenge
-- [ ] Update sounds: https://www.voicy.network/official-soundboards/games/unreal-tournament
-- [ ] Play sound effects during specific events:
-    - [ ] Finding 5 items within 5 seconds
-- [x] Add a "Finish" button to bingo game that lets users finish the game and collect their findings
-- [x] Add an achievement for finding a Yellow Car titled "No Return!"
-- [ ] Change the "Adventure Mode" into "World Quests"?
+- [ ] Create a new gamemode called "Mayhem Mode" or "Chaos Mode" or something like that.
+    - [ ] Can be 10 minutes or infinite
+    - [ ] Start with the default item set
+    - [ ] Every 60 seconds, any "unfound" item is changed to something from the full item set (CORE + EXPANSION)
+    - [ ] Different theme colour/highlighting

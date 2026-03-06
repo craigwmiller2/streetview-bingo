@@ -171,27 +171,34 @@ async function loadStats() {
     }
 
     // --- NEW: Game Mode Breakdown (Added between sections 3 and 4) ---
-    const modeCounts = stats.modeCounts || { Standard: 0, Random: 0, Infinite: 0 };
+    const modeCounts = stats.modeCounts || {};
     const totalGames = stats.totalAttempts || 1;
     const modeContainer = document.getElementById("mode-breakdown-container");
 
     if (modeContainer) {
         modeContainer.innerHTML = "";
+        // This will now loop through "Standard", "Random", "Mayhem", "Mayhem Infinite", etc.
         Object.entries(modeCounts).forEach(([mode, count]) => {
+            if (count === 0) return; // Skip modes never played
+
             const percentage = Math.round((count / totalGames) * 100);
             const modeRow = document.createElement("div");
             modeRow.className = "mode-stats-row";
+
+            // Use a generic class if it's a new hybrid mode
+            const colorClass = mode.toLowerCase().replace(" ", "-");
+
             modeRow.innerHTML = `
-                <div class="mode-info">
-                    <span class="mode-dot mode-${mode.toLowerCase()}"></span>
-                    <span class="mode-name">${mode}</span>
-                    <span class="mode-count">${count} games</span>
-                </div>
-                <div class="mode-bar-bg">
-                    <div class="mode-bar-fill mode-${mode.toLowerCase()}" style="width: ${percentage}%"></div>
-                </div>
-                <div class="mode-percent">${percentage}%</div>
-            `;
+            <div class="mode-info">
+                <span class="mode-dot mode-${colorClass}"></span>
+                <span class="mode-name">${mode}</span>
+                <span class="mode-count">${count} games</span>
+            </div>
+            <div class="mode-bar-bg">
+                <div class="mode-bar-fill mode-${colorClass}" style="width: ${percentage}%"></div>
+            </div>
+            <div class="mode-percent">${percentage}%</div>
+        `;
             modeContainer.appendChild(modeRow);
         });
     }
@@ -202,20 +209,32 @@ async function loadStats() {
         historyBody.innerHTML = "";
         stats.history.forEach((game) => {
             const row = document.createElement("tr");
+
+            // Time Calculation
             const totalSeconds = Math.floor(game.duration / 1000);
             const mins = Math.floor(totalSeconds / 60);
             const secs = totalSeconds % 60;
             const timeStr = `${mins}m ${secs.toString().padStart(2, "0")}s`;
+
+            // Status Class Logic
             const statusClass = game.status === "Completed" ? "status-completed" : "status-timeout";
+
+            // --- NEW: Hybrid Mode Class Normalization ---
             const mode = game.mode || "Standard";
+            // This converts "Mayhem Infinite" to "mayhem-infinite" for the CSS class
+            const modeClass = mode.toLowerCase().replace(/\s+/g, "-");
 
             row.innerHTML = `
-                <td>${game.date}</td>
-                <td><span class="mode-badge-table mode-${mode.toLowerCase()}">${mode}</span></td>
-                <td class="${statusClass}">${game.status}</td>
-                <td>${game.itemsFound}/25</td>
-                <td>${timeStr}</td>
-            `;
+            <td>${game.date}</td>
+            <td>
+                <span class="mode-badge-table mode-${modeClass}">
+                    ${mode}
+                </span>
+            </td>
+            <td class="${statusClass}">${game.status}</td>
+            <td>${game.itemsFound}/25</td>
+            <td>${timeStr}</td>
+        `;
             historyBody.appendChild(row);
         });
     }

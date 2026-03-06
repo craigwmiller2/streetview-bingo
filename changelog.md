@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.8.0] - 2026-03-06
+
+- Added new sound effects
+- Added new Mayhem Mode
+
 ## [1.7.4] - 2026-03-05
 
 - Added a bunch of new achievements and a few UI tweaks
