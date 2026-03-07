@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.8.2] - 2026-03-07
+
+- Updates: UI and sound changes/enhancements
+
 ## [1.8.1] - 2026-03-06
 
 - Fix: Fixed the shuffling of items in Mayhem mode

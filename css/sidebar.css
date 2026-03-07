@@ -596,7 +596,7 @@ button:active {
 }
 
 /* Start Countdown Overlay */
-.countdown-overlay {
+.menu-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -611,8 +611,64 @@ button:active {
     pointer-events: all; /* Blocks interaction during countdown */
 }
 
+#start-countdown {
+    /* Use variables for the inner glow and outer void */
+    background: radial-gradient(circle, var(--mode-glow, rgba(52, 152, 219, 0.4)) 0%, rgba(5, 5, 15, 0.98) 100%);
+    overflow: hidden;
+    perspective: 1000px;
+}
+
+/* Moving Perspective Grid */
+#start-countdown::after {
+    content: "";
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    /* The grid lines now use the --mode-color variable */
+    background-image:
+        linear-gradient(var(--mode-color, rgba(255, 255, 255, 0.1)) 2px, transparent 2px),
+        linear-gradient(90deg, var(--mode-color, rgba(255, 255, 255, 0.1)) 2px, transparent 2px);
+    background-size: 80px 80px;
+    transform: rotateX(60deg);
+    animation: tunnelFlow 2s linear infinite;
+    z-index: -1;
+}
+
+@keyframes tunnelFlow {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 0 160px;
+    }
+}
+
+/* Light Flare behind the number */
+#start-countdown::before {
+    content: "";
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    filter: blur(30px);
+    animation: flarePulse 0.5s ease-out infinite alternate;
+}
+
+@keyframes flarePulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0.8;
+    }
+}
+
 #countdown-number {
-    font-size: 6rem;
+    font-size: 12rem;
     font-weight: 900;
     color: white;
     text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
@@ -622,14 +678,114 @@ button:active {
 
 @keyframes pulseNumber {
     0% {
-        transform: scale(0.5);
+        transform: scale(0.5) translateY(100%);
         opacity: 0;
     }
     50% {
-        transform: scale(1.2);
+        transform: scale(1.2) translateY(-20%);
         opacity: 1;
     }
     100% {
+        transform: scale(1) translateY(0);
+    }
+}
+
+#pause-overlay {
+    perspective: 1000px;
+    overflow: hidden;
+    /* Use the variable for the ambient tint, fallback to a dark navy */
+    background: radial-gradient(circle, var(--mode-glow, rgba(15, 15, 25, 0.4)) 0%, rgba(5, 5, 10, 0.95) 100%);
+
+    .win-content {
+        text-align: center;
+        z-index: 10;
+        /* Add a subtle entrance animation so it floats in */
+        animation: pauseUIFadeIn 0.5s ease-out forwards;
+    }
+}
+
+/* The 3D Tunnel Grid */
+#pause-overlay::before {
+    content: "";
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    /* Use the mode-color for the grid lines */
+    background-image:
+        linear-gradient(var(--mode-color, rgba(52, 152, 219, 0.2)) 2px, transparent 2px),
+        linear-gradient(90deg, var(--mode-color, rgba(52, 152, 219, 0.2)) 2px, transparent 2px);
+    background-size: 80px 80px;
+    transform: rotateX(70deg);
+    animation: pauseTunnelFlow 15s linear infinite; /* Slower than start for a "paused" feel */
+    z-index: -1;
+}
+
+@keyframes pauseTunnelFlow {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 0 160px;
+    }
+}
+
+/* Optional: Add a "Scanline" sweep over the 3D space */
+#pause-overlay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 0%, rgba(52, 152, 219, 0.05) 50%, transparent 100%);
+    background-size: 100% 8px;
+    animation: scanlineMove 6s linear infinite;
+    pointer-events: none;
+}
+
+/* The "GAME PAUSED" Header */
+#pause-overlay h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    color: white;
+    /* Use the mode-color variable for a neon glow */
+    text-shadow:
+        0 0 10px var(--mode-color),
+        0 0 30px var(--mode-color);
+    margin-bottom: 30px;
+}
+
+/* The Resume Button - Overwriting btn-primary for a tech look */
+#resume-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 2px solid white !important;
+    padding: 15px 40px !important;
+    font-size: 1.2rem !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    letter-spacing: 2px !important;
+    color: white !important;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease !important;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+#resume-btn:hover {
+    background: white !important;
+    color: black !important;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 0 30px var(--mode-color);
+}
+
+/* Animations */
+@keyframes pauseUIFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
         transform: scale(1);
     }
 }
@@ -1359,16 +1515,49 @@ button:active {
 }
 
 .btn-mayhem {
-    background: linear-gradient(135deg, #e74c3c 0%, #8e44ad 100%) !important;
+    /* We make the background 300% larger so there's "room" to move the gradient */
+    background: linear-gradient(135deg, #e74c3c, #8e44ad, #c0392b, #9b59b6);
+    background-size: 400% 400% !important;
+    border: none !important;
     position: relative;
     overflow: hidden;
-    border: none !important;
+    transition: transform 0.2s ease;
+
+    animation: mayhem-gradient-flow 8s ease infinite;
+}
+
+/* 1. The "Swaying" Gradient Effect */
+@keyframes mayhem-gradient-flow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* 2. The Breathing/Pulsate Effect */
+@keyframes mayhem-button-pulse {
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 6px 25px rgba(231, 76, 60, 0.6);
+    }
 }
 
 .btn-mayhem:hover {
     filter: brightness(1.2);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+    /* Speed up the flow on hover for a "agitated" look */
+    animation:
+        mayhem-gradient-flow 1s ease infinite,
+        mayhem-button-pulse 0.5s infinite ease-in-out;
 }
 
 .btn-mayhem .btn-subtitle {
@@ -1377,21 +1566,4 @@ button:active {
     opacity: 0.8;
     font-weight: normal;
     margin-top: -2px;
-}
-
-/* Optional pulse effect to make it stand out in the menu */
-@keyframes mayhem-button-pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
-    }
-}
-
-.btn-mayhem {
-    animation: mayhem-button-pulse 2s infinite;
 }

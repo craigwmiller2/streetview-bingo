@@ -3,9 +3,11 @@ const soundBingo = new Audio(browser.runtime.getURL("audio/sonic-bingo.mp3"));
 const soundGameover = new Audio(browser.runtime.getURL("audio/gameover.mp3"));
 const soundAchievement = new Audio(browser.runtime.getURL("audio/achievement.ogg"));
 const soundCountdown = new Audio(browser.runtime.getURL("audio/countdown.mp3"));
+const soundMayhemCountdown = new Audio(browser.runtime.getURL("audio/gran-turismo-countdown.mp3"));
 const soundAlert = new Audio(browser.runtime.getURL("audio/alert.mp3"));
 const soundDrowning = new Audio(browser.runtime.getURL("audio/sonic-drowning.mp3"));
 const soundShuffle = new Audio(browser.runtime.getURL("audio/shuffle.mp3"));
+const soundSonicCheckpoint = new Audio(browser.runtime.getURL("audio/sonic-checkpoint.mp3"));
 
 // soundTick.load();
 soundBingo.load();
@@ -15,6 +17,8 @@ soundCountdown.load();
 soundAlert.load();
 soundDrowning.load();
 soundShuffle.load();
+soundSonicCheckpoint.load();
+soundMayhemCountdown.load();
 
 let gameData = [];
 let timerInterval = null;
@@ -30,12 +34,14 @@ let lastCaptureCoords = null;
 let selectedRuleset = "standard";
 let undoUsedInCurrentGame = false;
 let lastMayhemMinute = -1;
+let currentActiveMode = "standard"; // Global tracker
 const FULL_DASH_ARRAY = 283;
 
 /**
  * Game State Controller with Countdown
  */
 window.startGame = async function (mode) {
+    currentActiveMode = mode;
     const grid = document.getElementById("bingo-grid");
     const modeBadge = document.getElementById("mode-badge-title");
     const textDisplay = document.getElementById("timer-text");
@@ -123,12 +129,39 @@ window.startGame = async function (mode) {
     // 3. Prepare the Countdown Overlay
     const overlay = document.getElementById("start-countdown");
     const numberDisplay = document.getElementById("countdown-number");
+
+    // --- 1. Define Color Mapping ---
+    const modeColors = {
+        standard: { color: "rgba(52, 152, 219, 0.3)", glow: "rgba(52, 152, 219, 0.4)" },
+        random: { color: "rgba(142, 68, 173, 0.3)", glow: "rgba(142, 68, 173, 0.4)" },
+        infinite: { color: "rgba(243, 156, 18, 0.3)", glow: "rgba(243, 156, 18, 0.4)" },
+        "random-infinite": { color: "rgba(155, 89, 182, 0.3)", glow: "rgba(243, 156, 18, 0.3)" },
+        "mayhem-10min": { color: "rgba(231, 76, 60, 0.4)", glow: "rgba(142, 68, 173, 0.3)" },
+        "mayhem-infinite": { color: "rgba(231, 76, 60, 0.4)", glow: "rgba(243, 156, 18, 0.3)" },
+    };
+
+    // --- 2. Apply Colors to Overlay ---
+    // Fallback to standard if the mode string isn't an exact match
+    const theme = modeColors[mode] || modeColors["standard"];
+
+    overlay.style.setProperty("--mode-color", theme.color);
+    overlay.style.setProperty("--mode-glow", theme.glow);
+
     overlay.style.display = "flex";
 
     let count = 3;
     numberDisplay.textContent = count;
     numberDisplay.className = "";
-    soundCountdown.play();
+    // soundCountdown.play();
+
+    // if it's Mayhem, play the special countdown sound and apply a unique style
+    if (isMayhem) {
+        soundMayhemCountdown.currentTime = 0;
+        soundMayhemCountdown.play();
+    } else {
+        soundCountdown.currentTime = 0;
+        soundCountdown.play();
+    }
 
     const countdownInterval = setInterval(() => {
         count--;
@@ -173,18 +206,43 @@ function generateGrid() {
 }
 
 function togglePause() {
-    // Note: We now allow pausing in all modes including Infinite
     isPaused = !isPaused;
     const overlay = document.getElementById("pause-overlay");
     const grid = document.getElementById("bingo-grid");
 
     if (isPaused) {
-        pauseStartTime = Date.now(); // Record the moment pause began
+        pauseStartTime = Date.now();
         overlay.style.display = "flex";
-        grid.style.filter = "blur(4px)";
+
+        // 1. Define the same color palette as the countdown
+        const modeColors = {
+            standard: { color: "rgba(52, 152, 219, 0.2)", glow: "rgba(52, 152, 219, 0.15)" },
+            random: { color: "rgba(142, 68, 173, 0.2)", glow: "rgba(142, 68, 173, 0.15)" },
+            infinite: { color: "rgba(243, 156, 18, 0.2)", glow: "rgba(243, 156, 18, 0.15)" },
+            "random-infinite": { color: "rgba(155, 89, 182, 0.2)", glow: "rgba(243, 156, 18, 0.1)" },
+            "mayhem-10min": { color: "rgba(231, 76, 60, 0.3)", glow: "rgba(142, 68, 173, 0.1)" },
+            "mayhem-infinite": { color: "rgba(231, 76, 60, 0.3)", glow: "rgba(243, 156, 18, 0.1)" },
+        };
+
+        // 2. Apply the theme based on the current mode
+        const theme = modeColors[currentActiveMode] || modeColors["standard"];
+        overlay.style.setProperty("--mode-color", theme.color);
+        overlay.style.setProperty("--mode-glow", theme.glow);
+
+        grid.style.filter = "blur(5px) grayscale(50%)";
         grid.style.pointerEvents = "none";
+
+        // Update the button and text specifically
+        const resumeBtn = document.getElementById("resume-btn");
+        const pauseTitle = overlay.querySelector("h1");
+
+        if (resumeBtn && pauseTitle) {
+            // Make the button border glow with the mode color
+            resumeBtn.style.borderColor = theme.color;
+            // Make the title glow with the mode color
+            pauseTitle.style.textShadow = `0 0 15px ${theme.color}, 0 0 30px ${theme.color}`;
+        }
     } else {
-        // Calculate how long this specific pause lasted and add it to the total
         if (pauseStartTime) {
             totalPausedTime += Date.now() - pauseStartTime;
         }
@@ -231,6 +289,12 @@ async function handleCapture(itemObj, cellElement) {
         if (itemId && itemId.toLowerCase().includes("looking directly at street view car")) {
             soundAlert.currentTime = 0;
             soundAlert.play();
+        }
+
+        // if item ID is "lamp-post", play the Sonic Checkpoint sound
+        if (itemId && itemId.toLowerCase().includes("lamp-post")) {
+            soundSonicCheckpoint.currentTime = 0;
+            soundSonicCheckpoint.play();
         }
 
         if (lastCaptureCoords) {
@@ -1419,9 +1483,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("pause-btn").onclick = togglePause;
     document.getElementById("resume-btn").onclick = togglePause;
 
-    // document.getElementById("btn-10min").onclick = () => startGame("10min");
-    // document.getElementById("btn-random").onclick = () => startGame("random");
-    // document.getElementById("btn-infinite").onclick = () => startGame("infinite");
     document.getElementById("view-achievements-btn").onclick = () => openOrFocusTab("achievements.html");
     document.getElementById("view-stats-btn").onclick = () => openOrFocusTab("stats.html");
     document.getElementById("view-world-btn").onclick = () => openOrFocusTab("world.html");
