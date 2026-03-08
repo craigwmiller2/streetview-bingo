@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.8.3] - 2026-03-08
+
+- Fixed: United States country name so that it matches correctly in the daily country challenge.
+
 ## [1.8.2] - 2026-03-07
 
 - Updates: UI and sound changes/enhancements
