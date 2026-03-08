@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.4] - 2026-03-08
+
+- Seamless Handshake: New installations now feature a guided "Sync" screen that automatically disappears the moment the extension is reloaded.
+- Legacy Support: Returning players with existing stats will now bypass the initialization screen automatically.
+- UI Polish: The onboarding overlay now uses a "Glass-morphism" design to match the Mayhem Mode aesthetic.
+- Added: New achievements for playing 24 hours total.
+
 ## [1.8.3] - 2026-03-08
 
 - Fixed: United States country name so that it matches correctly in the daily country challenge.

@@ -698,4 +698,11 @@ const ACH_DATA = [
         icon: "🔱",
         type: "tactical",
     },
+    {
+        id: "full_rotation",
+        name: "Full Rotation",
+        desc: "Spend 24 total hours hunting in Street View.",
+        icon: "🌍",
+        type: "milestone",
+    },
 ];

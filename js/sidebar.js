@@ -973,6 +973,7 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
         master_hunter: ITEMS.every((item) => (stats.itemCounts[item.id || item] || 0) >= 5),
         world_traveler: uniqueCountries >= 5,
         marathoner: stats.totalPlaytime >= 3600000,
+        marathoner: stats.totalPlaytime >= 86400000,
         london_calling: visited("london"),
         the_patriot: checkExploration(gameData, lastGame, "A Flag", ["United States", "USA"]),
         quick_start: firstFindTime !== null && firstFindTime < 5000,
@@ -1406,7 +1407,58 @@ function resetMenu() {
     document.getElementById("menu-duration").classList.add("hidden");
 }
 
+async function checkOnboarding() {
+    const data = await browser.storage.local.get(["isInitialized", "bingo_stats"]);
+    const overlay = document.getElementById("welcome-overlay");
+
+    // 1. GRANDFATHER CHECK:
+    // If they have stats but no initialization flag, they are a returning player.
+    if (data.isInitialized === undefined && data.bingo_stats !== undefined) {
+        console.log("Legacy player detected. Skipping onboarding...");
+        await browser.storage.local.set({ isInitialized: true });
+        overlay.style.display = "none";
+        return; // Exit early, no need to show the overlay
+    }
+
+    // 2. NEW PLAYER CHECK:
+    if (data.isInitialized === undefined) {
+        // Brand New Install
+        overlay.style.display = "flex";
+        await browser.storage.local.set({ isInitialized: false });
+    } else if (data.isInitialized === false) {
+        // In the middle of instructions
+        overlay.style.display = "flex";
+    } else {
+        // Handshake complete
+        overlay.style.display = "none";
+    }
+}
+
+// Button Listeners
+document.getElementById("copy-debug-url").onclick = async (e) => {
+    const url = "about:debugging#/runtime/this-firefox";
+    const btn = e.currentTarget;
+
+    try {
+        await navigator.clipboard.writeText(url);
+
+        // Visual Feedback
+        const originalText = btn.textContent;
+        btn.textContent = "Copied! Now paste in new tab";
+        btn.style.backgroundColor = "#2980b9";
+
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.backgroundColor = "";
+        }, 3000);
+    } catch (err) {
+        console.error("Failed to copy:", err);
+    }
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
+    checkOnboarding();
+
     const storage = await browser.storage.local.get("last_bounty_claimed");
     const today = new Date().toLocaleDateString("en-GB");
     setBountyCache(storage.last_bounty_claimed === today);
