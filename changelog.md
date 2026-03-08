@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.8.5] - 2026-03-08
+
+- Fix: Fixed check for existing player localStorage for Onboarding.
+
 ## [1.8.4] - 2026-03-08
 
 - Seamless Handshake: New installations now feature a guided "Sync" screen that automatically disappears the moment the extension is reloaded.

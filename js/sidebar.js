@@ -1408,12 +1408,15 @@ function resetMenu() {
 }
 
 async function checkOnboarding() {
-    const data = await browser.storage.local.get(["isInitialized", "bingo_stats"]);
+    const data = await browser.storage.local.get(["isInitialized", "global_stats"]);
     const overlay = document.getElementById("welcome-overlay");
 
     // 1. GRANDFATHER CHECK:
     // If they have stats but no initialization flag, they are a returning player.
-    if (data.isInitialized === undefined && data.bingo_stats !== undefined) {
+    if (
+        (data.isInitialized === undefined || data.isInitialized === null || data.isInitialized === false) &&
+        data.global_stats !== undefined
+    ) {
         console.log("Legacy player detected. Skipping onboarding...");
         await browser.storage.local.set({ isInitialized: true });
         overlay.style.display = "none";
