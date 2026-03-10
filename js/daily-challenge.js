@@ -27,7 +27,7 @@ const DAILY_COUNTRIES = [
     { name: "Uruguay", flag: "🇺🇾" },
     { name: "Poland", flag: "🇵🇱" },
     { name: "Italy", flag: "🇮🇹" },
-    { name: "U.S. Virgin Islands", flag: "🇻🇮" },
+    { name: "United States Virgin Islands", flag: "🇻🇮" },
     { name: "Thailand", flag: "🇹🇭" },
     { name: "Indonesia", flag: "🇮🇩" },
     { name: "Madagascar", flag: "🇲🇬" },

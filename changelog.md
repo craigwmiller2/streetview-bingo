@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.6] - 2026-03-10
+
+### Added
+
+- Dynamic SFX Engine: Support for custom `.ogg` sound effects on a per-item basis.
+- Granular Volume Control: Dual sliders in Settings for independent System and Item SFX volumes.
+- Stealth Mode: Toggle in Settings to enable/disable the default capture sound for items without custom SFX.
+- Asset Optimization: Switched item sounds to `.ogg` format to reduce extension footprint.
+
+### Fixed
+
+- Improved audio cleanup and reset logic to prevent overlapping "BINGO" and "Drowning" sounds.
+
 ## [1.8.5] - 2026-03-08
 
 - Fix: Fixed check for existing player localStorage for Onboarding.

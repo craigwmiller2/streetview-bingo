@@ -97,3 +97,53 @@ function showStatusNotification(message, color) {
         setTimeout(() => notify.remove(), 500);
     }, 4000);
 }
+
+// --- Volume Logic ---
+const sysSlider = document.getElementById("sys-volume");
+const sfxSlider = document.getElementById("sfx-volume");
+const sysLabel = document.getElementById("sys-vol-label");
+const sfxLabel = document.getElementById("sfx-vol-label");
+
+// Load existing volumes
+window.addEventListener("DOMContentLoaded", async () => {
+    const data = await browser.storage.local.get(["sysVolume", "sfxVolume"]);
+
+    // Default to 1 (100%) if never set
+    const sysVol = data.sysVolume !== undefined ? data.sysVolume : 1;
+    const sfxVol = data.sfxVolume !== undefined ? data.sfxVolume : 1;
+
+    sysSlider.value = sysVol;
+    sfxSlider.value = sfxVol;
+    sysLabel.textContent = Math.round(sysVol * 100) + "%";
+    sfxLabel.textContent = Math.round(sfxVol * 100) + "%";
+});
+
+// Save volumes on change
+sysSlider.oninput = (e) => {
+    const val = parseFloat(e.target.value);
+    sysLabel.textContent = Math.round(val * 100) + "%";
+    browser.storage.local.set({ sysVolume: val });
+};
+
+sfxSlider.oninput = (e) => {
+    const val = parseFloat(e.target.value);
+    sfxLabel.textContent = Math.round(val * 100) + "%";
+    browser.storage.local.set({ sfxVolume: val });
+};
+
+const defaultSfxCheckbox = document.getElementById("enable-default-sfx");
+
+// Load existing setting
+window.addEventListener("DOMContentLoaded", async () => {
+    const data = await browser.storage.local.get(["sysVolume", "sfxVolume", "useDefaultSfx"]);
+
+    // ... Existing volume loading ...
+
+    // Default to true if never set
+    defaultSfxCheckbox.checked = data.useDefaultSfx !== false;
+});
+
+// Save on change
+defaultSfxCheckbox.onchange = (e) => {
+    browser.storage.local.set({ useDefaultSfx: e.target.checked });
+};

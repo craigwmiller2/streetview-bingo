@@ -61,6 +61,42 @@
             <h1>Settings & Data</h1>
 
             <div class="setting-group">
+                <h3>Audio Levels</h3>
+                <p>Adjust the volume for game events and item captures.</p>
+
+                <div style="margin-bottom: 20px">
+                    <label style="display: block; margin-bottom: 8px">
+                        System Volume:
+                        <span id="sys-vol-label">100%</span>
+                    </label>
+                    <input type="range" id="sys-volume" min="0" max="1" step="0.05" value="1" style="width: 100%" />
+                </div>
+
+                <div>
+                    <label style="display: block; margin-bottom: 8px">
+                        Item SFX Volume:
+                        <span id="sfx-vol-label">100%</span>
+                    </label>
+                    <input type="range" id="sfx-volume" min="0" max="1" step="0.05" value="1" style="width: 100%" />
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Audio Preferences</h3>
+                <div style="margin-top: 20px; display: flex; align-items: center; gap: 10px">
+                    <input
+                        type="checkbox"
+                        id="enable-default-sfx"
+                        checked
+                        style="width: 20px; height: 20px; cursor: pointer"
+                    />
+                    <label for="enable-default-sfx" style="cursor: pointer">
+                        Play default sound for items without custom SFX
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-group">
                 <h3>Backup & Restore</h3>
                 <p>Export your career stats, achievements, and world history to a file.</p>
                 <button id="export-btn" class="btn-export">📥 Export Data (.json)</button>

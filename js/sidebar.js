@@ -1,24 +1,41 @@
-const soundTick = new Audio(browser.runtime.getURL("audio/tick.mp3"));
-const soundBingo = new Audio(browser.runtime.getURL("audio/sonic-bingo.mp3"));
-const soundGameover = new Audio(browser.runtime.getURL("audio/gameover.mp3"));
-const soundAchievement = new Audio(browser.runtime.getURL("audio/achievement.ogg"));
-const soundCountdown = new Audio(browser.runtime.getURL("audio/countdown.mp3"));
-const soundMayhemCountdown = new Audio(browser.runtime.getURL("audio/gran-turismo-countdown.mp3"));
-const soundAlert = new Audio(browser.runtime.getURL("audio/alert.mp3"));
-const soundDrowning = new Audio(browser.runtime.getURL("audio/sonic-drowning.mp3"));
-const soundShuffle = new Audio(browser.runtime.getURL("audio/shuffle.mp3"));
-const soundSonicCheckpoint = new Audio(browser.runtime.getURL("audio/sonic-checkpoint.mp3"));
+// --- 1. System/UI Sound Definitions ---
+const systemSounds = {
+    bingo: new Audio(browser.runtime.getURL("audio/sonic-bingo.mp3")),
+    gameover: new Audio(browser.runtime.getURL("audio/gameover.mp3")),
+    achievement: new Audio(browser.runtime.getURL("audio/achievement.ogg")),
+    countdown: new Audio(browser.runtime.getURL("audio/countdown.mp3")),
+    mayhemCountdown: new Audio(browser.runtime.getURL("audio/gran-turismo-countdown.mp3")),
+    drowning: new Audio(browser.runtime.getURL("audio/sonic-drowning.mp3")),
+    shuffle: new Audio(browser.runtime.getURL("audio/shuffle.mp3")),
+};
 
-// soundTick.load();
-soundBingo.load();
-soundGameover.load();
-soundAchievement.load();
-soundCountdown.load();
-soundAlert.load();
-soundDrowning.load();
-soundShuffle.load();
-soundSonicCheckpoint.load();
-soundMayhemCountdown.load();
+// --- 2. Dynamic Item Sound Library ---
+const itemSoundLibrary = {};
+
+/**
+ * Automatically initializes sounds for items that have an 'sfx' property.
+ * Files should be named [sfx-name].mp3 inside the /audio folder.
+ */
+function initItemSounds() {
+    const allItems = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+
+    allItems.forEach((item) => {
+        if (item.sfx && !itemSoundLibrary[item.sfx]) {
+            // Path: /audio/sfx/[sfx].mp3
+            const soundPath = `audio/sfx/${item.sfx}.ogg`;
+            itemSoundLibrary[item.sfx] = new Audio(browser.runtime.getURL(soundPath));
+            itemSoundLibrary[item.sfx].load();
+        }
+    });
+
+    if (!itemSoundLibrary["default"]) {
+        itemSoundLibrary["default"] = new Audio(browser.runtime.getURL("audio/tick.mp3"));
+        itemSoundLibrary["default"].load();
+    }
+}
+
+// Run this on script load
+initItemSounds();
 
 let gameData = [];
 let timerInterval = null;
@@ -152,15 +169,14 @@ window.startGame = async function (mode) {
     let count = 3;
     numberDisplay.textContent = count;
     numberDisplay.className = "";
-    // soundCountdown.play();
 
     // if it's Mayhem, play the special countdown sound and apply a unique style
     if (isMayhem) {
-        soundMayhemCountdown.currentTime = 0;
-        soundMayhemCountdown.play();
+        systemSounds.mayhemCountdown.currentTime = 0;
+        systemSounds.mayhemCountdown.play();
     } else {
-        soundCountdown.currentTime = 0;
-        soundCountdown.play();
+        systemSounds.countdown.currentTime = 0;
+        systemSounds.countdown.play();
     }
 
     const countdownInterval = setInterval(() => {
@@ -285,18 +301,6 @@ async function handleCapture(itemObj, cellElement) {
         const previousLength = gameData.length;
         gameData.push(find);
 
-        // Achievement/Sound Logic uses the ID
-        if (itemId && itemId.toLowerCase().includes("looking directly at street view car")) {
-            soundAlert.currentTime = 0;
-            soundAlert.play();
-        }
-
-        // if item ID is "lamp-post", play the Sonic Checkpoint sound
-        if (itemId && itemId.toLowerCase().includes("lamp-post")) {
-            soundSonicCheckpoint.currentTime = 0;
-            soundSonicCheckpoint.play();
-        }
-
         if (lastCaptureCoords) {
             const distFromLast = calculateDistance(
                 lastCaptureCoords.lat,
@@ -346,6 +350,9 @@ async function handleCapture(itemObj, cellElement) {
         cellElement.style.backgroundImage = `url(${screenshot})`;
         cellElement.innerHTML = `<span>${itemName}</span>`;
 
+        // play item-specific sound if it exists, otherwise play default capture sound
+        playCaptureSound(itemId);
+
         const undoBtn = document.createElement("button");
         undoBtn.className = "undo-btn";
         undoBtn.innerHTML = "✕";
@@ -366,6 +373,52 @@ async function handleCapture(itemObj, cellElement) {
     }
 }
 
+async function applyVolumes() {
+    const data = await browser.storage.local.get(["sysVolume", "sfxVolume"]);
+    const sysVol = data.sysVolume ?? 1;
+    const sfxVol = data.sfxVolume ?? 1;
+
+    // System sounds get the System Volume
+    Object.values(systemSounds).forEach((sound) => (sound.volume = sysVol));
+
+    // Item sounds (including our new 'default') get the SFX Volume
+    Object.values(itemSoundLibrary).forEach((sound) => (sound.volume = sfxVol));
+}
+
+// Listen for changes from the settings page
+browser.storage.onChanged.addListener((changes) => {
+    if (changes.sysVolume || changes.sfxVolume) {
+        applyVolumes();
+    }
+});
+
+// Call this inside your init code
+applyVolumes();
+
+async function playCaptureSound(itemId) {
+    const data = await browser.storage.local.get("useDefaultSfx");
+    const useDefault = data.useDefaultSfx !== false; // Default to true
+
+    const allItems = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+    const itemData = allItems.find((item) => item.id === itemId);
+
+    let audioToPlay = null;
+
+    // 1. Check for specific item SFX
+    if (itemData && itemData.sfx && itemSoundLibrary[itemData.sfx]) {
+        audioToPlay = itemSoundLibrary[itemData.sfx];
+    }
+    // 2. Only use the fallback if the user has enabled it in settings
+    else if (useDefault) {
+        audioToPlay = itemSoundLibrary["default"];
+    }
+
+    // 3. Play if we found a valid sound (will respect sfxVolume automatically)
+    if (audioToPlay) {
+        audioToPlay.currentTime = 0;
+        audioToPlay.play().catch((e) => console.warn("Playback failed:", e));
+    }
+}
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3; // Earth's radius in metres
 
@@ -386,10 +439,11 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 function checkWinCondition() {
     if (gameData.length === 25) {
-        soundBingo.play();
+        systemSounds.bingo.currentTime = 0; // Reset just in case
+        systemSounds.bingo.play();
         // stop soundDrowning sound from playing and reset it for the next game
-        soundDrowning.pause();
-        soundDrowning.currentTime = 0;
+        systemSounds.drowning.pause();
+        systemSounds.drowning.currentTime = 0;
 
         triggerEndGame("🎉 BINGO!", "rgba(46, 204, 113, 0.9)");
 
@@ -484,9 +538,11 @@ function refreshHUD() {
 
         // --- NEW: Ticking Logic for last 10 seconds ---
         if (timeLeft <= 12 && timeLeft > 0) {
-            // soundTick.currentTime = 0; // Reset sound to allow rapid replay
-            // soundTick.play();
-            soundDrowning.play();
+            // check if the countdown sound is already playing to avoid overlap
+            if (systemSounds.drowning.paused) {
+                systemSounds.drowning.currentTime = 0;
+                systemSounds.drowning.play();
+            }
 
             // Visual feedback: Flash red and scale up slightly
             textDisplay.style.color = "#e74c3c";
@@ -567,7 +623,8 @@ function startTimer() {
 
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                soundGameover.play();
+                systemSounds.gameover.currentTime = 0;
+                systemSounds.gameover.play();
                 triggerEndGame("⏰ TIME'S UP!", "rgba(192, 57, 43, 0.9)");
             }
             refreshHUD();
@@ -594,9 +651,8 @@ async function triggerMayhemShuffle() {
     // Re-verify your shuffle function is called here
     shuffle(availablePool);
 
-    soundShuffle.currentTime = 0;
-    soundShuffle.volume = 0.6;
-    soundShuffle.play();
+    systemSounds.shuffle.currentTime = 0;
+    systemSounds.shuffle.play();
 
     // 4. Loop through cells and swap unfound ones
     cells.forEach((cell, index) => {
@@ -758,7 +814,8 @@ async function triggerEndGame(title, bgColor) {
                 rarity: "legendary",
             },
         ]);
-        soundAchievement.play();
+        systemSounds.achievement.currentTime = 0;
+        systemSounds.achievement.play();
     }
 
     const foundCount = gameData.length;
@@ -1100,7 +1157,8 @@ async function checkAchievements(finalDuration, stats, totalDistanceTraveled) {
         });
 
         showAchievementToast(newUnlocks);
-        soundAchievement.play();
+        systemSounds.achievement.currentTime = 0;
+        systemSounds.achievement.play();
     }
 }
 
