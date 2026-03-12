@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.8.7] - 2026-03-12
+
+- Added: Loads of new sounds!
+
 ## [1.8.6] - 2026-03-10
 
 ### Added
