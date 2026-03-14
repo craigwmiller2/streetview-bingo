@@ -167,6 +167,12 @@ body.game-active::before {
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+.group-title-justify {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
 .group-title {
     font-size: 0.7rem;
     text-transform: uppercase;
@@ -320,6 +326,14 @@ button:active {
     gap: var(--grid-gap);
     margin-bottom: 20px;
     position: relative;
+}
+
+/* Disable all interactions while shuffling */
+.grid-locked {
+    pointer-events: none !important;
+    filter: grayscale(0.3) contrast(0.8);
+    opacity: 0.8;
+    transition: filter 0.3s ease;
 }
 
 .cell {
@@ -1552,6 +1566,31 @@ button:active {
     }
 }
 
+@keyframes warningShake {
+    0% {
+        transform: translate(0, 0);
+    }
+    25% {
+        transform: translate(2px, -2px);
+    }
+    50% {
+        transform: translate(-2px, 2px);
+    }
+    75% {
+        transform: translate(2px, 2px);
+    }
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+.grid-warning-pulse {
+    animation: warningShake 0.1s infinite;
+    box-shadow: 0 0 30px rgba(231, 76, 60, 0.5) !important;
+    border-color: #e74c3c !important;
+    transition: all 0.1s ease;
+}
+
 .btn-mayhem:hover {
     filter: brightness(1.2);
     /* Speed up the flow on hover for a "agitated" look */
@@ -1641,4 +1680,17 @@ button:active {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.version-display {
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: var(--text-main);
+    pointer-events: none; /* User can't accidentally click it */
+    letter-spacing: 1px;
+    z-index: 100;
+
+    pre {
+        margin: 0;
+    }
 }

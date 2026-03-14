@@ -82,16 +82,37 @@
             </div>
 
             <div class="setting-group">
-                <h3>Audio Preferences</h3>
-                <div style="margin-top: 20px; display: flex; align-items: center; gap: 10px">
-                    <input
-                        type="checkbox"
-                        id="enable-default-sfx"
-                        checked
-                        style="width: 20px; height: 20px; cursor: pointer"
-                    />
-                    <label for="enable-default-sfx" style="cursor: pointer">
-                        Play default sound for items without custom SFX
+                <h3>Item Capture Audio</h3>
+                <p>Choose how the game reacts when you find an item:</p>
+
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer">
+                        <input type="radio" name="item-audio-mode" value="all" style="width: 18px; height: 18px" />
+                        <span>
+                            <strong>Full Audio:</strong>
+                            Play custom SFX where available, fallback to default tone.
+                        </span>
+                    </label>
+
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer">
+                        <input
+                            type="radio"
+                            name="item-audio-mode"
+                            value="custom-only"
+                            style="width: 18px; height: 18px"
+                        />
+                        <span>
+                            <strong>Custom Only:</strong>
+                            Only play unique SFX (Easter Eggs). No default tones.
+                        </span>
+                    </label>
+
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer">
+                        <input type="radio" name="item-audio-mode" value="mute" style="width: 18px; height: 18px" />
+                        <span>
+                            <strong>Mute Items:</strong>
+                            Silence all item captures (System sounds remain active).
+                        </span>
                     </label>
                 </div>
             </div>

@@ -6,7 +6,8 @@ const systemSounds = {
     countdown: new Audio(browser.runtime.getURL("audio/countdown.mp3")),
     mayhemCountdown: new Audio(browser.runtime.getURL("audio/gran-turismo-countdown.mp3")),
     drowning: new Audio(browser.runtime.getURL("audio/sonic-drowning.mp3")),
-    shuffle: new Audio(browser.runtime.getURL("audio/shuffle.mp3")),
+    shuffle: new Audio(browser.runtime.getURL("audio/shuffle.ogg")),
+    shuffleWarning: new Audio(browser.runtime.getURL("audio/shuffle-warning.ogg")),
 };
 
 // --- 2. Dynamic Item Sound Library ---
@@ -51,6 +52,7 @@ let lastCaptureCoords = null;
 let selectedRuleset = "standard";
 let undoUsedInCurrentGame = false;
 let lastMayhemMinute = -1;
+let lastWarningMinute = 0;
 let currentActiveMode = "standard"; // Global tracker
 const FULL_DASH_ARRAY = 283;
 
@@ -396,29 +398,33 @@ browser.storage.onChanged.addListener((changes) => {
 applyVolumes();
 
 async function playCaptureSound(itemId) {
-    const data = await browser.storage.local.get("useDefaultSfx");
-    const useDefault = data.useDefaultSfx !== false; // Default to true
+    const data = await browser.storage.local.get("itemAudioMode");
+    const mode = data.itemAudioMode || "all";
+
+    // 1. If mode is 'mute', we exit immediately
+    if (mode === "mute") return;
 
     const allItems = [...CORE_ITEMS, ...EXPANSION_ITEMS];
     const itemData = allItems.find((item) => item.id === itemId);
 
     let audioToPlay = null;
 
-    // 1. Check for specific item SFX
+    // 2. Try to find a custom SFX
     if (itemData && itemData.sfx && itemSoundLibrary[itemData.sfx]) {
         audioToPlay = itemSoundLibrary[itemData.sfx];
     }
-    // 2. Only use the fallback if the user has enabled it in settings
-    else if (useDefault) {
+    // 3. If no custom SFX, check if we are allowed to play the default tone
+    else if (mode === "all") {
         audioToPlay = itemSoundLibrary["default"];
     }
 
-    // 3. Play if we found a valid sound (will respect sfxVolume automatically)
+    // 4. Play if we have a match
     if (audioToPlay) {
         audioToPlay.currentTime = 0;
-        audioToPlay.play().catch((e) => console.warn("Playback failed:", e));
+        audioToPlay.play().catch((e) => console.warn("Audio blocked:", e));
     }
 }
+
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3; // Earth's radius in metres
 
@@ -577,7 +583,6 @@ function refreshHUD() {
 function startTimer() {
     const progressCircle = document.querySelector(".timer-progress");
     const grid = document.getElementById("bingo-grid");
-
     const isInfinite = grid.classList.contains("infinite-mode");
     const isMayhem = grid.classList.contains("mayhem-mode");
 
@@ -585,7 +590,8 @@ function startTimer() {
         progressCircle.style.transition = "stroke-dashoffset 1s linear, stroke 1s linear";
     }
 
-    lastMayhemMinute = 0; // Reset on start
+    lastMayhemMinute = 0;
+    lastWarningMinute = 0; // Reset
     refreshHUD();
 
     if (timerInterval) clearInterval(timerInterval);
@@ -593,48 +599,63 @@ function startTimer() {
     timerInterval = setInterval(() => {
         if (isPaused) return;
 
+        // --- CALCULATE ELAPSED TIME ---
+        let elapsedSeconds;
         if (isInfinite) {
-            // MAYHEM FOR INFINITE
-            if (isMayhem) {
-                const elapsedSeconds = Math.floor((Date.now() - gameStartTime - totalPausedTime) / 1000);
-                const currentMinute = Math.floor(elapsedSeconds / 60);
-
-                // Trigger if we've entered a new minute and it's not the start (0)
-                if (currentMinute > 0 && currentMinute > lastMayhemMinute) {
-                    lastMayhemMinute = currentMinute;
-                    triggerMayhemShuffle();
-                }
-            }
-            refreshHUD();
+            elapsedSeconds = Math.floor((Date.now() - gameStartTime - totalPausedTime) / 1000);
         } else {
-            timeLeft--;
+            const initialTimeVal = parseInt(grid.dataset.initialTime || 600);
+            elapsedSeconds = initialTimeVal - timeLeft;
+        }
 
-            // MAYHEM FOR STANDARD
-            if (isMayhem && timeLeft > 0) {
-                const initialTimeVal = parseInt(grid.dataset.initialTime || 600);
-                const elapsed = initialTimeVal - timeLeft;
-                const currentMinute = Math.floor(elapsed / 60);
+        const currentMinute = Math.floor(elapsedSeconds / 60);
+        const secondsIntoMinute = elapsedSeconds % 60;
 
-                if (currentMinute > 0 && currentMinute > lastMayhemMinute) {
-                    lastMayhemMinute = currentMinute;
-                    triggerMayhemShuffle();
-                }
+        // --- MAYHEM SEQUENCE LOGIC ---
+        if (isMayhem && currentMinute >= 0) {
+            // 1. THE WARNING (Trigger at 58 seconds)
+            if (secondsIntoMinute === 58 && currentMinute >= lastWarningMinute) {
+                lastWarningMinute = currentMinute + 1; // Mark that we've warned for the upcoming minute
+
+                // Play Warning SFX
+                systemSounds.shuffleWarning.currentTime = 0;
+                systemSounds.shuffleWarning.play();
+
+                // Visual Warning
+                grid.classList.add("grid-warning-pulse");
             }
 
+            // 2. THE SHUFFLE (Trigger at 0 seconds / New Minute)
+            if (secondsIntoMinute === 0 && currentMinute > 0 && currentMinute > lastMayhemMinute) {
+                lastMayhemMinute = currentMinute;
+
+                // Remove warning class and trigger the actual swap
+                grid.classList.remove("grid-warning-pulse");
+                triggerMayhemShuffle();
+            }
+        }
+
+        // --- STANDARD TIMER DEDUCTION ---
+        if (!isInfinite) {
+            timeLeft--;
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
                 systemSounds.gameover.currentTime = 0;
                 systemSounds.gameover.play();
                 triggerEndGame("⏰ TIME'S UP!", "rgba(192, 57, 43, 0.9)");
             }
-            refreshHUD();
         }
+
+        refreshHUD();
     }, 1000);
 }
 
 async function triggerMayhemShuffle() {
     const grid = document.getElementById("bingo-grid");
     const cells = grid.querySelectorAll(".cell");
+
+    // --- LOCK THE GRID ---
+    grid.classList.add("grid-locked");
 
     // 1. Create a fresh, flat copy of every possible item
     const fullPool = [...CORE_ITEMS, ...EXPANSION_ITEMS];
@@ -675,7 +696,10 @@ async function triggerMayhemShuffle() {
     });
 
     grid.classList.add("grid-glitch-pulse");
-    setTimeout(() => grid.classList.remove("grid-glitch-pulse"), 1000);
+    setTimeout(() => {
+        grid.classList.remove("grid-glitch-pulse");
+        grid.classList.remove("grid-locked");
+    }, 600);
 }
 
 /**
@@ -1610,8 +1634,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (confirm("End game and save your findings to your stats and map?")) {
             // Trigger the same logic as a timeout or Bingo
-            soundDrowning.pause();
-            soundDrowning.currentTime = 0;
+            systemSounds.drowning.pause();
+            systemSounds.drowning.currentTime = 0;
             triggerEndGame("🏁 SESSION COMPLETE", "rgba(52, 152, 219, 0.9)");
         }
     };
@@ -1669,3 +1693,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // This ensures the Bounty Card shows the correct item and status on load
     initBountyUI();
 });
+
+function displayVersion() {
+    const manifest = browser.runtime.getManifest();
+    const versionSpan = document.getElementById("version-number");
+
+    if (versionSpan && manifest.version) {
+        versionSpan.textContent = manifest.version;
+    }
+}
+
+// Call this on load
+document.addEventListener("DOMContentLoaded", displayVersion);

@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.8] - 2026-03-14
+
+### Added
+
+- Mayhem Warning System: The grid now enters a "Critical State" 2 seconds before a shuffle occurs, featuring a screen-shake effect and a dedicated warning SFX.
+- Input Locking: The Bingo grid is now temporarily disabled during the shuffle animation to prevent "ghost clicks" and data desync.
+- Version HUD: A subtle version indicator has been added to the sidebar, pulling directly from the extension manifest.
+
+### Changed
+
+- Optimised Timer Logic: Unified the shuffle trigger logic for both Standard and Infinite Mayhem modes.
+- UI Polish: Added a "Glitch Pulse" and desaturation effect to the grid during shuffle sequences to enhance the "Mayhem" aesthetic.
+
 ## [1.8.7] - 2026-03-12
 
 - Added: Loads of new sounds!
