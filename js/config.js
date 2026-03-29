@@ -74,6 +74,7 @@ const EXPANSION_ITEMS = [
     { id: "Traffic Lights", name: "Traffic Lights", sfx: "traffic-lights" },
     { id: "lamp-post", name: "Lamp Post", sfx: "lamp-post" },
     { id: "cemetery", name: "Cemetery", sfx: "undertakers-bell" },
+    { id: "shopping-trolley", name: "Shopping Trolley" },
 ];
 
 // This replaces your old 'const ITEMS'

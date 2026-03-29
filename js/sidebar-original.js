@@ -16,13 +16,12 @@ let lastWarningMinute = 0;
 let activeCountdownSound = null;
 let activeStartSound = null;
 let activeGameOverSound = null;
-let activeBingoSound = null;
 let currentActiveMode = "standard"; // Global tracker
-let currentRankIndex = 0;
 const FULL_DASH_ARRAY = 283;
 
 // --- 1. System/UI Sound Definitions ---
 const systemSounds = {
+    bingo: new Audio(browser.runtime.getURL("audio/sonic-bingo.mp3")),
     achievement: new Audio(browser.runtime.getURL("audio/achievement.ogg")),
     shuffle: new Audio(browser.runtime.getURL("audio/shuffle.ogg")),
     shuffleWarning: new Audio(browser.runtime.getURL("audio/shuffle-warning.ogg")),
@@ -47,34 +46,9 @@ const endCountdownSounds = [
         audio: new Audio(browser.runtime.getURL("audio/countdown-clock.ogg")),
         triggerAt: 30,
     },
-    {
-        id: "final_countdown",
-        audio: new Audio(browser.runtime.getURL("audio/final-countdown.ogg")),
-        triggerAt: 17,
-    },
 ];
 
-const gameoverSounds = [
-    // {
-    //     id: "sonic_gameover",
-    //     audio: new Audio(browser.runtime.getURL("audio/gameover.mp3")),
-    // },
-    {
-        id: "dave_gameover",
-        audio: new Audio(browser.runtime.getURL("audio/dave-fail.ogg")),
-    },
-];
-
-const bingoSounds = [
-    {
-        id: "sonic_bingo",
-        audio: new Audio(browser.runtime.getURL("audio/sonic-bingo.mp3")),
-    },
-    {
-        id: "ff_bingo",
-        audio: new Audio(browser.runtime.getURL("audio/final-fantasy-bingo.ogg")),
-    },
-];
+const gameoverSounds = [{ id: "sonic_gameover", audio: new Audio(browser.runtime.getURL("audio/gameover.mp3")) }];
 
 /**
  * Automatically initializes sounds for items that have an 'sfx' property.
@@ -108,10 +82,6 @@ function initItemSounds() {
     gameoverSounds.forEach((sound) => {
         sound.audio.load();
     });
-
-    bingoSounds.forEach((sound) => {
-        sound.audio.load();
-    });
 }
 
 // Run this on script load
@@ -128,23 +98,8 @@ window.startGame = async function (mode) {
     const progressCircle = document.querySelector(".timer-progress");
     undoUsedInCurrentGame = false;
 
-    const missionDisplay = document.getElementById("mission-title-display");
-    if (missionDisplay) {
-        // If it's NOT a lucky game, reset to default
-        if (!window.isLuckyGame) {
-            missionDisplay.innerText = "";
-            missionDisplay.style.display = "none";
-        }
-        // Always reset the flag after checking so the next game starts fresh
-        window.isLuckyGame = false;
-    }
-    document.getElementById("game-progress-bar").style.display = "block";
-    currentRankIndex = 0;
-    updateProgressBar(true, true);
-
     selectEndCountdownSound();
     selectGameOverSound();
-    selectBingoSound();
 
     const body = document.querySelector("body");
     body.classList.add("game-active");
@@ -288,88 +243,6 @@ window.startGame = async function (mode) {
     }, 1000);
 };
 
-/**
- * Updates the HUD progress bar and rank title.
- * @param {boolean} isUndo - If true, skips the celebratory pulse animation.
- */
-function updateProgressBar(isUndo = false, newGameReset = false) {
-    let count = gameData.length;
-    const total = 25;
-    let percentage = (count / total) * 100;
-
-    const containerEl = document.querySelector(".progress-container");
-    const counterEl = document.getElementById("progress-counter");
-    const fillEl = document.getElementById("progress-fill");
-    const labelEl = document.querySelector(".progress-label");
-
-    if (newGameReset) {
-        count = 0;
-        percentage = 0;
-
-        if (containerEl) {
-            containerEl.style.setProperty("--progress-color", "#3498db");
-        }
-        if (counterEl) counterEl.innerText = "0 / 25";
-        if (fillEl) {
-            fillEl.style.width = "0%";
-            fillEl.style.background = "#3498db"; // Reset to starting blue
-            fillEl.classList.remove("bar-bump", "rank-up-fill-flash");
-        }
-        if (labelEl) {
-            labelEl.innerText = "Novice Scout";
-            labelEl.classList.remove("rank-up-flare");
-        }
-    }
-
-    if (!counterEl || !fillEl) return;
-
-    counterEl.innerText = `${count} / ${total}`;
-    fillEl.style.width = `${percentage}%`;
-
-    // --- Threshold & Rank Logic ---
-    const ranks = [
-        { min: 0, text: "Novice Scout", color: "#3498db" },
-        { min: 5, text: "🚶 Casual Tourist", color: "#2ecc71" },
-        { min: 10, text: "📍 Local Guide", color: "#1abc9c" },
-        { min: 15, text: "🔍 Professional Hunter", color: "#9b59b6" },
-        { min: 20, text: "⭐ Elite Tracker", color: "#f1c40f" },
-        { min: 25, text: "🏆 BINGO MASTER", color: "#e67e22" },
-    ];
-
-    // Find the current rank based on count
-    let newRankIndex = 0;
-    for (let i = ranks.length - 1; i >= 0; i--) {
-        if (count >= ranks[i].min) {
-            newRankIndex = i;
-            break;
-        }
-    }
-
-    // This updates the border AND the fill at the same time
-    containerEl.style.setProperty("--progress-color", ranks[newRankIndex].color);
-
-    // --- Trigger Level Up Effects ---
-    if (!isUndo && newRankIndex > currentRankIndex) {
-        // Visual Flare (CSS Class)
-        labelEl.classList.remove("rank-up-flare");
-        void labelEl.offsetWidth; // Reset animation
-        labelEl.classList.add("rank-up-flare");
-    }
-
-    currentRankIndex = newRankIndex; // Update tracker
-
-    // Apply UI Updates
-    if (labelEl) labelEl.innerText = `Rank: ${ranks[newRankIndex].text}`;
-    fillEl.style.background = ranks[newRankIndex].color;
-
-    // Capture "Bump" Animation
-    fillEl.classList.remove("bar-bump");
-    if (!isUndo && count > 0) {
-        void fillEl.offsetWidth;
-        fillEl.classList.add("bar-bump");
-    }
-}
-
 function selectStartCountdownSound() {
     const randomIndex = Math.floor(Math.random() * startCountdownSounds.length);
     activeStartSound = startCountdownSounds[randomIndex].audio;
@@ -403,14 +276,6 @@ function selectGameOverSound() {
     activeGameOverSound = gameoverSounds[randomIndex].audio;
     browser.storage.local.get("sysVolume").then((data) => {
         activeGameOverSound.volume = data.sysVolume ?? 1;
-    });
-}
-
-function selectBingoSound() {
-    const randomIndex = Math.floor(Math.random() * bingoSounds.length);
-    activeBingoSound = bingoSounds[randomIndex].audio;
-    browser.storage.local.get("sysVolume").then((data) => {
-        activeBingoSound.volume = data.sysVolume ?? 1;
     });
 }
 
@@ -570,7 +435,6 @@ async function handleCapture(itemObj, cellElement) {
         // Sync the HUD immediately so the player sees the 0m or +Xm change
         refreshHUD();
         checkWinCondition();
-        updateProgressBar();
     } catch (error) {
         cellElement.classList.remove("capturing");
         cellElement.innerHTML = originalContent;
@@ -649,10 +513,8 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 function checkWinCondition() {
     if (gameData.length === 25) {
-        // systemSounds.bingo.currentTime = 0; // Reset just in case
-        // systemSounds.bingo.play();
-        activeBingoSound.currentTime = 0;
-        activeBingoSound.play();
+        systemSounds.bingo.currentTime = 0; // Reset just in case
+        systemSounds.bingo.play();
 
         stopEndCountdownMusic();
 
@@ -702,8 +564,6 @@ function handleUndo(itemId, cellElement) {
 
     // 5. Update HUD to show the new reduced distance
     refreshHUD();
-
-    updateProgressBar();
 }
 
 function refreshHUD() {
@@ -946,7 +806,6 @@ async function triggerEndGame(title, bgColor) {
     body.classList.remove("game-active");
     stopEndCountdownMusic();
     if (document.getElementById("win-overlay")) return;
-    // document.getElementById("game-progress-bar").style.display = "none";
 
     // Reveal the dashboard when the game completes
     const dashboard = document.getElementById("dashboard-container");
@@ -1073,7 +932,6 @@ async function triggerEndGame(title, bgColor) {
         document.getElementById("mode-menu").style.display = "block";
         document.getElementById("main-header").style.display = "block";
         document.getElementById("bingo-grid").innerHTML = "";
-        document.getElementById("game-progress-bar").style.display = "none";
         overlay.remove();
     };
 
@@ -1758,42 +1616,6 @@ document.getElementById("copy-debug-url").onclick = async (e) => {
     }
 };
 
-async function handleLuckyStart() {
-    // 1. Pick Random Location & Mode
-    const randomLoc = STARTING_LOCATIONS[Math.floor(Math.random() * STARTING_LOCATIONS.length)];
-    const modes = ["standard", "random", "mayhem"];
-    const randomMode = modes[Math.floor(Math.random() * modes.length)];
-
-    // 2. Define the full mode string
-    let finalModeString = "";
-    if (randomMode === "standard") finalModeString = "10min";
-    if (randomMode === "random") finalModeString = "random";
-    if (randomMode === "mayhem") finalModeString = "mayhem-10min";
-
-    console.log(`🍀 Lucky Start: Heading to ${randomLoc.name} in ${randomMode} mode!`);
-
-    // 3. Update HUD Mission Title
-    // We update this BEFORE startGame so the UI is ready when the grid appears
-    const missionDisplay = document.getElementById("mission-title-display");
-    if (missionDisplay) {
-        missionDisplay.style.display = "block";
-        missionDisplay.innerText = `Map: ${randomLoc.name}`;
-    }
-
-    document.activeElement.blur();
-
-    // 4. Open the Google Street View Tab
-    window.open(randomLoc.url, "_blank");
-
-    // 5. Start the game
-    // We use a slightly longer delay (300ms) to ensure the UI transition is smooth
-    setTimeout(() => {
-        // We set a temporary global flag so startGame knows NOT to overwrite our custom title
-        window.isLuckyGame = true;
-        startGame(finalModeString);
-    }, 500);
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
     checkOnboarding();
 
@@ -1869,8 +1691,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         resetMenu();
     };
 
-    document.getElementById("btn-lucky")?.addEventListener("click", handleLuckyStart);
-
     // pause button logic
     document.getElementById("pause-btn").onclick = togglePause;
     document.getElementById("resume-btn").onclick = togglePause;
@@ -1914,8 +1734,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.getElementById("timer-container").style.display = "none";
             document.getElementById("active-mode-display").style.display = "none";
             document.getElementById("bingo-grid").innerHTML = "";
-
-            document.getElementById("game-progress-bar").style.display = "none";
 
             const overlay = document.getElementById("win-overlay");
             if (overlay) overlay.remove();

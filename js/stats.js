@@ -14,9 +14,15 @@ function formatTotalDuration(ms) {
  * Resolves an ID string to its current Display Name
  */
 function getItemDisplayName(id) {
+    if (!id || id === "N/A") return "N/A";
+
+    // Combine your arrays from config.js
     const allItems = [...CORE_ITEMS, ...EXPANSION_ITEMS];
-    const match = allItems.find((item) => item.id === id);
-    return match ? match.name : id; // Fallback to ID if no match (for old legacy data)
+    const item = allItems.find((i) => i.id === id);
+
+    // If the item isn't in config.js anymore, return the ID string
+    // instead of letting it fall through to undefined
+    return item ? item.name || item.id : id;
 }
 
 async function loadStats() {
@@ -25,7 +31,7 @@ async function loadStats() {
     let stats = storage.global_stats;
     let worldHistory = storage.world_history || [];
 
-    const distanceMeters = stats.totalCareerDistance || 0;
+    const distanceMeters = stats?.totalCareerDistance || 0;
     const distanceKm = (distanceMeters / 1000).toFixed(2);
 
     // --- NEW: AUTOMATIC DATA MIGRATION ---
@@ -280,22 +286,25 @@ async function copyStatsToClipboard(stats) {
     const fMins = Math.floor(fastest / 60000);
     const fSecs = Math.floor((fastest % 60000) / 1000);
 
-    // all items and counts
     const itemCounts = stats.itemCounts || {};
-    // find raw IDs with highest/lowest counts
-    const mostFoundId = Object.entries(itemCounts).reduce(
-        (max, entry) => (entry[1] > max[1] ? entry : max),
-        ["N/A", 0],
-    )[0];
 
-    const leastFoundId = Object.entries(itemCounts).reduce(
-        (min, entry) => (entry[1] < min[1] ? entry : min),
-        ["N/A", Infinity],
-    )[0];
+    console.log(itemCounts);
 
-    // Convert IDs to Display Names for the clipboard
-    const mostFoundName = getItemDisplayName(mostFoundId);
-    const leastFoundName = getItemDisplayName(leastFoundId);
+    // 1. Get entries and filter out anything with 0 counts
+    const entries = Object.entries(itemCounts).filter(([id, count]) => count > 0);
+
+    // 2. Safely find IDs
+    let mostFoundId = "N/A";
+    let leastFoundId = "N/A";
+
+    if (entries.length > 0) {
+        mostFoundId = entries.reduce((a, b) => (b[1] > a[1] ? b : a))[0];
+        leastFoundId = entries.reduce((a, b) => (b[1] < a[1] ? b : a))[0];
+    }
+
+    // 3. Convert IDs to Names with a mandatory fallback string
+    const mostFoundName = getItemDisplayName(mostFoundId) || "N/A";
+    const leastFoundName = getItemDisplayName(leastFoundId) || "N/A";
 
     // Calculate distance for the share text
     const distanceMeters = stats.totalCareerDistance || 0;
