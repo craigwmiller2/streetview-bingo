@@ -120,10 +120,13 @@ function getDailyCountry() {
     const today = new Date().setHours(0, 0, 0, 0);
 
     // Calculate difference in days
-    const dayIndex = Math.floor((today - startDate) / (24 * 60 * 60 * 1000));
+    const dayIndex = Math.round((today - startDate) / (24 * 60 * 60 * 1000));
 
-    // Select country (loops if the list is shorter than days passed)
-    return DAILY_COUNTRIES[dayIndex % DAILY_COUNTRIES.length];
+    // 3. Prevent negative indices just in case of system clock errors
+    const safeIndex = Math.max(0, dayIndex);
+
+    // 4. Select country
+    return DAILY_COUNTRIES[safeIndex % DAILY_COUNTRIES.length];
 }
 
 /**
