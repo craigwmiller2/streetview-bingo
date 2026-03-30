@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.9.1] - 2026-03-30
+
+- Added more sounds
+
 ## [1.9.0] - 2026-03-30
 
 ### New Features

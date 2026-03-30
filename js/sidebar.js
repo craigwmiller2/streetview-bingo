@@ -55,13 +55,33 @@ const endCountdownSounds = [
 ];
 
 const gameoverSounds = [
-    // {
-    //     id: "sonic_gameover",
-    //     audio: new Audio(browser.runtime.getURL("audio/gameover.mp3")),
-    // },
+    {
+        id: "sonic_gameover",
+        audio: new Audio(browser.runtime.getURL("audio/gameover.mp3")),
+    },
+    {
+        id: "sonic_3_gameover",
+        audio: new Audio(browser.runtime.getURL("audio/sonic-3-gameover.mp3")),
+    },
     {
         id: "dave_gameover",
         audio: new Audio(browser.runtime.getURL("audio/dave-fail.ogg")),
+    },
+    {
+        id: "elden_ring",
+        audio: new Audio(browser.runtime.getURL("audio/elden-ring-death.ogg")),
+    },
+    {
+        id: "snake_gameover",
+        audio: new Audio(browser.runtime.getURL("audio/snake-gameover.ogg")),
+    },
+    {
+        id: "aliens_gameover",
+        audio: new Audio(browser.runtime.getURL("audio/aliens-gameover.ogg")),
+    },
+    {
+        id: "lost_gameover",
+        audio: new Audio(browser.runtime.getURL("audio/lost-gameover.ogg")),
     },
 ];
 

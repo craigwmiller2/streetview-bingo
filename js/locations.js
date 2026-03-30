@@ -19,4 +19,8 @@ const STARTING_LOCATIONS = [
         name: "Sorry, there's a problem with the lift.",
         url: "https://www.google.com/maps/@58.9632601,-3.2976389,3a,48.9y,278.75h,101.98t/data=!3m7!1e1!3m5!1sAqmn9jUIFhAVm-9AQlqTBg!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D-11.982755463220002%26panoid%3DAqmn9jUIFhAVm-9AQlqTBg%26yaw%3D278.75363562125756!7i16384!8i8192?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D",
     },
+    {
+        name: "Don't get angry, get Angra (do Heroísmo)!",
+        url: "https://www.google.com/maps/@38.6699719,-27.252259,3a,35.9y,244.31h,74.53t/data=!3m7!1e1!3m5!1sSvol7SP66Ys72hmun27wvQ!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D15.46744273784195%26panoid%3DSvol7SP66Ys72hmun27wvQ%26yaw%3D244.30681092168925!7i13312!8i6656?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D",
+    },
 ];
