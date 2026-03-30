@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.9.0] - 2026-03-30
+
+### New Features
+
+- "I'm Feeling Lucky" Mode: Added a high-stakes randomizer that drops players into hand-picked "Missions" with randomized game modes (Standard, Random, or Mayhem).
+- Dynamic Progress HUD: Real-time "Items Found" counter (0/25) with a smooth-fill progress bar located above the bingo grid.
+- Ranking System: Five tiered ranks (Novice Scout to Bingo Master) that unlock as you find items, featuring visual "flare" animations and color-shifting UI.
+- Campaign Missions: Integrated a library of curated starting locations with unique titles like "Make the Hattamost of It" and "Only graffiti in the village...".
+
+### Technical Fixes & Improvements
+
+- Clock-Sync Stability: Refactored Daily Country logic from Math.floor to Math.round to prevent "stuck" challenges during Daylight Savings (BST) transitions.
+- Adaptive UI: The progress bar border now dynamically syncs its color with the current rank/bar color.
+- Code Consolidation: Reverted architecture to a unified sidebar.js for improved stability and easier event listener management.
+- Data Sanitization: Hardened statistics logic to ignore undefined or null entries in localStorage caused by legacy bugs.
+
 ## [1.8.8] - 2026-03-14
 
 ### Added
