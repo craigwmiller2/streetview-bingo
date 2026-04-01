@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.2] - 2026-04-01
+
+### Added
+
+- Added a new sound option within the Settings screen to choose to play the default capture tone only instead of any custom sounds.
+- Added a fun new sound to celebrate the start of April
+
 ## [1.9.1] - 2026-03-30
 
 - Added more sounds

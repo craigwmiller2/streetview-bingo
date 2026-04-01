@@ -23,4 +23,28 @@ const STARTING_LOCATIONS = [
         name: "Don't get angry, get Angra (do Heroísmo)!",
         url: "https://www.google.com/maps/@38.6699719,-27.252259,3a,35.9y,244.31h,74.53t/data=!3m7!1e1!3m5!1sSvol7SP66Ys72hmun27wvQ!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D15.46744273784195%26panoid%3DSvol7SP66Ys72hmun27wvQ%26yaw%3D244.30681092168925!7i13312!8i6656?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D",
     },
+    {
+        name: "Watch out Mario! He's right behind you!",
+        url: "https://www.google.com/maps/@40.7586728,-73.9853152,3a,15y,341.34h,88.59t/data=!3m7!1e1!3m5!1sBanBwEchMPRTWfc1EgetRA!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D1.406442804590398%26panoid%3DBanBwEchMPRTWfc1EgetRA%26yaw%3D341.34118478527444!7i16384!8i8192?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D",
+    },
+    {
+        name: "Welcome to the winner's circle!",
+        url: "https://www.google.com/maps/@43.3792108,-99.8771062,3a,15.5y,169.92h,89.57t/data=!3m7!1e1!3m5!1sGEYyvBQ0DznuMxBau-msPQ!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D0.43243872807173034%26panoid%3DGEYyvBQ0DznuMxBau-msPQ%26yaw%3D169.92160469113577!7i16384!8i8192?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D",
+    },
+    {
+        name: "Where the hell is Adell?",
+        url: "https://www.google.com/maps/@43.6191144,-87.950829,3a,75y,100.79h,99.27t/data=!3m7!1e1!3m5!1sWAyLERk2aJ9EwFIMwhpNBA!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D-9.270773169806901%26panoid%3DWAyLERk2aJ9EwFIMwhpNBA%26yaw%3D100.79120820012447!7i16384!8i8192?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D",
+    },
+    {
+        name: "Can ye tell what it is yet?",
+        url: "https://www.google.com/maps/@38.1574231,-107.7577414,3a,15.7y,164.05h,86.23t/data=!3m7!1e1!3m5!1sW9X96d3fmU-MSDUJzQCQtw!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D3.7667263541697196%26panoid%3DW9X96d3fmU-MSDUJzQCQtw%26yaw%3D164.0506418880548!7i16384!8i8192?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D",
+    },
+    {
+        name: "If at Firth you don't succeed, try, try again.",
+        url: "https://www.google.com/maps/@43.3047476,-112.1838327,3a,19.1y,14.23h,96.63t/data=!3m7!1e1!3m5!1scUhd9nZApn9Mh1Nehrh6uA!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D-6.629369935014765%26panoid%3DcUhd9nZApn9Mh1Nehrh6uA%26yaw%3D14.228496195754193!7i16384!8i8192?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D",
+    },
+    {
+        name: "Yes please, yip!",
+        url: "https://www.google.com/maps/@57.6913586,-4.1717358,3a,15y,46.14h,91.21t/data=!3m7!1e1!3m5!1s4wWrCyi58WUpEGZu3uu6xw!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D-1.2136784703891124%26panoid%3D4wWrCyi58WUpEGZu3uu6xw%26yaw%3D46.137554888902784!7i16384!8i8192?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D",
+    },
 ];

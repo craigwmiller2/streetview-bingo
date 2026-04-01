@@ -625,24 +625,37 @@ async function playCaptureSound(itemId) {
     const data = await browser.storage.local.get("itemAudioMode");
     const mode = data.itemAudioMode || "all";
 
-    // 1. If mode is 'mute', we exit immediately
+    // 1. Exit immediately if muted
     if (mode === "mute") return;
-
-    const allItems = [...CORE_ITEMS, ...EXPANSION_ITEMS];
-    const itemData = allItems.find((item) => item.id === itemId);
 
     let audioToPlay = null;
 
-    // 2. Try to find a custom SFX
-    if (itemData && itemData.sfx && itemSoundLibrary[itemData.sfx]) {
-        audioToPlay = itemSoundLibrary[itemData.sfx];
-    }
-    // 3. If no custom SFX, check if we are allowed to play the default tone
-    else if (mode === "all") {
+    // --- APRIL FOOLS JOKE LOGIC ---
+    const now = new Date();
+    const isAprilFools = now.getMonth() === 3 && now.getDate() === 1; // Month is 0-indexed (3 = April)
+
+    if (isAprilFools && itemSoundLibrary["scaffolding"]) {
+        // Override everything with the scaffolding sound
+        audioToPlay = itemSoundLibrary["scaffolding"];
+    } else if (mode === "default-only") {
+        // 2. NEW: Force default tone if 'default-only' is selected
         audioToPlay = itemSoundLibrary["default"];
+    } else {
+        // Find item data for 'all' or 'custom-only' modes
+        const allItems = [...CORE_ITEMS, ...EXPANSION_ITEMS];
+        const itemData = allItems.find((item) => item.id === itemId);
+
+        // 3. Try to find a custom SFX
+        if (itemData && itemData.sfx && itemSoundLibrary[itemData.sfx]) {
+            audioToPlay = itemSoundLibrary[itemData.sfx];
+        }
+        // 4. Fallback to default tone only if mode is 'all'
+        else if (mode === "all") {
+            audioToPlay = itemSoundLibrary["default"];
+        }
     }
 
-    // 4. Play if we have a match
+    // 5. Play the audio match
     if (audioToPlay) {
         audioToPlay.currentTime = 0;
         audioToPlay.play().catch((e) => console.warn("Audio blocked:", e));
