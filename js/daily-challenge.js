@@ -51,8 +51,6 @@ const DAILY_COUNTRIES = [
     { name: "Colombia", flag: "🇨🇴" },
     { name: "Andorra", flag: "🇦🇩" },
     { name: "Portugal", flag: "🇵🇹" },
-    { name: "Palestine", flag: "🇵🇸" },
-    { name: "Jordan", flag: "🇯🇴" },
     { name: "Isle of Man", flag: "🇮🇲" },
     { name: "United Kingdom", flag: "🇬🇧" },
     { name: "Ukraine", flag: "🇺🇦" },

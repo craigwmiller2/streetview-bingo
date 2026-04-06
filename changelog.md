@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.3] - 2026-04-06
+
+### Removed
+
+- Removed a couple of countries from the daily challenge list.
+
 ## [1.9.2] - 2026-04-01
 
 ### Added
