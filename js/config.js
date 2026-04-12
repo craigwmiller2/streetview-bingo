@@ -44,7 +44,7 @@ const CORE_ITEMS = [
 const EXPANSION_ITEMS = [
     { id: "Cement Mixer", name: "Cement Mixer" },
     { id: "Bus", name: "Bus" },
-    { id: "Statue", name: "Statue" },
+    { id: "Statue", name: "Statue/Ornament" },
     { id: "Washing Line", name: "Washing Line" },
     { id: "Boat", name: "Boat", sfx: "boat-horn" },
     { id: "Bird", name: "Bird", sfx: "free-bird" },
@@ -75,6 +75,24 @@ const EXPANSION_ITEMS = [
     { id: "lamp-post", name: "Lamp Post", sfx: "lamp-post" },
     { id: "cemetery", name: "Cemetery", sfx: "undertakers-bell" },
     { id: "shopping-trolley", name: "Shopping Trolley" },
+    { id: "something-pink", name: "Something Pink", sfx: "pink-panther" },
+    { id: "hat", name: "Someone wearing a hat" },
+    { id: "garbage", name: "Garbage/Rubbish" },
+    { id: "pram-stroller", name: "Pram/Stroller" },
+    { id: "spare-tyre", name: "Spare Tyre" },
+    { id: "emergency-vehicle", name: "Emergency Vehicle" },
+    { id: "roundabout", name: "Roundabout" },
+    { id: "no-entry-sign", name: "No Entry Sign" },
+    { id: "petrol-station", name: "Petrol Station" },
+    { id: "shop-signage", name: "Shop Signage" },
+    { id: "digger-excavator", name: "Digger/Excavator" },
+    { id: "gas-cylinder", name: "Gas Cylinder" },
+    { id: "shed", name: "Shed" },
+    { id: "gate", name: "Gate" },
+    { id: "window", name: "Window" },
+    { id: "door", name: "Door" },
+    { id: "lorry", name: "Lorry" },
+    { id: "garage", name: "Garage" },
 ];
 
 // This replaces your old 'const ITEMS'

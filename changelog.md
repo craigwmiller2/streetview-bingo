@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.9.4] - 2026-04-12
+
+- Added new items and sounds
+
 ## [1.9.3] - 2026-04-06
 
 ### Removed

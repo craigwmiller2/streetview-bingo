@@ -52,6 +52,11 @@ const endCountdownSounds = [
         audio: new Audio(browser.runtime.getURL("audio/final-countdown.ogg")),
         triggerAt: 17,
     },
+    {
+        id: "mgs_countdown",
+        audio: new Audio(browser.runtime.getURL("audio/mgs-alert-music.ogg")),
+        triggerAt: 44,
+    },
 ];
 
 const gameoverSounds = [
