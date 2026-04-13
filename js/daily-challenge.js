@@ -58,7 +58,7 @@ const DAILY_COUNTRIES = [
     { name: "Tunisia", flag: "🇹🇳" },
     { name: "Romania", flag: "🇷🇴" },
     { name: "Sri Lanka", flag: "🇱🇰" },
-    { name: "Czech Republic", flag: "🇨🇿" },
+    { name: "Czechia", flag: "🇨🇿" },
     { name: "Serbia", flag: "🇷🇸" },
     { name: "Russia", flag: "🇷🇺" },
     { name: "Latvia", flag: "🇱🇻" },

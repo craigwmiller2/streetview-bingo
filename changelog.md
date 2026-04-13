@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.9.5] - 2026-04-13
+
+- Fixed: daily country name for checking
+
 ## [1.9.4] - 2026-04-12
 
 - Added new items and sounds
